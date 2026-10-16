@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import { compileCore, compileStyles } from './compile-ui.mjs';
+import { verifyDistributionReferences } from './verify-distribution.mjs';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import vm from 'node:vm';
@@ -23,6 +24,13 @@ for (const browser of ['chromium', 'firefox']) {
     assert(!manifest.host_permissions.some(host => /<all_urls>|githubusercontent|\*:\/\/\*\//.test(host)));
     assert.equal(await fs.readFile(`${dir}/main.js`, 'utf8'), main);
     assert.equal(await fs.readFile(`${dir}/popup.css`, 'utf8'), await compileStyles('popup'));
+    for (const size of [16,32,48,128]) {
+        const png = await fs.readFile(`${dir}/icons/icon${size}.png`);
+        assert.deepEqual(png.subarray(0,8), Buffer.from([137,80,78,71,13,10,26,10]));
+        assert.equal(png.readUInt32BE(16), size);
+        assert.equal(png.readUInt32BE(20), size);
+        if (size === 128) assert.deepEqual(png, await fs.readFile('icon.png'));
+    }
     const info = JSON.parse(await fs.readFile(`${dir}/build-info.json`));
     assert.equal(info.version, pkg.version);
     assert.equal(info.coreSha256, hash(script));
@@ -36,6 +44,7 @@ for (const browser of ['chromium', 'firefox']) {
     }
     assert.equal(await fs.readFile(`${dir}/LICENSE`, 'utf8'), await fs.readFile('LICENSE', 'utf8'));
 }
+verifyDistributionReferences({readme:await fs.readFile('README.md','utf8'), script, config:JSON.parse(await fs.readFile('build/distribution.json','utf8')), manifests, version:pkg.version});
 assert.deepEqual(manifests[0].background, { service_worker: 'background.js' });
 assert.deepEqual(manifests[1].background, { scripts: ['background.js'] });
 assert.equal(manifests[1].browser_specific_settings.gecko.id, 'zynubo@rafelolv.github.io');

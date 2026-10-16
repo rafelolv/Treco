@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Zynubo
 // @namespace    https://github.com/rafelolv
-// @version      1.5.0
+// @version      1.6.0
 // @description  Local YouTube ad blocking with signed rules, plus an in-page Control Center that explains what is running.
 // @author       rafelolv (based on Matthew Parker's MIT-licensed work)
 // @license      MIT
@@ -87,7 +87,7 @@
      * ===================================================================== */
 
     const SCRIPT_NAME = 'Zynubo';
-    const SCRIPT_VERSION = '1.5.0';
+    const SCRIPT_VERSION = '1.6.0';
     const PROJECT_URL = 'https://github.com/rafelolv/Zynubo';
     const ISSUES_URL = `${PROJECT_URL}/issues`;
     const FILTER_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/youtube-adblock-filters.txt';
@@ -552,7 +552,7 @@
                 refreshNetworkEvidence: 'Refresh Evidence',
                 refreshingNetworkEvidence: 'Checking Evidence…',
                 shareSnapshot: 'Share a Snapshot',
-                shareSnapshotHelp: 'Copy the active Rule Library, module states, counters, and environment details, then open the repo issue tracker with clean context.',
+                shareSnapshotHelp: 'Review, copy or download a redacted report. It includes filter status and counters, without video IDs, list contents, custom source URLs or raw errors.',
                 copyDiagnostics: 'Copy Diagnostics',
                 openIssues: 'Open Issues',
                 resetLocalState: 'Reset Local State',
@@ -568,12 +568,12 @@
             },
             searchEmptyTitle: 'No Matching Settings',
             searchEmptyBody: query => `Nothing matches "${query}". Try terms like "rule", "shorts", "sponsor", or "reset".`,
-            armedAction: label => `${label} is armed. Click again to confirm.`,
+            armedAction: label => `${label}: click again within 10 seconds to confirm. Escape cancels.`,
             featureToggle: (label, enabled) => `${label} ${enabled ? 'enabled' : 'disabled'}.`,
             protectionResumed: 'Protection resumed across every engine.',
             protectionPausedToast: 'Protection paused. Zynubo stays installed and ready to resume.',
             diagnosticsCopied: 'Diagnostics copied. You can paste them into a bug report or note.',
-            diagnosticsClipboardFailed: 'Clipboard access was unavailable, so diagnostics could not be copied.',
+            diagnosticsClipboardFailed: 'Clipboard access was blocked. Use Download report in Diagnostics instead.',
             stillLoading: 'Control Center is still loading. Try again in a moment.',
             loadedLate: hint => `Zynubo loaded late. Open Diagnostics for setup steps. ${hint}`,
             activeToast: hint => `Zynubo is active. ${hint}`,
@@ -585,20 +585,24 @@
                 description: 'Intercept the network and data paths that carry ad payloads before YouTube can render them.',
                 features: {
                     jsonParsePrune: {
-                        label: 'JSON response pruning',
-                        desc: 'Removes ad payloads from parsed player responses before they are consumed.'
+                        label: 'Clean ad data',
+                        desc: 'Removes known ad fields from video data before the page uses it.',
+                        technical: 'JSON response pruning. Removes ad payloads from parsed player responses before they are consumed.'
                     },
                     fetchIntercept: {
-                        label: 'fetch() interception',
-                        desc: 'Applies pruning to player and browse requests handled through fetch().'
+                        label: 'Filter video requests',
+                        desc: 'Cleans ad data from video and feed responses.',
+                        technical: 'fetch() interception. Applies pruning to player and browse requests handled through fetch().'
                     },
                     xhrIntercept: {
-                        label: 'XMLHttpRequest interception',
-                        desc: 'Catches older request paths that still deliver ad-related responses.'
+                        label: 'Filter older requests',
+                        desc: 'Applies the same ad cleanup to older YouTube requests.',
+                        technical: 'XMLHttpRequest interception. Catches older request paths that still deliver ad-related responses.'
                     },
                     setUndefinedTraps: {
-                        label: 'Initial property traps',
-                        desc: 'Keeps early ad-related player properties undefined during first-page hydration.'
+                        label: 'Early ad cleanup',
+                        desc: 'Removes known ad fields when the initial video data arrives.',
+                        technical: 'Initial property traps. Keeps early ad-related player properties undefined during first-page hydration.'
                     }
                 }
             },
@@ -607,44 +611,53 @@
                 description: 'Reduce the odds of YouTube detecting, rehydrating, or bypassing the protections already in place.',
                 features: {
                     abnormalityBypass: {
-                        label: 'Abnormality callback bypass',
-                        desc: 'Neutralizes callbacks that flag ad blocking as abnormal behavior.'
+                        label: 'Handle blocker checks',
+                        desc: 'Prevents known blocker-check callbacks from interrupting playback.',
+                        technical: 'Abnormality callback bypass. Neutralizes callbacks that flag ad blocking as abnormal behavior.'
                     },
                     domBypassPrevention: {
-                        label: 'Iframe bypass prevention',
-                        desc: 'Stops clean iframe contexts from restoring unmodified browser APIs.'
+                        label: 'Protect page filters',
+                        desc: 'Stops page scripts from replacing the active request filters.',
+                        technical: 'Iframe bypass prevention. Stops clean iframe contexts from restoring unmodified browser APIs.'
                     },
                     requestBodyModify: {
-                        label: 'No-ad request signal',
-                        desc: 'Marks outbound player requests with the inline-playback no-ad flag so YouTube serves no ad payload and no fake-buffering delay. Works on cold loads and in-app navigation.'
+                        label: 'Request playback without ads',
+                        desc: 'Adds a playback preference asking YouTube for an inline video without ads.',
+                        technical: 'No-ad request signal. Marks outbound player requests with the inline-playback no-ad flag so YouTube serves no ad payload and no fake-buffering delay. Works on cold loads and in-app navigation.'
                     },
                     ssapAutoSkip: {
-                        label: 'SSAP auto-skip',
-                        desc: 'Fast-forwards through stitched server-side ads whenever they are detected.'
+                        label: 'Skip stitched ads',
+                        desc: 'Fast-forwards detected ads that are inserted into the video stream.',
+                        technical: 'SSAP auto-skip. Fast-forwards through stitched server-side ads whenever they are detected.'
                     },
                     timerNeutralization: {
-                        label: 'Timer neutralization',
-                        desc: 'Disarms the long timers YouTube uses to validate ad playback.'
+                        label: 'Reduce ad-check delays',
+                        desc: 'Disables known timers used to check ad playback.',
+                        technical: 'Timer neutralization. Disarms the long timers YouTube uses to validate ad playback.'
                     },
                     aggressiveAntiStall: {
-                        label: 'Aggressive anti-stall',
-                        desc: 'Fast-forwards the 17-second bound timers YouTube uses to stall playback when a blocker is suspected.'
+                        label: 'Reduce playback stalls',
+                        desc: 'Speeds up known delays associated with blocker checks.',
+                        technical: 'Aggressive anti-stall. Fast-forwards the 17-second bound timers YouTube uses to stall playback when a blocker is suspected.'
                     },
                     videoAdFastForward: {
                         label: 'Video ad fast-forward',
                         desc: 'If an unskippable ad still plays, mutes it and accelerates playback as a fallback safety net.'
                     },
                     nativeToStringMask: {
-                        label: 'Hide proxies from toString',
-                        desc: 'Patches Function.prototype.toString so YouTube cannot detect our hooked natives by source inspection.'
+                        label: 'Hide filter hooks',
+                        desc: 'Makes the request filters less visible to script checks.',
+                        technical: 'Hide proxies from toString. Patches Function.prototype.toString so YouTube cannot detect our hooked natives by source inspection.'
                     },
                     serviceWorkerBlock: {
-                        label: 'Block service worker injection',
-                        desc: 'Prevents YouTube from registering a service worker that could bypass our request proxies.'
+                        label: 'Limit background workers',
+                        desc: 'Stops YouTube from creating workers that could bypass page filters.',
+                        technical: 'Block service worker injection. Prevents YouTube from registering a service worker that could bypass our request proxies.'
                     },
                     webpackChunkHook: {
-                        label: 'Webpack chunk prune',
-                        desc: 'Rewrites YouTube webpack chunks before execution to strip modules that render ad placements.'
+                        label: 'Filter ad modules',
+                        desc: 'Skips known ad-related code while the YouTube player loads.',
+                        technical: 'Webpack chunk prune. Rewrites YouTube webpack chunks before execution to strip modules that render ad placements.'
                     }
                 }
             },
@@ -6478,7 +6491,7 @@
 
     function injectSettingsCSS() {
         // Compiled from src/ui/ at build time; no remote styles or runtime HTML parsing.
-        const css = ".ytab-panel, .ytab-toast-region, .ytab-launcher { --z-accent: #cb3727;\n--z-accent-hover: #ac2b1e;\n--z-accent-text: #ffffff;\n--z-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;\n--z-display-font: Georgia, 'Times New Roman', serif;\n--z-paper: #181818;\n--z-rail: #131313;\n--z-inset: #202020;\n--z-hover: #252525;\n--z-line: #373737;\n--z-ink: #f5f3ef;\n--z-muted: #b6b3ad;\n--z-faint: #99968f;\n--z-success: #97c79b;\n--z-warning: #e4bc78;\n--z-danger: #ffab9c;\n--z-info: #a4c5e8;\n--z-focus: #ef8f78;\n--z-scheme: dark; --z-logo: url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20128%20128%22%3E%3Crect%20width%3D%22128%22%20height%3D%22128%22%20rx%3D%2220%22%20fill%3D%22%23cb3727%22%2F%3E%3Cpath%20d%3D%22M30%2032h68v16L54%2080h44v16H30V80l44-32H30Z%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E\"); }\nhtml:not([dark]) .ytab-panel, html:not([dark]) .ytab-toast-region, html:not([dark]) .ytab-launcher { --z-paper: #ffffff;\n--z-rail: #f6f5f2;\n--z-inset: #f6f5f2;\n--z-hover: #eeece7;\n--z-line: #dedbd5;\n--z-ink: #201f1d;\n--z-muted: #68645f;\n--z-faint: #75716a;\n--z-success: #347349;\n--z-warning: #885a12;\n--z-danger: #ac2b1e;\n--z-info: #335f8d;\n--z-focus: #b62f20;\n--z-scheme: light; }\n/* Zynubo's UI is scoped to the dialog and notifications; never reset the host page. */\nbody:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !important; }\n.ytab-overlay, .ytab-panel *, .ytab-panel *::before, .ytab-panel *::after,\n.ytab-toast-region, .ytab-toast-region * { box-sizing: border-box; }\n.ytab-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }\n.ytab-overlay {\n    position: fixed; inset: 0; z-index: 2147483646; display: grid; place-items: center;\n    padding: 24px; background: rgb(0 0 0 / 65%); opacity: 0; visibility: hidden;\n    transition: opacity .12s, visibility .12s;\n}\n.ytab-overlay.ytab-active { opacity: 1; visibility: visible; }\n.ytab-panel {\n    display: flex; flex-direction: column; width: min(960px, 100%); height: min(740px, 100%); min-height: 0; overflow: hidden;\n    border: 1px solid var(--z-line); border-radius: 8px; background: var(--z-paper);\n    color: var(--z-ink); color-scheme: var(--z-scheme); font: 14px/1.5 var(--z-font);\n    box-shadow: 0 20px 80px rgb(0 0 0 / 30%); text-align: left; outline: none;\n    /* The host's base font size must not affect controls inside the dialog. */\n    letter-spacing: normal; text-transform: none;\n}\n.ytab-panel [hidden], .ytab-overlay [hidden] { display: none !important; }\n.ytab-panel button, .ytab-panel input, .ytab-panel textarea { font-family: inherit; letter-spacing: normal; }\n.ytab-panel button { text-transform: none; }\n.ytab-panel :is(button, input, textarea, a, summary):focus-visible { outline: 2px solid var(--z-focus); outline-offset: 3px; }\n.ytab-settings-shell { display: grid; grid-template-columns: 176px minmax(0, 1fr); flex: 1; overflow: hidden; min-height: 0; }\n.ytab-settings-nav { display: flex; flex-direction: column; min-height: 0; padding: 22px 12px 18px; border-right: 1px solid var(--z-line); background: var(--z-rail); }\n.ytab-nav-brand { display: flex; gap: 10px; align-items: center; padding: 0; }\n.ytab-nav-mark { flex: 0 0 28px; width: 28px; height: 28px; background: var(--z-logo) center / contain no-repeat; }\n.ytab-nav-product { font: 700 27px/1 var(--z-display-font); letter-spacing: -1.1px; color: var(--z-ink); }\n.ytab-nav-list { display: grid; align-content: start; gap: 3px; min-height: 0; overflow: auto; scrollbar-width: thin; }\n.ytab-nav-button { width: 100%; min-height: 36px; padding: 8px 12px; border: 0; border-radius: 0; background: transparent; color: var(--z-muted); text-align: left; font-size: 13px; line-height: 1.35; font-weight: 500; cursor: pointer; }\n.ytab-nav-button:hover:not(:disabled) { color: var(--z-ink); background: var(--z-hover); }\n.ytab-nav-button[aria-current=\"page\"] { color: var(--z-ink); background: transparent; font-weight: 650; box-shadow: inset 2px 0 var(--z-accent); }\n.ytab-nav-button:disabled { opacity: .4; cursor: default; }\n.ytab-nav-button[data-section-id=\"ytab-section-core\"], .ytab-nav-button[data-section-id=\"ytab-section-sponsor\"], .ytab-nav-button[data-section-id=\"ytab-section-diagnostics\"] { margin-top: 14px; }\n.ytab-nav-meta { margin-top: auto; padding: 24px 8px 0; font-size: 11px; color: var(--z-faint); display: grid; gap: 4px; }\n.ytab-nav-meta strong { font-weight: 500; }\n.ytab-main-column { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; min-height: 0; min-width: 0; }\n.ytab-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 28px 32px 12px; }\n.ytab-header-left { flex: 1; min-width: 0; }\n.ytab-brand { display: flex; align-items: center; justify-content: space-between; gap: 20px; }\n.ytab-title-row { min-width: 0; }\n.ytab-title { margin: 0; font: 400 38px/1.1 var(--z-display-font); letter-spacing: -1.3px; }\n.ytab-header-search { width: min(200px, 46%); flex-shrink: 0; }\n.ytab-close { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--z-muted); font-size: 25px; line-height: 1; cursor: pointer; }\n.ytab-close:hover { color: var(--z-ink); background: var(--z-hover); }\n.ytab-content { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--z-line) transparent; scroll-padding-top: 24px; }\n.ytab-layout { padding: 16px 32px 32px; display: grid; gap: 36px; }\n.ytab-section { min-width: 0; scroll-margin-top: 24px; }\n.ytab-section-head { display: flex; justify-content: space-between; align-items: start; gap: 18px; margin-bottom: 20px; }\n.ytab-section-head > div:first-child { min-width: 0; }\n.ytab-section-title { margin: 0 0 6px; font: 400 28px/1.2 var(--z-display-font); letter-spacing: -.7px; }\n.ytab-section-desc, .ytab-field-help, .ytab-row-desc, .ytab-summary-text, .ytab-detail-text,\n.ytab-glance-detail, .ytab-note-text, .ytab-toast-message { margin: 0; color: var(--z-muted); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }\n.ytab-section-toggle { cursor: pointer; list-style: none; }\n.ytab-section-toggle::-webkit-details-marker { display: none; }\n.ytab-section-toggle::marker { content: ''; }\n.ytab-section-toggle-meta { display: flex; gap: 10px; align-items: center; flex-shrink: 0; padding-top: 6px; }\n.ytab-section-chevron { display: inline-block; color: var(--z-faint); font-size: 20px; transition: transform .12s; }\n.ytab-section-disclosure[open] .ytab-section-chevron { transform: rotate(90deg); }\n.ytab-surface { display: grid; gap: 24px; min-width: 0; }\n.ytab-summary { gap: 20px; }\n.ytab-summary-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 18px 0; border-top: 1px solid var(--z-line); border-bottom: 1px solid var(--z-line); }\n.ytab-summary-title { margin: 0 0 4px; font-size: 16px; line-height: 1.4; font-weight: 650; letter-spacing: -.2px; }\n.ytab-summary-copy { max-width: 430px; }\n.ytab-summary-text { font-size: 12px; }\n.ytab-summary-control { display: flex; align-items: center; }\n.ytab-summary-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }\n.ytab-glance { min-width: 0; display: grid; align-content: start; gap: 4px; }\n.ytab-glance-label, .ytab-metric-label { color: var(--z-faint); font-size: 11px; line-height: 1.5; font-weight: 500; }\n.ytab-glance-value { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }\n.ytab-glance-detail { font-size: 11px; }\n.ytab-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }\n.ytab-metric { display: flex; flex-direction: column; gap: 6px; min-width: 0; }\n.ytab-metric-value { order: -1; display: block; font-size: 22px; line-height: 1.2; font-weight: 600; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }\n.ytab-more-stats { color: var(--z-muted); font-size: 12px; border-top: 1px solid var(--z-line); padding-top: 16px; }\n.ytab-more-stats > summary { width: fit-content; cursor: pointer; }\n.ytab-more-stats[open] > summary { margin-bottom: 20px; }\n.ytab-more-stats > .ytab-metric-grid, .ytab-more-stats > .ytab-summary-facts { margin-top: 20px; }\n.ytab-more-stats .ytab-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }\n.ytab-more-stats .ytab-metric-value { font-size: 22px; }\n.ytab-chip-row, .ytab-btn-row, .ytab-url-group, .ytab-jump-nav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }\n.ytab-btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--z-line); border-radius: 5px; background: transparent; color: var(--z-ink); font-size: 12px; line-height: 1.4; font-weight: 600; text-decoration: none; cursor: pointer; }\n.ytab-btn:hover:not(:disabled) { background: var(--z-hover); }\n.ytab-btn-primary { background: var(--z-accent); border-color: var(--z-accent); color: var(--z-accent-text); }\n.ytab-btn-primary:hover:not(:disabled) { background: var(--z-accent-hover); border-color: var(--z-accent-hover); }\n.ytab-btn-danger { color: var(--z-danger); }\n.ytab-btn[data-armed=\"true\"] { color: var(--z-warning); border-color: var(--z-warning); }\n.ytab-btn:disabled { opacity: .5; cursor: default; }\n.ytab-btn-small { min-height: 34px; font-size: 12px; }\n.ytab-btn-ghost { border-color: transparent; color: var(--z-muted); }\n.ytab-pill { display: inline-block; font-size: 11px; line-height: 1.5; font-weight: 600; color: var(--z-muted); white-space: nowrap; }\n.ytab-pill[data-tone=\"success\"] { color: var(--z-success); }\n.ytab-pill[data-tone=\"info\"] { color: var(--z-info); }\n.ytab-pill[data-tone=\"warn\"] { color: var(--z-warning); }\n.ytab-pill[data-tone=\"danger\"] { color: var(--z-danger); }\n.ytab-toggle-list { display: grid; }\n.ytab-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 26px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--z-line); cursor: pointer; }\n.ytab-row:first-child { padding-top: 0; }\n.ytab-row:last-child { border-bottom: 0; }\n.ytab-row-label-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }\n.ytab-row-label { color: var(--z-ink); font-size: 14px; font-weight: 600; }\n.ytab-row-desc { max-width: 62ch; font-size: 12px; }\n.ytab-toggle { position: relative; display: inline-flex; flex-shrink: 0; width: 44px; height: 26px; }\n.ytab-toggle input { position: absolute; z-index: 1; inset: -7px -2px; width: 48px; height: 40px; margin: 0; opacity: 0; cursor: pointer; }\n.ytab-toggle-track { position: absolute; inset: 0; border: 1px solid var(--z-faint); border-radius: 20px; background: var(--z-line); pointer-events: none; }\n.ytab-toggle-track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--z-ink); transition: transform .12s; }\n.ytab-toggle input:checked + .ytab-toggle-track { background: var(--z-accent); border-color: var(--z-accent); }\n.ytab-toggle input:checked + .ytab-toggle-track::after { transform: translateX(18px); background: white; }\n.ytab-toggle input:focus-visible + .ytab-toggle-track { outline: 2px solid var(--z-focus); outline-offset: 4px; }\n.ytab-toggle input:disabled { cursor: default; }\n.ytab-toggle:has(input:disabled) { opacity: .4; }\n.ytab-field { display: grid; gap: 10px; min-width: 0; }\n.ytab-field-label { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; font-size: 13px; font-weight: 600; }\n.ytab-input, .ytab-blocklist-textarea { min-width: 0; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--z-line); border-radius: 4px; background: var(--z-inset); color: var(--z-ink); font: 13px/1.5 var(--z-font); }\n.ytab-input::placeholder, .ytab-blocklist-textarea::placeholder { color: var(--z-faint); opacity: 1; }\n.ytab-input[aria-invalid=\"true\"] { border-color: var(--z-danger); }\n.ytab-search-input { min-height: 34px; padding: 7px 0; font-size: 12px; background: transparent; border: 0; border-bottom: 1px solid var(--z-line); border-radius: 0; }\n.ytab-url-group .ytab-input { flex: 1 1 250px; width: auto; }\n.ytab-blocklist-textarea { min-height: 92px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }\n.ytab-action-groups, .ytab-action-group { display: grid; gap: 16px; }\n.ytab-action-group + .ytab-action-group { border-top: 1px solid var(--z-line); padding-top: 24px; }\n.ytab-action-group-title, .ytab-detail-title { margin: 0; font-size: 14px; font-weight: 650; }\n.ytab-glance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }\n.ytab-summary-support { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }\n.ytab-detail-card { display: grid; gap: 12px; min-width: 0; }\n.ytab-note { display: grid; gap: 6px; padding: 12px 0 12px 14px; border: 0; border-left: 2px solid var(--z-line); background: transparent; }\n.ytab-note-title, .ytab-consent-title { margin: 0; font-size: 13px; font-weight: 650; }\n.ytab-note[data-tone=\"warn\"] .ytab-note-title { color: var(--z-warning); }\n.ytab-note[data-tone=\"danger\"] .ytab-note-title { color: var(--z-danger); }\n.ytab-note[data-tone=\"success\"] .ytab-note-title { color: var(--z-success); }\n.ytab-pause-card { gap: 10px; }\n.ytab-pause-card .ytab-note-text { font-size: 12px; }\n.ytab-consent-panel { display: grid; gap: 16px; border-top: 1px solid var(--z-line); padding-top: 24px; }\n.ytab-consent-card { display: grid; gap: 10px; }\n.ytab-consent-head { display: flex; align-items: start; justify-content: space-between; gap: 14px; }\n.ytab-consent-cache, .ytab-consent-hint, .ytab-blocklist-feedback { font-size: 12px; color: var(--z-warning); }\n.ytab-attribution { margin-top: 4px; font-size: 11px; color: var(--z-faint); overflow-wrap: anywhere; }\n.ytab-panel a { color: var(--z-ink); text-underline-offset: 3px; }\n.ytab-panel a.ytab-btn-primary { color: var(--z-accent-text); }\n.ytab-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 32px; border-top: 1px solid var(--z-line); font-size: 11px; color: var(--z-faint); }\n.ytab-footer-status { margin: 0; font-size: 11px; color: var(--z-muted); }\n.ytab-footer-meta { min-width: 0; }\n.ytab-footer-hint { display: none; }\n.ytab-footer-sync { flex-shrink: 0; font-size: 11px; }\n.ytab-toast-lane { min-height: 0; }\n.ytab-toast-region { display: grid; gap: 8px; position: fixed; right: 18px; bottom: 18px; z-index: 2147483647; width: min(360px, calc(100vw - 36px)); font: 13px/1.5 var(--z-font); color: var(--z-ink); pointer-events: none; }\n.ytab-toast { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 12px 16px; border: 1px solid var(--z-line); border-radius: 4px; background: var(--z-paper); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }\n.ytab-toast-visible { opacity: 1; transform: none; }\n.ytab-toast-tone { width: 6px; height: 6px; border-radius: 50%; background: var(--z-info); margin-top: 7px; }\n.ytab-toast-warn .ytab-toast-tone { background: var(--z-warning); }\n.ytab-toast-success .ytab-toast-tone { background: var(--z-success); }\n.ytab-toast-error .ytab-toast-tone { background: var(--z-danger); }\n.ytab-toast-title { font-size: 12px; font-weight: 650; }\n.ytab-toast-message { font-size: 12px; }\n.ytab-panel .ytab-toast-region { position: static; width: auto; padding: 12px 28px 0; }\n.ytab-panel .ytab-toast-region:empty { display: none; }\n.ytab-panel .ytab-toast { padding: 0; border: 0; background: transparent; }\n.ytab-panel .ytab-toast-title { display: none; }\n.ytab-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: ytab-spin .6s linear infinite; }\n@keyframes ytab-spin { to { transform: rotate(360deg); } }\n.ytab-topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-top: 3px solid var(--z-accent); border-bottom: 1px solid var(--z-line); }\n.ytab-shortcut-hint { margin-left: auto; margin-right: 14px; font: 11px/1.4 var(--z-font); color: var(--z-faint); }\n.ytab-topbar .ytab-close { margin-left: 0; }\n.ytab-panel[data-searching=\"false\"] .ytab-section-head .ytab-section-title { display: none; }\n.ytab-summary-actions { display: grid; gap: 0; }\n.ytab-home-link { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding: 15px 0; border: 0; border-bottom: 1px solid var(--z-line); background: transparent; text-align: left; color: var(--z-ink); cursor: pointer; }\n.ytab-home-link:first-child { border-top: 1px solid var(--z-line); }\n.ytab-home-link > span:first-child { display: grid; gap: 3px; }\n.ytab-home-link strong { font-size: 14px; font-weight: 600; }\n.ytab-home-link > span:first-child > span { color: var(--z-muted); font-size: 12px; }\n.ytab-home-link > span:last-child { color: var(--z-accent); font-size: 21px; }\n.ytab-home-link:hover strong { text-decoration: underline; text-underline-offset: 3px; }\n.ytab-home-tools { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }\n.ytab-text-action { appearance: none; padding: 3px 0; border: 0; background: transparent; color: var(--z-muted); text-align: left; font: 12px/1.5 var(--z-font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }\n.ytab-text-action:hover { color: var(--z-ink); }\n.ytab-text-action:disabled { opacity: .5; cursor: default; }\n.ytab-home-details { border-top: 1px solid var(--z-line); padding-top: 16px; color: var(--z-muted); font-size: 12px; }\n.ytab-home-details > summary { cursor: pointer; width: fit-content; }\n.ytab-home-details[open] > summary { margin-bottom: 14px; }\n.ytab-home-details .ytab-pause-card { padding: 0; border: 0; }\n@media (max-width: 760px) {\n    .ytab-overlay { padding: 12px; }\n    .ytab-settings-shell { grid-template-columns: 150px minmax(0, 1fr); }\n    .ytab-settings-nav { padding-inline: 8px; }\n    .ytab-nav-button { padding-inline: 10px; font-size: 12px; }\n    .ytab-layout { padding: 12px 24px 24px; }\n    .ytab-header { padding: 24px 24px 12px; }\n    .ytab-footer { padding-inline: 24px; }\n    .ytab-panel .ytab-toast-region { padding-inline: 24px; }\n}\n@media (max-width: 560px) {\n    .ytab-overlay { padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); }\n    .ytab-panel { border-radius: 6px; height: 100%; }\n    .ytab-topbar { padding: 12px 16px; }\n    .ytab-shortcut-hint { display: none; }\n    .ytab-topbar .ytab-close { margin-left: auto; }\n    .ytab-settings-shell { display: flex; flex-direction: column; }\n    .ytab-settings-nav { flex: 0 0 auto; padding: 4px 8px 0; border-right: 0; border-bottom: 1px solid var(--z-line); }\n    .ytab-nav-list { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 4px; }\n    .ytab-nav-button { width: auto; flex: 0 0 auto; min-height: 38px; padding: 9px; font-size: 12px; }\n    .ytab-nav-button[data-section-id] { margin-top: 0; }\n    .ytab-nav-button[aria-current=\"page\"] { box-shadow: inset 0 -2px var(--z-accent); }\n    .ytab-nav-meta { display: none; }\n    .ytab-main-column { flex: 1; }\n    .ytab-header { padding: 20px 18px 8px; }\n    .ytab-title { font-size: 30px; }\n    .ytab-header-search { width: 100%; }\n    .ytab-brand { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 8px; }\n    .ytab-layout { padding: 12px 18px 24px; }\n    .ytab-summary-hero { gap: 14px; padding: 14px 0; }\n    .ytab-summary-facts, .ytab-glance-grid { grid-template-columns: 1fr; gap: 12px; }\n    .ytab-summary-facts .ytab-glance { grid-template-columns: 90px minmax(0, 1fr); column-gap: 12px; }\n    .ytab-summary-facts .ytab-glance-detail { grid-column: 2; }\n    .ytab-metric-grid, .ytab-more-stats .ytab-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }\n    .ytab-summary-support { grid-template-columns: 1fr; }\n    .ytab-section-title { font-size: 25px; }\n    .ytab-row { gap: 14px; }\n    .ytab-btn-row { align-items: stretch; }\n    .ytab-btn-row > .ytab-btn { flex: 1 1 auto; }\n    .ytab-footer { padding: 10px 18px; }\n    .ytab-footer-sync { display: none; }\n    .ytab-panel .ytab-toast-region { padding: 10px 18px 0; }\n}\n@media (prefers-reduced-motion: reduce) {\n    .ytab-overlay, .ytab-toast, .ytab-section-chevron, .ytab-toggle-track::after { transition: none; }\n    .ytab-spinner { animation: none; }\n}\n\n/* Visible page entry point; shared tokens and canonical logo are embedded locally. */\n.ytab-launcher {\n    appearance: none; display: inline-flex; align-items: center; justify-content: center;\n    gap: 7px; flex: 0 0 auto; height: 36px; margin: 0 8px 0 0; padding: 0 12px;\n    border: 1px solid var(--z-line); border-radius: 6px; background: var(--z-paper);\n    color: var(--z-ink); font: 600 12px/1 var(--z-font); letter-spacing: normal;\n    text-transform: none; cursor: pointer; box-sizing: border-box;\n}\n.ytab-launcher:hover { background: var(--z-hover); }\n.ytab-launcher:focus-visible { outline: 2px solid var(--z-focus); outline-offset: 3px; }\n.ytab-launcher-mark { width: 22px; height: 22px; flex: 0 0 22px; background: var(--z-logo) center / contain no-repeat; }\n\n.ytab-launcher-status { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--z-success); }\n.ytab-launcher[data-status=\"paused\"] .ytab-launcher-status { background: var(--z-faint); }\n.ytab-launcher[data-status=\"attention\"] .ytab-launcher-status { background: var(--z-warning); }\n.ytab-feature-row { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: center; gap: 8px; border-bottom: 1px solid var(--z-line); }\n.ytab-feature-row:last-child { border-bottom: 0; }\n.ytab-feature-row > .ytab-row { min-width: 0; padding: 17px 0; border: 0; gap: 12px; }\n.ytab-favorite-button { appearance: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 6px; color: var(--z-muted); background: transparent; font-size: 22px; cursor: pointer; }\n.ytab-favorite-button:hover { background: var(--z-hover); }\n.ytab-favorite-button[aria-pressed=\"true\"] { color: var(--z-focus); }\n.ytab-favorites { min-width: 0; }\n.ytab-favorites h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--z-ink); }\n";
+        const css = ".ytab-panel, .ytab-toast-region, .ytab-launcher { --z-accent: #cb3727;\n--z-accent-hover: #ac2b1e;\n--z-accent-text: #ffffff;\n--z-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;\n--z-display-font: Georgia, 'Times New Roman', serif;\n--z-paper: #181818;\n--z-rail: #131313;\n--z-inset: #202020;\n--z-hover: #252525;\n--z-line: #373737;\n--z-ink: #f5f3ef;\n--z-muted: #b6b3ad;\n--z-faint: #99968f;\n--z-success: #97c79b;\n--z-warning: #e4bc78;\n--z-danger: #ffab9c;\n--z-info: #a4c5e8;\n--z-focus: #ef8f78;\n--z-scheme: dark; --z-logo: url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20128%20128%22%3E%3Crect%20width%3D%22128%22%20height%3D%22128%22%20rx%3D%2220%22%20fill%3D%22%23cb3727%22%2F%3E%3Cpath%20d%3D%22M30%2032h68v16L54%2080h44v16H30V80l44-32H30Z%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E\"); }\nhtml:not([dark]) .ytab-panel, html:not([dark]) .ytab-toast-region, html:not([dark]) .ytab-launcher { --z-paper: #ffffff;\n--z-rail: #f6f5f2;\n--z-inset: #f6f5f2;\n--z-hover: #eeece7;\n--z-line: #dedbd5;\n--z-ink: #201f1d;\n--z-muted: #68645f;\n--z-faint: #6d6963;\n--z-success: #347349;\n--z-warning: #885a12;\n--z-danger: #ac2b1e;\n--z-info: #335f8d;\n--z-focus: #b62f20;\n--z-scheme: light; }\n/* Zynubo's UI is scoped to the dialog and notifications; never reset the host page. */\nbody:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !important; }\n.ytab-overlay, .ytab-panel *, .ytab-panel *::before, .ytab-panel *::after,\n.ytab-toast-region, .ytab-toast-region * { box-sizing: border-box; }\n.ytab-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }\n.ytab-overlay {\n    position: fixed; inset: 0; z-index: 2147483646; display: grid; place-items: center;\n    padding: 24px; background: rgb(0 0 0 / 65%); opacity: 0; visibility: hidden;\n    transition: opacity .12s, visibility .12s;\n}\n.ytab-overlay.ytab-active { opacity: 1; visibility: visible; }\n.ytab-panel {\n    display: flex; flex-direction: column; width: min(960px, 100%); height: min(740px, 100%); min-height: 0; overflow: hidden;\n    border: 1px solid var(--z-line); border-radius: 8px; background: var(--z-paper);\n    color: var(--z-ink); color-scheme: var(--z-scheme); font: 14px/1.5 var(--z-font);\n    box-shadow: 0 20px 80px rgb(0 0 0 / 30%); text-align: left; outline: none;\n    /* The host's base font size must not affect controls inside the dialog. */\n    letter-spacing: normal; text-transform: none;\n}\n.ytab-panel [hidden], .ytab-overlay [hidden] { display: none !important; }\n.ytab-panel button, .ytab-panel input, .ytab-panel textarea { font-family: inherit; letter-spacing: normal; }\n.ytab-panel button { text-transform: none; }\n.ytab-panel :is(button, input, textarea, a, summary):focus-visible { outline: 2px solid var(--z-focus); outline-offset: 3px; }\n.ytab-settings-shell { display: grid; grid-template-columns: 176px minmax(0, 1fr); flex: 1; overflow: hidden; min-height: 0; }\n.ytab-settings-nav { display: flex; flex-direction: column; min-height: 0; padding: 22px 12px 18px; border-right: 1px solid var(--z-line); background: var(--z-rail); }\n.ytab-nav-brand { display: flex; gap: 10px; align-items: center; padding: 0; }\n.ytab-nav-mark { flex: 0 0 28px; width: 28px; height: 28px; background: var(--z-logo) center / contain no-repeat; }\n.ytab-nav-product { font: 700 27px/1 var(--z-display-font); letter-spacing: -1.1px; color: var(--z-ink); }\n.ytab-nav-list { display: grid; align-content: start; gap: 3px; min-height: 0; overflow: auto; scrollbar-width: thin; }\n.ytab-nav-button { width: 100%; min-height: 36px; padding: 8px 12px; border: 0; border-radius: 0; background: transparent; color: var(--z-muted); text-align: left; font-size: 13px; line-height: 1.35; font-weight: 500; cursor: pointer; }\n.ytab-nav-button:hover:not(:disabled) { color: var(--z-ink); background: var(--z-hover); }\n.ytab-nav-button[aria-current=\"page\"] { color: var(--z-ink); background: transparent; font-weight: 650; box-shadow: inset 2px 0 var(--z-accent); }\n.ytab-nav-button:disabled { opacity: .4; cursor: default; }\n.ytab-nav-button[data-section-id=\"ytab-section-core\"], .ytab-nav-button[data-section-id=\"ytab-section-sponsor\"], .ytab-nav-button[data-section-id=\"ytab-section-diagnostics\"] { margin-top: 14px; }\n.ytab-nav-meta { margin-top: auto; padding: 24px 8px 0; font-size: 11px; color: var(--z-faint); display: grid; gap: 4px; }\n.ytab-nav-meta strong { font-weight: 500; }\n.ytab-main-column { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; min-height: 0; min-width: 0; }\n.ytab-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 28px 32px 12px; }\n.ytab-header-left { flex: 1; min-width: 0; }\n.ytab-brand { display: flex; align-items: center; justify-content: space-between; gap: 20px; }\n.ytab-title-row { min-width: 0; }\n.ytab-title { margin: 0; font: 400 38px/1.1 var(--z-display-font); letter-spacing: -1.3px; }\n.ytab-header-search { width: min(200px, 46%); flex-shrink: 0; }\n.ytab-close { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--z-muted); font-size: 25px; line-height: 1; cursor: pointer; }\n.ytab-close:hover { color: var(--z-ink); background: var(--z-hover); }\n.ytab-content { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--z-line) transparent; scroll-padding-top: 24px; }\n.ytab-layout { padding: 16px 32px 32px; display: grid; gap: 36px; }\n.ytab-section { min-width: 0; scroll-margin-top: 24px; }\n.ytab-section-head { display: flex; justify-content: space-between; align-items: start; gap: 18px; margin-bottom: 20px; }\n.ytab-section-head > div:first-child { min-width: 0; }\n.ytab-section-title { margin: 0 0 6px; font: 400 28px/1.2 var(--z-display-font); letter-spacing: -.7px; }\n.ytab-section-desc, .ytab-field-help, .ytab-row-desc, .ytab-summary-text, .ytab-detail-text,\n.ytab-glance-detail, .ytab-note-text, .ytab-toast-message { margin: 0; color: var(--z-muted); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }\n.ytab-section-toggle { cursor: pointer; list-style: none; }\n.ytab-section-toggle::-webkit-details-marker { display: none; }\n.ytab-section-toggle::marker { content: ''; }\n.ytab-section-toggle-meta { display: flex; gap: 10px; align-items: center; flex-shrink: 0; padding-top: 6px; }\n.ytab-section-chevron { display: inline-block; color: var(--z-faint); font-size: 20px; transition: transform .12s; }\n.ytab-section-disclosure[open] .ytab-section-chevron { transform: rotate(90deg); }\n.ytab-surface { display: grid; gap: 24px; min-width: 0; }\n.ytab-summary { gap: 20px; }\n.ytab-summary-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 18px 0; border-top: 1px solid var(--z-line); border-bottom: 1px solid var(--z-line); }\n.ytab-summary-title { margin: 0 0 4px; font-size: 16px; line-height: 1.4; font-weight: 650; letter-spacing: -.2px; }\n.ytab-summary-copy { max-width: 430px; }\n.ytab-summary-text { font-size: 12px; }\n.ytab-summary-control { display: flex; align-items: center; }\n.ytab-summary-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }\n.ytab-glance { min-width: 0; display: grid; align-content: start; gap: 4px; }\n.ytab-glance-label, .ytab-metric-label { color: var(--z-faint); font-size: 11px; line-height: 1.5; font-weight: 500; }\n.ytab-glance-value { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }\n.ytab-glance-detail { font-size: 11px; }\n.ytab-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }\n.ytab-metric { display: flex; flex-direction: column; gap: 6px; min-width: 0; }\n.ytab-metric-value { order: -1; display: block; font-size: 22px; line-height: 1.2; font-weight: 600; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }\n.ytab-more-stats { color: var(--z-muted); font-size: 12px; border-top: 1px solid var(--z-line); padding-top: 16px; }\n.ytab-more-stats > summary { width: fit-content; cursor: pointer; }\n.ytab-more-stats[open] > summary { margin-bottom: 20px; }\n.ytab-more-stats > .ytab-metric-grid, .ytab-more-stats > .ytab-summary-facts { margin-top: 20px; }\n.ytab-more-stats .ytab-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }\n.ytab-more-stats .ytab-metric-value { font-size: 22px; }\n.ytab-chip-row, .ytab-btn-row, .ytab-url-group, .ytab-jump-nav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }\n.ytab-btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--z-line); border-radius: 5px; background: transparent; color: var(--z-ink); font-size: 12px; line-height: 1.4; font-weight: 600; text-decoration: none; cursor: pointer; }\n.ytab-btn:hover:not(:disabled) { background: var(--z-hover); }\n.ytab-btn-primary { background: var(--z-accent); border-color: var(--z-accent); color: var(--z-accent-text); }\n.ytab-btn-primary:hover:not(:disabled) { background: var(--z-accent-hover); border-color: var(--z-accent-hover); }\n.ytab-btn-danger { color: var(--z-danger); }\n.ytab-btn[data-armed=\"true\"] { color: var(--z-warning); border-color: var(--z-warning); }\n.ytab-btn:disabled { opacity: .5; cursor: default; }\n.ytab-btn-small { min-height: 34px; font-size: 12px; }\n.ytab-btn-ghost { border-color: transparent; color: var(--z-muted); }\n.ytab-pill { display: inline-block; font-size: 11px; line-height: 1.5; font-weight: 600; color: var(--z-muted); white-space: nowrap; }\n.ytab-pill[data-tone=\"success\"] { color: var(--z-success); }\n.ytab-pill[data-tone=\"info\"] { color: var(--z-info); }\n.ytab-pill[data-tone=\"warn\"] { color: var(--z-warning); }\n.ytab-pill[data-tone=\"danger\"] { color: var(--z-danger); }\n.ytab-toggle-list { display: grid; }\n.ytab-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 26px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--z-line); cursor: pointer; }\n.ytab-row:first-child { padding-top: 0; }\n.ytab-row:last-child { border-bottom: 0; }\n.ytab-row-label-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }\n.ytab-row-label { color: var(--z-ink); font-size: 14px; font-weight: 600; }\n.ytab-row-desc { max-width: 62ch; font-size: 12px; }\n.ytab-toggle { position: relative; display: inline-flex; flex-shrink: 0; width: 44px; height: 26px; }\n.ytab-toggle input { position: absolute; z-index: 1; inset: -7px -2px; width: 48px; height: 40px; margin: 0; opacity: 0; cursor: pointer; }\n.ytab-toggle-track { position: absolute; inset: 0; border: 1px solid var(--z-faint); border-radius: 20px; background: var(--z-line); pointer-events: none; }\n.ytab-toggle-track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--z-ink); transition: transform .12s; }\n.ytab-toggle input:checked + .ytab-toggle-track { background: var(--z-accent); border-color: var(--z-accent); }\n.ytab-toggle input:checked + .ytab-toggle-track::after { transform: translateX(18px); background: white; }\n.ytab-toggle input:focus-visible + .ytab-toggle-track { outline: 2px solid var(--z-focus); outline-offset: 4px; }\n.ytab-toggle input:disabled { cursor: default; }\n.ytab-toggle:has(input:disabled) { opacity: .4; }\n.ytab-field { display: grid; gap: 10px; min-width: 0; }\n.ytab-field-label { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; font-size: 13px; font-weight: 600; }\n.ytab-input, .ytab-blocklist-textarea { min-width: 0; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--z-faint); border-radius: 4px; background: var(--z-inset); color: var(--z-ink); font: 13px/1.5 var(--z-font); }\n.ytab-input::placeholder, .ytab-blocklist-textarea::placeholder { color: var(--z-faint); opacity: 1; }\n.ytab-input[aria-invalid=\"true\"] { border-color: var(--z-danger); }\n.ytab-search-input { min-height: 34px; padding: 7px 0; font-size: 12px; background: transparent; border: 0; border-bottom: 1px solid var(--z-line); border-radius: 0; }\n.ytab-url-group .ytab-input { flex: 1 1 250px; width: auto; }\n.ytab-blocklist-textarea { min-height: 92px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }\n.ytab-action-groups, .ytab-action-group { display: grid; gap: 16px; }\n.ytab-action-group + .ytab-action-group { border-top: 1px solid var(--z-line); padding-top: 24px; }\n.ytab-action-group-title, .ytab-detail-title { margin: 0; font-size: 14px; font-weight: 650; }\n.ytab-glance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }\n.ytab-summary-support { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }\n.ytab-detail-card { display: grid; gap: 12px; min-width: 0; }\n.ytab-note { display: grid; gap: 6px; padding: 12px 0 12px 14px; border: 0; border-left: 2px solid var(--z-line); background: transparent; }\n.ytab-note-title, .ytab-consent-title { margin: 0; font-size: 13px; font-weight: 650; }\n.ytab-note[data-tone=\"warn\"] .ytab-note-title { color: var(--z-warning); }\n.ytab-note[data-tone=\"danger\"] .ytab-note-title { color: var(--z-danger); }\n.ytab-note[data-tone=\"success\"] .ytab-note-title { color: var(--z-success); }\n.ytab-pause-card { gap: 10px; }\n.ytab-pause-card .ytab-note-text { font-size: 12px; }\n.ytab-consent-panel { display: grid; gap: 16px; border-top: 1px solid var(--z-line); padding-top: 24px; }\n.ytab-consent-card { display: grid; gap: 10px; }\n.ytab-consent-head { display: flex; align-items: start; justify-content: space-between; gap: 14px; }\n.ytab-consent-cache, .ytab-consent-hint, .ytab-blocklist-feedback { font-size: 12px; color: var(--z-warning); }\n.ytab-attribution { margin-top: 4px; font-size: 11px; color: var(--z-faint); overflow-wrap: anywhere; }\n.ytab-panel a { color: var(--z-ink); text-underline-offset: 3px; }\n.ytab-panel a.ytab-btn-primary { color: var(--z-accent-text); }\n.ytab-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 32px; border-top: 1px solid var(--z-line); font-size: 11px; color: var(--z-faint); }\n.ytab-footer-status { margin: 0; font-size: 11px; color: var(--z-muted); }\n.ytab-footer-meta { min-width: 0; }\n.ytab-footer-hint { display: none; }\n.ytab-footer-sync { flex-shrink: 0; font-size: 11px; }\n.ytab-toast-lane { min-height: 0; }\n.ytab-toast-region { display: grid; gap: 8px; position: fixed; right: 18px; bottom: 18px; z-index: 2147483647; width: min(360px, calc(100vw - 36px)); font: 13px/1.5 var(--z-font); color: var(--z-ink); pointer-events: none; }\n.ytab-toast { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 12px 16px; border: 1px solid var(--z-line); border-radius: 4px; background: var(--z-paper); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }\n.ytab-toast-visible { opacity: 1; transform: none; }\n.ytab-toast-tone { width: 6px; height: 6px; border-radius: 50%; background: var(--z-info); margin-top: 7px; }\n.ytab-toast-warn .ytab-toast-tone { background: var(--z-warning); }\n.ytab-toast-success .ytab-toast-tone { background: var(--z-success); }\n.ytab-toast-error .ytab-toast-tone { background: var(--z-danger); }\n.ytab-toast-title { font-size: 12px; font-weight: 650; }\n.ytab-toast-message { font-size: 12px; }\n.ytab-panel .ytab-toast-region { position: static; width: auto; padding: 12px 28px 0; }\n.ytab-panel .ytab-toast-region:empty { display: none; }\n.ytab-panel .ytab-toast { padding: 0; border: 0; background: transparent; }\n.ytab-panel .ytab-toast-title { display: none; }\n.ytab-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: ytab-spin .6s linear infinite; }\n@keyframes ytab-spin { to { transform: rotate(360deg); } }\n.ytab-topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-top: 3px solid var(--z-accent); border-bottom: 1px solid var(--z-line); }\n.ytab-shortcut-hint { margin-left: auto; margin-right: 14px; font: 11px/1.4 var(--z-font); color: var(--z-faint); }\n.ytab-topbar .ytab-close { margin-left: 0; }\n.ytab-panel[data-searching=\"false\"] .ytab-section-head .ytab-section-title { display: none; }\n.ytab-summary-actions { display: grid; gap: 0; }\n.ytab-home-link { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding: 15px 0; border: 0; border-bottom: 1px solid var(--z-line); background: transparent; text-align: left; color: var(--z-ink); cursor: pointer; }\n.ytab-home-link:first-child { border-top: 1px solid var(--z-line); }\n.ytab-home-link > span:first-child { display: grid; gap: 3px; }\n.ytab-home-link strong { font-size: 14px; font-weight: 600; }\n.ytab-home-link > span:first-child > span { color: var(--z-muted); font-size: 12px; }\n.ytab-home-link > span:last-child { color: var(--z-accent); font-size: 21px; }\n.ytab-home-link:hover strong { text-decoration: underline; text-underline-offset: 3px; }\n.ytab-home-tools { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }\n.ytab-text-action { min-height: 32px; appearance: none; padding: 3px 0; border: 0; background: transparent; color: var(--z-muted); text-align: left; font: 12px/1.5 var(--z-font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }\n.ytab-text-action:hover { color: var(--z-ink); }\n.ytab-text-action:disabled { opacity: .5; cursor: default; }\n.ytab-home-details { border-top: 1px solid var(--z-line); padding-top: 16px; color: var(--z-muted); font-size: 12px; }\n.ytab-home-details > summary { cursor: pointer; width: fit-content; }\n.ytab-home-details[open] > summary { margin-bottom: 14px; }\n.ytab-home-details .ytab-pause-card { padding: 0; border: 0; }\n@media (max-width: 760px) {\n    .ytab-overlay { padding: 12px; }\n    .ytab-settings-shell { grid-template-columns: 150px minmax(0, 1fr); }\n    .ytab-settings-nav { padding-inline: 8px; }\n    .ytab-nav-button { padding-inline: 10px; font-size: 12px; }\n    .ytab-layout { padding: 12px 24px 24px; }\n    .ytab-header { padding: 24px 24px 12px; }\n    .ytab-footer { padding-inline: 24px; }\n    .ytab-panel .ytab-toast-region { padding-inline: 24px; }\n}\n@media (max-width: 560px) {\n    .ytab-overlay { padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); }\n    .ytab-panel { border-radius: 6px; height: 100%; }\n    .ytab-topbar { padding: 12px 16px; }\n    .ytab-shortcut-hint { display: none; }\n    .ytab-topbar .ytab-close { margin-left: auto; }\n    .ytab-settings-shell { display: flex; flex-direction: column; }\n    .ytab-settings-nav { flex: 0 0 auto; padding: 4px 8px 0; border-right: 0; border-bottom: 1px solid var(--z-line); }\n    .ytab-nav-list { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 4px; }\n    .ytab-nav-button { width: auto; flex: 0 0 auto; min-height: 38px; padding: 9px; font-size: 12px; }\n    .ytab-nav-button[data-section-id] { margin-top: 0; }\n    .ytab-nav-button[aria-current=\"page\"] { box-shadow: inset 0 -2px var(--z-accent); }\n    .ytab-nav-meta { display: none; }\n    .ytab-main-column { flex: 1; }\n    .ytab-header { padding: 20px 18px 8px; }\n    .ytab-title { font-size: 30px; }\n    .ytab-header-search { width: 100%; }\n    .ytab-brand { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 8px; }\n    .ytab-layout { padding: 12px 18px 24px; }\n    .ytab-summary-hero { gap: 14px; padding: 14px 0; }\n    .ytab-summary-facts, .ytab-glance-grid { grid-template-columns: 1fr; gap: 12px; }\n    .ytab-summary-facts .ytab-glance { grid-template-columns: 90px minmax(0, 1fr); column-gap: 12px; }\n    .ytab-summary-facts .ytab-glance-detail { grid-column: 2; }\n    .ytab-metric-grid, .ytab-more-stats .ytab-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }\n    .ytab-summary-support { grid-template-columns: 1fr; }\n    .ytab-section-title { font-size: 25px; }\n    .ytab-row { gap: 14px; }\n    .ytab-btn-row { align-items: stretch; }\n    .ytab-btn-row > .ytab-btn { flex: 1 1 auto; }\n    .ytab-footer { padding: 10px 18px; }\n    .ytab-footer-sync { display: none; }\n    .ytab-panel .ytab-toast-region { padding: 10px 18px 0; }\n}\n@media (prefers-reduced-motion: reduce) {\n    .ytab-overlay, .ytab-toast, .ytab-section-chevron, .ytab-toggle-track::after { transition: none; }\n    .ytab-spinner { animation: none; }\n}\n\n/* Visible page entry point; shared tokens and canonical logo are embedded locally. */\n.ytab-launcher {\n    appearance: none; display: inline-flex; align-items: center; justify-content: center;\n    gap: 7px; flex: 0 0 auto; height: 36px; margin: 0 8px 0 0; padding: 0 12px;\n    border: 1px solid var(--z-line); border-radius: 6px; background: var(--z-paper);\n    color: var(--z-ink); font: 600 12px/1 var(--z-font); letter-spacing: normal;\n    text-transform: none; cursor: pointer; box-sizing: border-box;\n}\n.ytab-launcher:hover { background: var(--z-hover); }\n.ytab-launcher:focus-visible { outline: 2px solid var(--z-focus); outline-offset: 3px; }\n.ytab-launcher-mark { width: 22px; height: 22px; flex: 0 0 22px; background: var(--z-logo) center / contain no-repeat; }\n\n.ytab-launcher-status { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--z-success); }\n.ytab-launcher[data-status=\"paused\"] .ytab-launcher-status { background: var(--z-faint); }\n.ytab-launcher[data-status=\"attention\"] .ytab-launcher-status { background: var(--z-warning); }\n.ytab-feature-row { display: grid; grid-template-columns: minmax(0, 1fr) 40px; align-items: center; gap: 8px; border-bottom: 1px solid var(--z-line); }\n.ytab-feature-row:last-child { border-bottom: 0; }\n.ytab-feature-row > .ytab-row { min-width: 0; padding: 17px 0; border: 0; gap: 12px; }\n.ytab-favorite-button { appearance: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 6px; color: var(--z-muted); background: transparent; font-size: 22px; cursor: pointer; }\n.ytab-favorite-button:hover { background: var(--z-hover); }\n.ytab-favorite-button[aria-pressed=\"true\"] { color: var(--z-focus); }\n.ytab-favorites { min-width: 0; }\n.ytab-favorites h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--z-ink); }\n\n.ytab-technical-details { grid-column: 1 / -1; margin-top: -6px; padding-bottom: 14px; font-size: 12px; color: var(--z-muted); }\n.ytab-technical-details > summary, .ytab-diagnostics-review > summary { width: fit-content; cursor: pointer; }\n.ytab-technical-details > p { margin: 8px 0 0; line-height: 1.55; overflow-wrap: anywhere; }\n.ytab-diagnostics-review { margin-top: 12px; color: var(--z-muted); font-size: 12px; }\n.ytab-diagnostics-review textarea { margin-top: 10px; min-height: 180px; }\n.ytab-recovery-help > .ytab-btn { justify-self: start; margin-top: 6px; }\n";
         ensureStyleElement(`${CSS_PREFIX}-ui`).textContent = css;
     }
 
@@ -6824,6 +6837,37 @@
         return container;
     }
 
+    function getRecoveryAdvice() {
+        if (Object.values(state.engineHealth || {}).some(value => value !== 'ok')) {
+            return {title:'Some page filters could not start', detail:'Reload YouTube. If the problem returns, pause this tab and share a diagnostic report.', action:'reload'};
+        }
+        if (state.filterError) {
+            return {title:'Rules could not be updated', detail:'Your current rules remain available. Retry the update; if it still fails, download a diagnostic report.', action:'refresh'};
+        }
+        if (getInjectionTimingStatus().likelyLate) {
+            return {title:'Zynubo started after the page loaded', detail:'Check that your manager or extension is enabled, then reload YouTube. Userscript managers may also need Allow User Scripts enabled.', action:'reload'};
+        }
+        return null;
+    }
+
+    function createRecoveryHelp() {
+        const advice = getRecoveryAdvice();
+        if (!advice) return null;
+        const note = createNote(advice.title, advice.detail, 'warn');
+        note.classList.add(`${CSS_PREFIX}-recovery-help`);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-small`;
+        button.textContent = advice.action === 'refresh' ? 'Retry rule update' : 'Reload YouTube';
+        button.addEventListener('click', async () => {
+            if (advice.action === 'reload') { location.reload(); return; }
+            button.disabled = true;
+            try { await fetchFilters(true); } finally { button.disabled = false; }
+        });
+        note.appendChild(button);
+        return note;
+    }
+
     function createOverviewSection(query = '') {
         if (query && !matchesSettingsQuery(
             query,
@@ -6987,7 +7031,8 @@
         const pauseLabel = document.createElement('summary');
         pauseLabel.textContent = isPaused() ? 'Paused on this tab' : 'Pause on this tab';
         pauseDetails.append(pauseLabel, createRecoveryPauseCard());
-        const notes = [injectionNote, healthNote, ssaiNote].filter(Boolean);
+        const recoveryHelp = createRecoveryHelp();
+        const notes = recoveryHelp ? [recoveryHelp, ssaiNote].filter(Boolean) : [injectionNote, healthNote, ssaiNote].filter(Boolean);
         surface.append(hero, ...notes, createFavoriteSettings(query), actions, toolActions, pauseDetails, moreStats);
         section.appendChild(surface);
         return section;
@@ -7245,7 +7290,8 @@
             group.description,
             feat.key,
             feat.label,
-            feat.desc
+            feat.desc,
+            feat.technical || ''
         ));
         if (!visibleFeatures.length) return null;
         const enabledCount = visibleFeatures.filter(feat => state.features[feat.key] !== false).length;
@@ -7781,6 +7827,10 @@
         helpEl.textContent = help;
         const ta = document.createElement('textarea');
         ta.className = `${CSS_PREFIX}-blocklist-textarea`;
+        ta.id = `${CSS_PREFIX}-input-${storageKey}`;
+        label.htmlFor = ta.id;
+        helpEl.id = `${ta.id}-help`;
+        ta.setAttribute('aria-describedby', `${helpEl.id} ${ta.id}-feedback`);
         ta.rows = 4;
         ta.spellcheck = false;
         ta.value = String(getSetting(storageKey, ''));
@@ -7789,6 +7839,7 @@
         // rejected and why instead of failing silently.
         const feedback = document.createElement('p');
         feedback.className = `${CSS_PREFIX}-field-help ${CSS_PREFIX}-blocklist-feedback`;
+        feedback.id = `${ta.id}-feedback`;
         feedback.setAttribute('role', 'status');
         feedback.hidden = true;
         const channelOptions = storageKey === 'keyword_blocklist' ? undefined : { channel: true };
@@ -7833,6 +7884,9 @@
         payload.className = `${CSS_PREFIX}-blocklist-textarea`;
         payload.rows = 5;
         payload.spellcheck = false;
+        payload.id = `${CSS_PREFIX}-import-payload`;
+        payload.setAttribute('aria-label', 'Settings to import or export');
+        payload.setAttribute('aria-describedby', `${CSS_PREFIX}-import-preview`);
         payload.placeholder = STRINGS.ui.blocklist.importPlaceholder;
 
         const actions = document.createElement('div');
@@ -7865,6 +7919,7 @@
         // in-session undo restores the pre-import snapshot.
         const importPreview = document.createElement('p');
         importPreview.className = `${CSS_PREFIX}-field-help ${CSS_PREFIX}-import-preview`;
+        importPreview.id = `${CSS_PREFIX}-import-preview`;
         importPreview.setAttribute('role', 'status');
         importPreview.hidden = true;
 
@@ -7872,7 +7927,7 @@
         undoImport.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
         undoImport.type = 'button';
         undoImport.textContent = STRINGS.ui.blocklist.importUndo;
-        undoImport.hidden = true;
+        undoImport.hidden = !hasUndoableImport();
 
         const importJson = document.createElement('button');
         importJson.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-primary`;
@@ -7901,19 +7956,20 @@
         }
 
         importJson.addEventListener('click', () => {
-            if (!pendingImport || pendingImport.raw !== payload.value) {
+            if (!pendingImport || pendingImport.raw !== payload.value || Date.now() > pendingImport.expiresAt) {
                 const preview = importSettingsPayload(payload.value, 'json-preview');
                 if (!preview.ok) {
                     resetImportPreview();
                     showToast(preview.error, 'error');
                     return;
                 }
-                pendingImport = { raw: payload.value };
+                pendingImport = { raw: payload.value, armedAt: Date.now(), expiresAt: Date.now() + 30000 };
                 importPreview.textContent = describeDiff(preview.diff, preview.unknown);
                 importPreview.hidden = false;
                 importJson.textContent = STRINGS.ui.blocklist.importConfirm;
                 return;
             }
+            if (Date.now() - pendingImport.armedAt < 350) return;
             const result = importSettingsPayload(payload.value, 'json');
             resetImportPreview();
             if (!result.ok) {
@@ -7926,6 +7982,13 @@
             refreshSettingsUI(true);
             undoImport.hidden = !hasUndoableImport();
             showToast(STRINGS.ui.blocklist.importedSettings(result.count), 'success');
+        });
+
+        importJson.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !pendingImport) return;
+            event.preventDefault();
+            event.stopPropagation();
+            resetImportPreview();
         });
 
         undoImport.addEventListener('click', () => {
@@ -7948,29 +8011,41 @@
         importText.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
         importText.type = 'button';
         importText.textContent = STRINGS.ui.blocklist.importChannelText;
-        importText.addEventListener('click', () => {
-            const result = importSettingsPayload(payload.value, 'text');
-            loadState();
-            refreshSettingsUI(true);
-            showToast(result.ok ? STRINGS.ui.blocklist.channelBlocklistImported : result.error, result.ok ? 'success' : 'error');
+        const cancelTextImport = attachArmedAction(importText, {
+            idleLabel: STRINGS.ui.blocklist.importChannelText,
+            armedLabel: 'Replace channel list — confirm',
+            getSignature: () => payload.value,
+            onConfirm() {
+                const result = importSettingsPayload(payload.value, 'text');
+                loadState();
+                refreshSettingsUI(true);
+                showToast(result.ok ? STRINGS.ui.blocklist.channelBlocklistImported : result.error, result.ok ? 'success' : 'error');
+            }
         });
+        payload.addEventListener('input', cancelTextImport);
 
         const importMigration = document.createElement('button');
         importMigration.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
         importMigration.type = 'button';
         importMigration.textContent = STRINGS.ui.blocklist.importMigration;
-        importMigration.addEventListener('click', () => {
-            const result = importSettingsPayload(payload.value, 'migration');
-            if (!result.ok) {
+        const cancelMigrationImport = attachArmedAction(importMigration, {
+            idleLabel: STRINGS.ui.blocklist.importMigration,
+            armedLabel: 'Merge lists and enable filters — confirm',
+            getSignature: () => payload.value,
+            onConfirm() {
+                const result = importSettingsPayload(payload.value, 'migration');
+                if (!result.ok) {
+                    if (result.rejected && result.rejected.length) payload.value = STRINGS.ui.blocklist.rejectedEntries(result.rejected);
+                    showToast(result.error, 'error');
+                    return;
+                }
+                loadState();
+                refreshSettingsUI(true);
                 if (result.rejected && result.rejected.length) payload.value = STRINGS.ui.blocklist.rejectedEntries(result.rejected);
-                showToast(result.error, 'error');
-                return;
+                showToast(STRINGS.ui.blocklist.migrationImported(result.channels, result.keywords, result.rejected && result.rejected.length), 'success');
             }
-            loadState();
-            refreshSettingsUI(true);
-            if (result.rejected && result.rejected.length) payload.value = STRINGS.ui.blocklist.rejectedEntries(result.rejected);
-            showToast(STRINGS.ui.blocklist.migrationImported(result.channels, result.keywords, result.rejected && result.rejected.length), 'success');
         });
+        payload.addEventListener('input', cancelMigrationImport);
 
         actions.append(copyJson, copyText, importJson, importText, importMigration, undoImport);
         wrap.append(payload, importPreview, actions);
@@ -7993,6 +8068,8 @@
         function makeInput(key, placeholder) {
             const inp = document.createElement('input');
             inp.type = 'number';
+            inp.id = `${CSS_PREFIX}-${key}`;
+            inp.setAttribute('aria-label', key === 'duration_min' ? 'Minimum video length in seconds' : 'Maximum video length in seconds');
             inp.min = '0';
             inp.placeholder = placeholder;
             inp.className = `${CSS_PREFIX}-input`;
@@ -8090,8 +8167,23 @@
         copyBtn.textContent = STRINGS.ui.diagnosticsSection.copyDiagnostics;
         copyBtn.addEventListener('click', copyDiagnosticsToClipboard);
         const issuesLink = createExternalLinkButton(ISSUES_URL, STRINGS.ui.diagnosticsSection.openIssues, `${CSS_PREFIX}-btn-ghost`);
-        diagnosticsActions.append(copyBtn, issuesLink);
-        diagnosticsGroup.appendChild(diagnosticsActions);
+        const download = document.createElement('button');
+        download.type = 'button';
+        download.id = `${CSS_PREFIX}-download-diagnostics`;
+        download.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
+        download.textContent = 'Download report';
+        download.addEventListener('click', downloadDiagnosticsReport);
+        diagnosticsActions.append(copyBtn, download, issuesLink);
+        const review = document.createElement('details');
+        review.className = `${CSS_PREFIX}-diagnostics-review`;
+        const reviewLabel = document.createElement('summary'); reviewLabel.textContent = 'Review the report';
+        const preview = document.createElement('textarea');
+        preview.className = `${CSS_PREFIX}-blocklist-textarea`;
+        preview.readOnly = true;
+        preview.setAttribute('aria-label', 'Redacted diagnostic report');
+        review.addEventListener('toggle', () => { if (review.open) preview.value = buildDiagnosticsReport(); });
+        review.append(reviewLabel, preview);
+        diagnosticsGroup.append(diagnosticsActions, review);
 
         const recoveryGroup = createActionGroup(
             STRINGS.ui.diagnosticsSection.resetLocalState,
@@ -8140,6 +8232,8 @@
                 showToast(STRINGS.ui.diagnosticsSection.defaultsRestored, 'success');
             }
         });
+        const recoveryHelp = createRecoveryHelp();
+        if (recoveryHelp) recoveryGroup.appendChild(recoveryHelp);
         recoveryActions.append(resetStats, restore);
         recoveryGroup.appendChild(recoveryActions);
 
@@ -8543,13 +8637,23 @@
             if (saved[feature.key]) delete saved[feature.key];
             else saved[feature.key] = true;
             if (!setSetting('favorite_features', saved)) {
-                showToast('Could not save favorites.', 'warn');
+                showToast('Could not save favorites. Check browser storage permissions, then try again.', 'warn');
                 return;
             }
             refreshSettingsUI(true);
             (document.getElementById(favorite.id) || document.getElementById(`${CSS_PREFIX}-master-toggle`))?.focus();
         });
         wrapper.append(row, favorite);
+        if (feature.technical) {
+            const details = document.createElement('details');
+            details.className = `${CSS_PREFIX}-technical-details`;
+            details.open = !!state.settingsQuery && matchesSettingsQuery(state.settingsQuery, feature.key, feature.technical);
+            const summary = document.createElement('summary'); summary.textContent = 'Technical details';
+            summary.setAttribute('aria-label', `Technical details: ${feature.label}`);
+            const body = document.createElement('p'); body.textContent = feature.technical;
+            details.append(summary, body);
+            wrapper.appendChild(details);
+        }
         return wrapper;
     }
 
@@ -8604,7 +8708,13 @@
 
     function getFocusableElements(root) {
         return [...root.querySelectorAll('button, [href], input, textarea, select, summary, [tabindex]:not([tabindex="-1"])')]
-            .filter(el => !(el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') && el.getClientRects().length > 0);
+            .filter(el => {
+                if (el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true' || !el.getClientRects().length) return false;
+                for (let parent = el.parentElement; parent && parent !== root; parent = parent.parentElement) {
+                    if (parent.tagName === 'DETAILS' && !parent.open && !parent.querySelector('summary')?.contains(el)) return false;
+                }
+                return true;
+            });
     }
 
     function handleDialogKeydown(event) {
@@ -8637,8 +8747,10 @@
         }
     }
 
-    function attachArmedAction(button, { idleLabel, armedLabel, onConfirm, timeout = 3200 }) {
+    function attachArmedAction(button, { idleLabel, armedLabel, onConfirm, timeout = 10000, getSignature = () => '' }) {
         let armed = false;
+        let armedAt = 0;
+        let signature = '';
         let timer = null;
 
         const reset = () => {
@@ -8654,8 +8766,10 @@
         button.textContent = idleLabel;
         button.dataset.armed = 'false';
         button.addEventListener('click', () => {
-            if (!armed) {
+            if (!armed || Date.now() - armedAt > timeout || signature !== getSignature()) {
                 armed = true;
+                armedAt = Date.now();
+                signature = getSignature();
                 button.dataset.armed = 'true';
                 button.textContent = armedLabel;
                 showToast(STRINGS.ui.armedAction(idleLabel), 'warn');
@@ -8663,9 +8777,18 @@
                 return;
             }
 
+            // A double-click must not accidentally confirm a destructive action.
+            if (Date.now() - armedAt < 350) return;
             reset();
             onConfirm();
         });
+        button.addEventListener('blur', reset);
+        button.addEventListener('keydown', event => {
+            if (armed && event.key === 'Escape') {
+                event.preventDefault(); event.stopPropagation(); reset();
+            }
+        });
+        return reset;
     }
 
     // Features whose on/off state directly changes the cosmetic stylesheet.
@@ -8708,7 +8831,11 @@
     function setFeatureEnabled(key, checked, label) {
         const overrides = getFeatureOverrides();
         overrides[key] = checked;
-        setSetting('feature_overrides', overrides);
+        if (!setSetting('feature_overrides', overrides)) {
+            refreshSettingsUI(true);
+            showToast('This option could not be saved. Check browser storage permissions, then try again.', 'warn');
+            return;
+        }
         state.features[key] = checked;
         if (COSMETIC_AFFECTING_FEATURES.has(key)) {
             updateCosmeticCSS();
@@ -8745,8 +8872,12 @@
     }
 
     function setScriptEnabled(enabled) {
+        if (!setSetting('enabled', enabled)) {
+            refreshSettingsUI(true);
+            showToast('The change could not be saved. Check browser storage permissions, then try again.', 'warn');
+            return;
+        }
         state.enabled = enabled;
-        setSetting('enabled', enabled);
         updateCosmeticCSS();
         updateClutterCSS();
         refreshSettingsUI(true);
@@ -8784,8 +8915,10 @@
             await navigator.clipboard.writeText(text);
             return true;
         } catch (e) {
+            const previousFocus = document.activeElement;
+            let textarea;
             try {
-                const textarea = document.createElement('textarea');
+                textarea = document.createElement('textarea');
                 textarea.value = text;
                 textarea.setAttribute('readonly', 'true');
                 textarea.style.position = 'fixed';
@@ -8793,12 +8926,30 @@
                 textarea.style.left = '-9999px';
                 document.body.appendChild(textarea);
                 textarea.select();
-                const copied = document.execCommand('copy');
-                textarea.remove();
-                return copied;
+                return document.execCommand('copy');
             } catch (err) {
                 return false;
+            } finally {
+                textarea?.remove();
+                if (previousFocus?.isConnected) previousFocus.focus({preventScroll:true});
             }
+        }
+    }
+
+    async function downloadDiagnosticsReport() {
+        if (IS_EXTENSION_BUILD) await refreshDnrDiagnostics();
+        let objectUrl;
+        try {
+            objectUrl = URL.createObjectURL(new Blob([buildDiagnosticsReport()], {type:'text/plain;charset=utf-8'}));
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = `${SCRIPT_NAME}-diagnostics-v${SCRIPT_VERSION}.txt`;
+            document.body.appendChild(link); link.click(); link.remove();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 30000);
+            showToast('Diagnostic report downloaded. Review it before sharing.', 'success');
+        } catch (e) {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            showToast('Download was blocked. Use Copy Diagnostics or Review the report instead.', 'warn');
         }
     }
 
@@ -8841,16 +8992,27 @@
         return list.map(item => `${item.name}=${item.count}`).join(', ');
     }
 
-    function redactUrl(url) {
-        if (!url || typeof url !== 'string') return url;
-        return url
-            .replace(/([?&])v=[^&#]+/g, '$1v=[video-id]')
-            .replace(/\/shorts\/[^/?#]+/g, '/shorts/[video-id]')
-            .replace(/[?][^#]*/g, (match) => {
-                if (/^\?v=\[video-id\]$/.test(match)) return match;
-                if (/^\?v=\[video-id\]&/.test(match)) return '?v=[video-id]';
-                return '?[redacted]';
-            });
+    function redactUrl(value) {
+        if (!value || typeof value !== 'string') return '';
+        try {
+            const bareHost = /^[\w.-]+\.[A-Za-z]{2,}\//.test(value);
+            const url = new URL(bareHost ? `https://${value}` : value, location.href);
+            if (!/(^|\.)(youtube\.com|youtube-nocookie\.com|youtubekids\.com)$/.test(url.hostname)) return '[external URL]';
+            const known = /^\/(?:watch|shorts|results|playlist|feed|channel|live_chat|live_chat_replay)(?:\/|$)/.exec(url.pathname)?.[0].replace(/\/$/, '') || '';
+            let path = known || (/^\/youtubei\/v1\/[a-z_]+$/.test(url.pathname) ? url.pathname : '/[page]');
+            if (path === '/shorts') path += '/[video-id]';
+            if (path === '/channel') path += '/[channel-id]';
+            if (['/', '/feed/trending'].includes(url.pathname)) path = url.pathname;
+            if (path === '/watch' && url.searchParams.has('v')) path += '?v=[video-id]';
+            return (/^https?:\/\//.test(value) || bareHost ? url.hostname : '') + path;
+        } catch (e) { return '[URL omitted]'; }
+    }
+
+    function diagnosticBrowserHint() {
+        const ua = typeof navigator !== 'undefined' ? String(navigator.userAgent || '') : '';
+        const browser = /(?:Firefox|Edg|Chrome)\/\d+/.exec(ua)?.[0] || 'Unknown browser';
+        const os = /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';
+        return `${browser} / ${os}`;
     }
 
     function sanitizeDnrDiagnostics(value) {
@@ -9051,7 +9213,7 @@
             ? [...state.trappedRoots].join(', ')
             : STRINGS.common.none;
         const coverage = sanitizeFilterCoverage(state.filters?.coverage);
-        const uaHint = typeof navigator !== 'undefined' ? (navigator.userAgent || STRINGS.common.unknown) : STRINGS.common.unknown;
+        const uaHint = diagnosticBrowserHint();
         const injectionStatus = getInjectionTimingStatus();
         return [
             `${SCRIPT_NAME} v${SCRIPT_VERSION}`,
@@ -9067,15 +9229,15 @@
             `${report.protectionEnabled}: ${isEnabled()}`,
             `${report.filterSource}: ${getFilterSourceLabel()}`,
             `${report.filterIntegrity}: ${getFilterIntegrityLabel()}`,
-            `${report.filterIntegrityDetail}: ${state.filterIntegrityMessage || STRINGS.common.none}`,
-            `${report.filterUrl}: ${redactUrl(resolveFilterUrl())}`,
-            `${report.filterVersion}: ${state.filters?.version || STRINGS.common.unknown}`,
+            `${report.filterIntegrityDetail}: ${getFilterIntegrityLabel()}`,
+            `${report.filterUrl}: ${isDefaultFilterUrl() ? 'Default signed source' : '[custom source omitted]'}`,
+            `${report.filterVersion}: ${isDefaultFilterUrl() && /^[0-9.\-]{1,40}$/.test(String(state.filters?.version || '')) ? state.filters.version : '[version omitted]'}`,
             `${report.lastSync}: ${state.lastFilterUpdate ? new Date(state.lastFilterUpdate).toISOString() : STRINGS.common.never}`,
-            `${report.lastError}: ${state.filterError || STRINGS.common.none}`,
+            `${report.lastError}: ${state.filterError ? 'Rule refresh failed; current rules retained' : STRINGS.common.none}`,
             `${report.rulesActive}: ${getRuleCount()}`,
             `${report.pruneKeys}: ${(state.filters?.pruneKeys || []).length}`,
             `${report.cosmeticSelectors}: ${(state.filters?.cosmeticSelectors || []).length}`,
-            `${report.interceptPatterns}: ${(state.filters?.interceptPatterns || []).join(' · ') || STRINGS.common.none}`,
+            `${report.interceptPatterns}: ${DEFAULT_FILTERS.interceptPatterns.filter(pattern => (state.filters?.interceptPatterns || []).includes(pattern)).join(' · ') || STRINGS.common.none} (custom patterns omitted)`,
             `${report.appliedSelectors}: ${coverage.appliedSelectors}`,
             `${report.appliedPrunePaths}: ${coverage.appliedPrunePaths}`,
             `${report.networkOnlyRules}: ${coverage.networkOnlyRules}`,
@@ -9092,10 +9254,10 @@
             `${report.communityCache}: ${Object.entries(getCommunityCacheStatus()).map(([name, info]) => `${name}=${info.entries}`).join(', ')}`,
             `${report.communityApiCooldown}: ${Object.entries(getApiCooldownStatus()).map(([k, v]) => `${k}=${v}`).join(', ')}`,
             `${report.webpackSignatureSource}: ${state.webpackSignatureSource || STRINGS.common.unknown}`,
-            `${report.webpackSignatureVersion}: ${state.webpackSignatureVersion || STRINGS.common.unknown}`,
+            `${report.webpackSignatureVersion}: ${/^[0-9.\-]{1,40}$/.test(String(state.webpackSignatureVersion || '')) ? state.webpackSignatureVersion : '[version omitted]'}`,
             `${report.webpackSignatureTokens}: ${(state.webpackSignatureDatabase?.tokens || []).length}`,
             `${report.webpackSignatureIntegrity}: ${state.webpackSignatureIntegrity || STRINGS.common.unknown}`,
-            `${report.webpackSignatureError}: ${state.webpackSignatureError || STRINGS.common.none}`,
+            `${report.webpackSignatureError}: ${state.webpackSignatureError ? 'Signature refresh failed' : STRINGS.common.none}`,
             `${report.channelBlockEntries}: ${parseBlocklist(getSetting('channel_blocklist', ''), { channel: true }).length}`,
             `${report.keywordBlockEntries}: ${parseBlocklist(getSetting('keyword_blocklist', '')).length}`,
             `${report.adAllowEntries}: ${parseBlocklist(getSetting('ad_allowlist', ''), { channel: true }).length}`,
@@ -9106,7 +9268,7 @@
             `${report.stats}: blocked=${state.stats.blocked}, pruned=${state.stats.pruned}, ssapSkipped=${state.stats.ssapSkipped}, sponsorSkipped=${state.stats.sponsorSkipped}, ssaiDetected=${state.stats.ssaiDetected || 0}`,
             `${report.enabledFeatures}: ${enabledFeatures}`,
             `${report.disabledFeatures}: ${disabledFeatures}`
-        ].join('\n');
+        ].map(line => line.replace(/[\r\n\u0000-\u001f]/g, ' ').slice(0, 768)).join('\n').slice(0, 16384);
     }
 
     function handleExtensionSettingsSync(event) {

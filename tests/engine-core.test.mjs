@@ -164,6 +164,7 @@ function createTestHarness(options = {}) {
         applyOriginalAudioTrack,
         getInjectionTimingStatus,
         buildDiagnosticsReport,
+        getRecoveryAdvice,
         sanitizeDnrDiagnostics,
         formatDnrDiagnosticsReport,
         getDnrDiagnosticsPresentation,
@@ -606,13 +607,13 @@ test('redactUrl removes video IDs from Shorts URLs', () => {
 test('redactUrl strips query strings from custom filter URLs', () => {
     const result = harness.redactUrl('https://example.com/filters.txt?token=secret123');
     assert.doesNotMatch(result, /secret123/);
-    assert.match(result, /\[redacted\]/);
+    assert.equal(result, '[external URL]');
 });
 
 test('redactUrl strips query strings from SSAI URLs', () => {
     const result = harness.redactUrl('https://rr1.googlevideo.com/videoplayback?id=abc&itag=140');
     assert.doesNotMatch(result, /abc/);
-    assert.match(result, /\[redacted\]/);
+    assert.equal(result, '[external URL]');
 });
 
 test('redactUrl preserves benign paths without video IDs', () => {
@@ -2376,4 +2377,28 @@ test('iframe bridging never assigns APIs to live or replay chat frames', () => {
         h.bridgeIframeWindow({src:'about:blank',contentWindow:cw});
         assert.equal(cw.fetch,nativeFetch);
     }
+});
+
+
+test('diagnostic export omits private source data, raw errors and browsing identifiers', () => {
+    const h=createTestHarness({storage:{ytab_filter_url:'https://person@example.com/private-filter?token=secret123',ytab_channel_blocklist:'Private Person',ytab_keyword_blocklist:'Private Keyword'}});
+    h.state.filterError='secret123 person@example.com /Users/Private Person/file';
+    h.state.filterIntegrityMessage='secret123'; h.state.webpackSignatureError='secret123';
+    h.state.ssaiLastUrl='https://www.youtube.com/channel/SECRET_CHANNEL?token=secret123';
+    h.state.filters={version:'secret123',interceptPatterns:['/private/secret123'],pruneKeys:[],cosmeticSelectors:[]};
+    const report=h.buildDiagnosticsReport();
+    assert(report.length<=16384);
+    for (const secret of ['secret123','person@example.com','Private Person','Private Keyword','SECRET_CHANNEL']) assert.equal(report.includes(secret),false,secret);
+    assert.match(report,/Rule refresh failed/);
+});
+
+test('recovery advice gives bounded actions for rule, engine and startup failures', () => {
+    const h=createTestHarness({documentReadyState:'loading'});
+    h.state.engineHealth = {};
+    assert.equal(h.getRecoveryAdvice(),null);
+    h.state.filterError='raw error';
+    assert.equal(h.getRecoveryAdvice().action,'refresh');
+    h.state.engineHealth.FetchProxy='failed';
+    assert.equal(h.getRecoveryAdvice().action,'reload');
+    assert.equal(JSON.stringify(h.getRecoveryAdvice()).includes('raw error'),false);
 });

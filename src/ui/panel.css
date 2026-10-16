@@ -41,7 +41,7 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-title-row { min-width: 0; }
 .ytab-title { margin: 0; font: 400 38px/1.1 var(--z-display-font); letter-spacing: -1.3px; }
 .ytab-header-search { width: min(200px, 46%); flex-shrink: 0; }
-.ytab-close { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--z-muted); font-size: 25px; line-height: 1; cursor: pointer; }
+.ytab-close { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--z-muted); font-size: 25px; line-height: 1; cursor: pointer; }
 .ytab-close:hover { color: var(--z-ink); background: var(--z-hover); }
 .ytab-content { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--z-line) transparent; scroll-padding-top: 24px; }
 .ytab-layout { padding: 16px 32px 32px; display: grid; gap: 36px; }
@@ -111,7 +111,7 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-toggle:has(input:disabled) { opacity: .4; }
 .ytab-field { display: grid; gap: 10px; min-width: 0; }
 .ytab-field-label { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; font-size: 13px; font-weight: 600; }
-.ytab-input, .ytab-blocklist-textarea { min-width: 0; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--z-line); border-radius: 4px; background: var(--z-inset); color: var(--z-ink); font: 13px/1.5 var(--z-font); }
+.ytab-input, .ytab-blocklist-textarea { min-width: 0; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--z-faint); border-radius: 4px; background: var(--z-inset); color: var(--z-ink); font: 13px/1.5 var(--z-font); }
 .ytab-input::placeholder, .ytab-blocklist-textarea::placeholder { color: var(--z-faint); opacity: 1; }
 .ytab-input[aria-invalid="true"] { border-color: var(--z-danger); }
 .ytab-search-input { min-height: 34px; padding: 7px 0; font-size: 12px; background: transparent; border: 0; border-bottom: 1px solid var(--z-line); border-radius: 0; }
@@ -171,7 +171,7 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-home-link > span:last-child { color: var(--z-accent); font-size: 21px; }
 .ytab-home-link:hover strong { text-decoration: underline; text-underline-offset: 3px; }
 .ytab-home-tools { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
-.ytab-text-action { appearance: none; padding: 3px 0; border: 0; background: transparent; color: var(--z-muted); text-align: left; font: 12px/1.5 var(--z-font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ytab-text-action { min-height: 32px; appearance: none; padding: 3px 0; border: 0; background: transparent; color: var(--z-muted); text-align: left; font: 12px/1.5 var(--z-font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .ytab-text-action:hover { color: var(--z-ink); }
 .ytab-text-action:disabled { opacity: .5; cursor: default; }
 .ytab-home-details { border-top: 1px solid var(--z-line); padding-top: 16px; color: var(--z-muted); font-size: 12px; }
@@ -241,11 +241,18 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-launcher-status { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--z-success); }
 .ytab-launcher[data-status="paused"] .ytab-launcher-status { background: var(--z-faint); }
 .ytab-launcher[data-status="attention"] .ytab-launcher-status { background: var(--z-warning); }
-.ytab-feature-row { display: grid; grid-template-columns: minmax(0, 1fr) 36px; align-items: center; gap: 8px; border-bottom: 1px solid var(--z-line); }
+.ytab-feature-row { display: grid; grid-template-columns: minmax(0, 1fr) 40px; align-items: center; gap: 8px; border-bottom: 1px solid var(--z-line); }
 .ytab-feature-row:last-child { border-bottom: 0; }
 .ytab-feature-row > .ytab-row { min-width: 0; padding: 17px 0; border: 0; gap: 12px; }
-.ytab-favorite-button { appearance: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 6px; color: var(--z-muted); background: transparent; font-size: 22px; cursor: pointer; }
+.ytab-favorite-button { appearance: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 6px; color: var(--z-muted); background: transparent; font-size: 22px; cursor: pointer; }
 .ytab-favorite-button:hover { background: var(--z-hover); }
 .ytab-favorite-button[aria-pressed="true"] { color: var(--z-focus); }
 .ytab-favorites { min-width: 0; }
 .ytab-favorites h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--z-ink); }
+
+.ytab-technical-details { grid-column: 1 / -1; margin-top: -6px; padding-bottom: 14px; font-size: 12px; color: var(--z-muted); }
+.ytab-technical-details > summary, .ytab-diagnostics-review > summary { width: fit-content; cursor: pointer; }
+.ytab-technical-details > p { margin: 8px 0 0; line-height: 1.55; overflow-wrap: anywhere; }
+.ytab-diagnostics-review { margin-top: 12px; color: var(--z-muted); font-size: 12px; }
+.ytab-diagnostics-review textarea { margin-top: 10px; min-height: 180px; }
+.ytab-recovery-help > .ytab-btn { justify-self: start; margin-top: 6px; }

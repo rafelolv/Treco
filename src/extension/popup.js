@@ -8,7 +8,11 @@ document.getElementById('version').textContent = `v${version}`;
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id) throw Error('No active tab');
         const response = await chrome.tabs.sendMessage(tab.id, { type: 'zynubo:status' });
-        if (!response || response.version !== version || response.initialized !== true ||
+        if (response?.version && response.version !== version) {
+            status.textContent = 'The page is using a different Zynubo version. Reload the extension and YouTube, then try again.';
+            return;
+        }
+        if (!response || response.initialized !== true ||
             !['extension', 'userscript'].includes(response.distribution) ||
             typeof response.enabled !== 'boolean' || typeof response.degraded !== 'boolean') {
             throw Error('No verified engine response');

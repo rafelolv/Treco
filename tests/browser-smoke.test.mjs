@@ -543,6 +543,7 @@ async function exercisePanel(page, mode, surface) {
     if (mode === 'userscript' && surface.name === 'www-watch-dark') {
         await page.click('#ytab-restore-defaults');
         assert.equal(await page.locator('#ytab-restore-defaults').textContent(), 'Confirm Restore');
+        await page.waitForTimeout(400); // A deliberate confirmation must outlast the double-click guard.
         await page.click('#ytab-restore-defaults');
         await page.waitForFunction(() => document.body.textContent.includes('Recommended defaults restored'));
         assert.equal(await page.locator('#ytab-master-toggle').isChecked(), true);
@@ -928,6 +929,78 @@ test('shortcut, launcher status and favorite switches share the existing setting
                 await page.keyboard.press('Alt+Shift+KeyZ');
                 assert.equal(await page.locator('.ytab-overlay').isVisible(), false, 'Shortcut must not fire in a comment editor');
             } finally { await context.close(); }
+        });
+    }
+});
+
+test('support tools confirm imports, preserve undo and download redacted diagnostics', {skip:!browserPath}, async t => {
+    const browser=await chromium.launch({executablePath:browserPath,headless:true});
+    t.after(()=>browser.close());
+    for (const mode of ['userscript','extension']) {
+        await t.test(mode, async () => {
+            const context=await browser.newContext({acceptDownloads:true});
+            try {
+                await installRoutes(context);
+                const page=await context.newPage();
+                if(mode==='userscript') await installUserscriptMode(page); else await installExtensionMode(page);
+                await page.goto('https://www.youtube.com/watch?v=PRIVATE_VIDEO_ID&list=PRIVATE_LIST');
+                await openControlCenter(page,mode);
+                const readSetting=key=>page.evaluate(({mode,key})=>mode==='userscript'?window.__ytabStore?.[key]:JSON.parse(localStorage.getItem('__ytab_ext_settings__')||'{}')[key],{mode,key});
+                await page.locator('[data-section-id="ytab-section-core"]').click();
+                assert.equal(await page.getByText('Clean ad data',{exact:true}).isVisible(),true);
+                const technical=page.locator('#ytab-section-core .ytab-technical-details').first();
+                assert.equal(await technical.evaluate(el=>el.open),false);
+                await technical.locator('summary').click();
+                assert.match(await technical.textContent(),/JSON response pruning/);
+                await page.locator('[data-section-id="ytab-section-blocklist"]').click();
+                assert.equal(await page.getByLabel('Blocked Channels',{exact:true}).count(),1);
+                const payload=page.locator('#ytab-import-payload');
+                await payload.fill('@first');
+                const textImport=page.getByRole('button',{name:'Import Channel Text',exact:true});
+                await textImport.click();
+                assert.equal(await readSetting('ytab_channel_blocklist')||'','');
+                await payload.fill('@changed');
+                assert.equal(await textImport.count(),1,'Editing cancels the old confirmation');
+                await textImport.click();
+                await page.waitForTimeout(400); // Product double-click protection requires a deliberate second action.
+                await page.getByRole('button',{name:'Replace channel list — confirm',exact:true}).click();
+                assert.equal(await readSetting('ytab_channel_blocklist'),'@changed');
+                await payload.fill('keyword: example');
+                await page.getByRole('button',{name:'Import Migration',exact:true}).click();
+                await page.getByRole('button',{name:'Merge lists and enable filters — confirm',exact:true}).press('Escape');
+                assert.equal(await readSetting('ytab_keyword_blocklist')||'','');
+                assert.equal(await page.locator('.ytab-overlay').isVisible(),true);
+                await payload.fill(JSON.stringify({app:'Zynubo',version:1,settings:{channel_blocklist:'@json'}}));
+                await page.getByRole('button',{name:'Import JSON',exact:true}).click();
+                assert.equal(await readSetting('ytab_channel_blocklist'),'@changed');
+                await page.getByRole('button',{name:'Apply import',exact:true}).press('Escape');
+                assert.equal(await page.locator('.ytab-overlay').isVisible(),true);
+                await page.getByRole('button',{name:'Import JSON',exact:true}).click();
+                await page.waitForTimeout(400);
+                await page.getByRole('button',{name:'Apply import',exact:true}).click();
+                assert.equal(await readSetting('ytab_channel_blocklist'),'@json');
+                await page.getByRole('button',{name:'Undo import',exact:true}).click();
+                assert.equal(await readSetting('ytab_channel_blocklist'),'@changed');
+                await page.locator('[data-section-id="ytab-section-diagnostics"]').click();
+                await page.getByText('Review the report',{exact:true}).click();
+                const preview=page.getByRole('textbox',{name:'Redacted diagnostic report'});
+                await page.waitForFunction(()=>document.querySelector('.ytab-diagnostics-review textarea')?.value.startsWith('Zynubo v'));
+                assert.equal(await preview.getAttribute('readonly'),'');
+                const downloadPromise=page.waitForEvent('download');
+                await page.locator('#ytab-download-diagnostics').click();
+                const download=await downloadPromise;
+                assert.match(download.suggestedFilename(),/^Zynubo-diagnostics-v\d+\.\d+\.\d+\.txt$/);
+                const report=fs.readFileSync(await download.path(),'utf8');
+                assert(report.length<=16384);
+                for(const secret of ['PRIVATE_VIDEO_ID','PRIVATE_LIST','@changed']) assert.equal(report.includes(secret),false,secret);
+                assert.match(report,/Engine health:/);
+                // The first restore click and an accidental double-click cannot apply changes.
+                await page.locator('#ytab-restore-defaults').dblclick();
+                assert.equal(await page.locator('#ytab-restore-defaults').textContent(),'Confirm Restore');
+                await page.locator('#ytab-restore-defaults').press('Escape');
+                assert.equal(await page.locator('#ytab-restore-defaults').textContent(),'Restore Defaults');
+                assert.equal(await page.locator('.ytab-overlay').isVisible(),true);
+            } finally {await context.close();}
         });
     }
 });

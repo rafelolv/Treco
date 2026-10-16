@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0 — Unreleased
+
+- Explain startup and rule-update problems with direct recovery actions.
+- Review, copy or download a bounded diagnostic report that omits private identifiers and raw errors.
+- Confirm list replacements and migration imports, reject accidental double-clicks and keep import undo available.
+- Explain advanced options in plain language with expandable technical details.
+- Improve text contrast, input labels, keyboard focus and control sizes.
+- Check installer links, public metadata, icons and published download checksums automatically.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.5.0 — Unreleased
 
 - Redesign settings with a single brand bar, serif headings and a neutral black/white palette with red accents.

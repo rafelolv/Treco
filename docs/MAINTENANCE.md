@@ -48,3 +48,20 @@ entries through its optional Android adbkit/node-forge chain; no patched
 node-forge version was available in the registry (latest 1.4.0). Do not downgrade
 to obsolete web-ext merely to silence audit. Runtime packages contain none of
 these dependencies. Recheck before future dependency updates and store tooling use.
+
+## Distribution audits
+
+`npm run check` verifies installer/update/support links, manifest icon paths,
+PNG sizes and synchronized local versions. Contrast checks cover shared text,
+focus and primary-button colors in both themes.
+
+`npm run verify:published` performs a read-only network audit of the release linked
+by README. It verifies its five assets, downloaded checksums, package versions,
+shared engines, public icon and reviewer source without executing downloaded code.
+The Audit published downloads workflow runs weekly or manually with read-only
+permissions. No tokens or publishing permissions are needed.
+
+The README download buttons name one existing GitHub release; the userscript URL
+follows main and can be newer. The audit derives the published version from these
+links rather than adding another public version source. Update both ZIP links
+together when preparing an authorized release and verify them after publication.

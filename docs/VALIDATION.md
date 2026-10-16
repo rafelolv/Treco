@@ -301,3 +301,45 @@ cached after a force push; their refresh is separate from verifying branch ances
 - All browser evidence uses synthetic data, simulated manager APIs and temporary
   profiles. No actual Violentmonkey profile, live YouTube playback or store
   signing/submission was validated. No new release tag was created.
+
+
+## 1.6.0 support and distribution improvements — 2026-10-16
+
+- Added recovery advice with explicit reload/rule-refresh actions, plain-language
+  feature descriptions with optional technical details, clearer storage errors
+  and an extension/page version mismatch message. Existing consent defaults,
+  filter algorithms, permissions, signed files and chat exclusions are preserved.
+- Diagnostics can be reviewed, copied or downloaded as text. Reports omit video
+  and channel IDs, pasted lists, custom source URLs and raw errors; lines are
+  capped at 768 characters and reports at 16,384 characters. Explicit settings
+  export remains separate. New regression fixtures inject private data and
+  assert that it is absent from the report.
+- List replacement and migration require deliberate confirmation, canceled by
+  editing, blur or Escape. JSON import previews expire and reject double-clicks;
+  their rebuilt panel keeps the existing undo action visible. The clipboard
+  fallback removes its temporary field and restores focus even on failure.
+- Shared theme contrast assertions exposed and corrected the light-theme faint
+  text color. Inputs have explicit labels, technical disclosures identify their
+  feature, and keyboard focus excludes content inside closed disclosures.
+- npm run package passed all five unit/contract suites, source/version/engine
+  parity, license checks and reproducible extension builds. Public metadata is
+  synchronized at 1.6.0 in the userscript and both extension packages.
+- Chromium for Testing 149.0.7827.55 passed the full UI matrix: 30 scenarios
+  (36 including parent groups), with zero skips. New browser scenarios exercise
+  text import confirmation, edit cancellation, migration Escape, JSON import,
+  undo after rebuilding, diagnostic preview/download and destructive double-click
+  protection in both generated modes. The affected support scenarios were
+  repeated after adding JSON-preview Escape cancellation. Dark settings captures
+  were inspected visually.
+- npm run test:stability passed both userscript and generated-extension scenarios.
+  Temporary extension installation/integration checks passed in Chromium
+  149.0.7827.55 and Mozilla Firefox 157.0. Firefox lint reported zero errors,
+  notices or warnings. No user browser profile was used.
+- npm run verify:published downloaded and verified all five existing v1.3.2
+  release assets, SHA256SUMS, userscript metadata, shared engines, icon dimensions,
+  public icon and matching reviewer source. The new weekly/manual audit workflow
+  is read-only. README links intentionally continue to name that published
+  release; the userscript's main URL can receive newer versions independently.
+- Browser evidence is synthetic and uses simulated manager APIs. Actual
+  Violentmonkey installation and live YouTube playback/ad blocking were not
+  validated. No new release tag or store submission was created.

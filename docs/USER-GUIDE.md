@@ -84,6 +84,19 @@ For an old upstream installation, saved settings do not automatically transfer t
 a different script or extension identity. Use the Control Center's settings
 export/import tools. Zynubo accepts the original project's settings format.
 
+## Settings and imports
+
+Advanced options use plain-language names. Expand **Technical details** to see the
+underlying mechanism; search also recognizes these technical names.
+
+JSON imports show a change preview before confirmation and offer **Undo import**
+for the latest JSON import in the current session. Editing the pasted data cancels
+the preview; the preview expires after 30 seconds. Plain-text channel replacement,
+list migration, counter resets and restoring defaults require a second deliberate
+click within 10 seconds. Escape cancels confirmation; for these timed actions,
+moving focus away also cancels it. Settings exports are explicit backups and can
+contain your lists; keep them private.
+
 ## Troubleshooting
 
 1. Confirm Zynubo is enabled and permitted to run on YouTube.
@@ -96,6 +109,15 @@ export/import tools. Zynubo accepts the original project's settings format.
 YouTube account experiments, server-stitched ads, late script startup and browser
 policies can reduce effectiveness. A successful fixture test or a positive popup
 response cannot establish that live playback is working.
+
+Overview and Diagnostics show relevant recovery buttons when rules cannot update
+or page filters cannot start. The extension popup also explains when the page is
+running a different version and needs a reload.
+
+In Diagnostics, use **Review the report**, **Copy Diagnostics** or **Download
+report**. The text report is limited to 16,384 characters and omits video/channel IDs, list
+contents, custom source URLs and raw errors. Review it before sharing. If clipboard
+access is blocked, download the report instead.
 
 If you still need help, [open an issue](https://github.com/rafelolv/Zynubo/issues/new?template=bug_report.yml).
 Include browser and Zynubo versions, installation method, the YouTube surface

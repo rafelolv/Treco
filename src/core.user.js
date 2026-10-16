@@ -552,7 +552,7 @@
                 refreshNetworkEvidence: 'Refresh Evidence',
                 refreshingNetworkEvidence: 'Checking Evidence…',
                 shareSnapshot: 'Share a Snapshot',
-                shareSnapshotHelp: 'Copy the active Rule Library, module states, counters, and environment details, then open the repo issue tracker with clean context.',
+                shareSnapshotHelp: 'Review, copy or download a redacted report. It includes filter status and counters, without video IDs, list contents, custom source URLs or raw errors.',
                 copyDiagnostics: 'Copy Diagnostics',
                 openIssues: 'Open Issues',
                 resetLocalState: 'Reset Local State',
@@ -568,12 +568,12 @@
             },
             searchEmptyTitle: 'No Matching Settings',
             searchEmptyBody: query => `Nothing matches "${query}". Try terms like "rule", "shorts", "sponsor", or "reset".`,
-            armedAction: label => `${label} is armed. Click again to confirm.`,
+            armedAction: label => `${label}: click again within 10 seconds to confirm. Escape cancels.`,
             featureToggle: (label, enabled) => `${label} ${enabled ? 'enabled' : 'disabled'}.`,
             protectionResumed: 'Protection resumed across every engine.',
             protectionPausedToast: 'Protection paused. Zynubo stays installed and ready to resume.',
             diagnosticsCopied: 'Diagnostics copied. You can paste them into a bug report or note.',
-            diagnosticsClipboardFailed: 'Clipboard access was unavailable, so diagnostics could not be copied.',
+            diagnosticsClipboardFailed: 'Clipboard access was blocked. Use Download report in Diagnostics instead.',
             stillLoading: 'Control Center is still loading. Try again in a moment.',
             loadedLate: hint => `Zynubo loaded late. Open Diagnostics for setup steps. ${hint}`,
             activeToast: hint => `Zynubo is active. ${hint}`,
@@ -585,20 +585,24 @@
                 description: 'Intercept the network and data paths that carry ad payloads before YouTube can render them.',
                 features: {
                     jsonParsePrune: {
-                        label: 'JSON response pruning',
-                        desc: 'Removes ad payloads from parsed player responses before they are consumed.'
+                        label: 'Clean ad data',
+                        desc: 'Removes known ad fields from video data before the page uses it.',
+                        technical: 'JSON response pruning. Removes ad payloads from parsed player responses before they are consumed.'
                     },
                     fetchIntercept: {
-                        label: 'fetch() interception',
-                        desc: 'Applies pruning to player and browse requests handled through fetch().'
+                        label: 'Filter video requests',
+                        desc: 'Cleans ad data from video and feed responses.',
+                        technical: 'fetch() interception. Applies pruning to player and browse requests handled through fetch().'
                     },
                     xhrIntercept: {
-                        label: 'XMLHttpRequest interception',
-                        desc: 'Catches older request paths that still deliver ad-related responses.'
+                        label: 'Filter older requests',
+                        desc: 'Applies the same ad cleanup to older YouTube requests.',
+                        technical: 'XMLHttpRequest interception. Catches older request paths that still deliver ad-related responses.'
                     },
                     setUndefinedTraps: {
-                        label: 'Initial property traps',
-                        desc: 'Keeps early ad-related player properties undefined during first-page hydration.'
+                        label: 'Early ad cleanup',
+                        desc: 'Removes known ad fields when the initial video data arrives.',
+                        technical: 'Initial property traps. Keeps early ad-related player properties undefined during first-page hydration.'
                     }
                 }
             },
@@ -607,44 +611,53 @@
                 description: 'Reduce the odds of YouTube detecting, rehydrating, or bypassing the protections already in place.',
                 features: {
                     abnormalityBypass: {
-                        label: 'Abnormality callback bypass',
-                        desc: 'Neutralizes callbacks that flag ad blocking as abnormal behavior.'
+                        label: 'Handle blocker checks',
+                        desc: 'Prevents known blocker-check callbacks from interrupting playback.',
+                        technical: 'Abnormality callback bypass. Neutralizes callbacks that flag ad blocking as abnormal behavior.'
                     },
                     domBypassPrevention: {
-                        label: 'Iframe bypass prevention',
-                        desc: 'Stops clean iframe contexts from restoring unmodified browser APIs.'
+                        label: 'Protect page filters',
+                        desc: 'Stops page scripts from replacing the active request filters.',
+                        technical: 'Iframe bypass prevention. Stops clean iframe contexts from restoring unmodified browser APIs.'
                     },
                     requestBodyModify: {
-                        label: 'No-ad request signal',
-                        desc: 'Marks outbound player requests with the inline-playback no-ad flag so YouTube serves no ad payload and no fake-buffering delay. Works on cold loads and in-app navigation.'
+                        label: 'Request playback without ads',
+                        desc: 'Adds a playback preference asking YouTube for an inline video without ads.',
+                        technical: 'No-ad request signal. Marks outbound player requests with the inline-playback no-ad flag so YouTube serves no ad payload and no fake-buffering delay. Works on cold loads and in-app navigation.'
                     },
                     ssapAutoSkip: {
-                        label: 'SSAP auto-skip',
-                        desc: 'Fast-forwards through stitched server-side ads whenever they are detected.'
+                        label: 'Skip stitched ads',
+                        desc: 'Fast-forwards detected ads that are inserted into the video stream.',
+                        technical: 'SSAP auto-skip. Fast-forwards through stitched server-side ads whenever they are detected.'
                     },
                     timerNeutralization: {
-                        label: 'Timer neutralization',
-                        desc: 'Disarms the long timers YouTube uses to validate ad playback.'
+                        label: 'Reduce ad-check delays',
+                        desc: 'Disables known timers used to check ad playback.',
+                        technical: 'Timer neutralization. Disarms the long timers YouTube uses to validate ad playback.'
                     },
                     aggressiveAntiStall: {
-                        label: 'Aggressive anti-stall',
-                        desc: 'Fast-forwards the 17-second bound timers YouTube uses to stall playback when a blocker is suspected.'
+                        label: 'Reduce playback stalls',
+                        desc: 'Speeds up known delays associated with blocker checks.',
+                        technical: 'Aggressive anti-stall. Fast-forwards the 17-second bound timers YouTube uses to stall playback when a blocker is suspected.'
                     },
                     videoAdFastForward: {
                         label: 'Video ad fast-forward',
                         desc: 'If an unskippable ad still plays, mutes it and accelerates playback as a fallback safety net.'
                     },
                     nativeToStringMask: {
-                        label: 'Hide proxies from toString',
-                        desc: 'Patches Function.prototype.toString so YouTube cannot detect our hooked natives by source inspection.'
+                        label: 'Hide filter hooks',
+                        desc: 'Makes the request filters less visible to script checks.',
+                        technical: 'Hide proxies from toString. Patches Function.prototype.toString so YouTube cannot detect our hooked natives by source inspection.'
                     },
                     serviceWorkerBlock: {
-                        label: 'Block service worker injection',
-                        desc: 'Prevents YouTube from registering a service worker that could bypass our request proxies.'
+                        label: 'Limit background workers',
+                        desc: 'Stops YouTube from creating workers that could bypass page filters.',
+                        technical: 'Block service worker injection. Prevents YouTube from registering a service worker that could bypass our request proxies.'
                     },
                     webpackChunkHook: {
-                        label: 'Webpack chunk prune',
-                        desc: 'Rewrites YouTube webpack chunks before execution to strip modules that render ad placements.'
+                        label: 'Filter ad modules',
+                        desc: 'Skips known ad-related code while the YouTube player loads.',
+                        technical: 'Webpack chunk prune. Rewrites YouTube webpack chunks before execution to strip modules that render ad placements.'
                     }
                 }
             },
@@ -6824,6 +6837,37 @@
         return container;
     }
 
+    function getRecoveryAdvice() {
+        if (Object.values(state.engineHealth || {}).some(value => value !== 'ok')) {
+            return {title:'Some page filters could not start', detail:'Reload YouTube. If the problem returns, pause this tab and share a diagnostic report.', action:'reload'};
+        }
+        if (state.filterError) {
+            return {title:'Rules could not be updated', detail:'Your current rules remain available. Retry the update; if it still fails, download a diagnostic report.', action:'refresh'};
+        }
+        if (getInjectionTimingStatus().likelyLate) {
+            return {title:'Zynubo started after the page loaded', detail:'Check that your manager or extension is enabled, then reload YouTube. Userscript managers may also need Allow User Scripts enabled.', action:'reload'};
+        }
+        return null;
+    }
+
+    function createRecoveryHelp() {
+        const advice = getRecoveryAdvice();
+        if (!advice) return null;
+        const note = createNote(advice.title, advice.detail, 'warn');
+        note.classList.add(`${CSS_PREFIX}-recovery-help`);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-small`;
+        button.textContent = advice.action === 'refresh' ? 'Retry rule update' : 'Reload YouTube';
+        button.addEventListener('click', async () => {
+            if (advice.action === 'reload') { location.reload(); return; }
+            button.disabled = true;
+            try { await fetchFilters(true); } finally { button.disabled = false; }
+        });
+        note.appendChild(button);
+        return note;
+    }
+
     function createOverviewSection(query = '') {
         if (query && !matchesSettingsQuery(
             query,
@@ -6987,7 +7031,8 @@
         const pauseLabel = document.createElement('summary');
         pauseLabel.textContent = isPaused() ? 'Paused on this tab' : 'Pause on this tab';
         pauseDetails.append(pauseLabel, createRecoveryPauseCard());
-        const notes = [injectionNote, healthNote, ssaiNote].filter(Boolean);
+        const recoveryHelp = createRecoveryHelp();
+        const notes = recoveryHelp ? [recoveryHelp, ssaiNote].filter(Boolean) : [injectionNote, healthNote, ssaiNote].filter(Boolean);
         surface.append(hero, ...notes, createFavoriteSettings(query), actions, toolActions, pauseDetails, moreStats);
         section.appendChild(surface);
         return section;
@@ -7245,7 +7290,8 @@
             group.description,
             feat.key,
             feat.label,
-            feat.desc
+            feat.desc,
+            feat.technical || ''
         ));
         if (!visibleFeatures.length) return null;
         const enabledCount = visibleFeatures.filter(feat => state.features[feat.key] !== false).length;
@@ -7781,6 +7827,10 @@
         helpEl.textContent = help;
         const ta = document.createElement('textarea');
         ta.className = `${CSS_PREFIX}-blocklist-textarea`;
+        ta.id = `${CSS_PREFIX}-input-${storageKey}`;
+        label.htmlFor = ta.id;
+        helpEl.id = `${ta.id}-help`;
+        ta.setAttribute('aria-describedby', `${helpEl.id} ${ta.id}-feedback`);
         ta.rows = 4;
         ta.spellcheck = false;
         ta.value = String(getSetting(storageKey, ''));
@@ -7789,6 +7839,7 @@
         // rejected and why instead of failing silently.
         const feedback = document.createElement('p');
         feedback.className = `${CSS_PREFIX}-field-help ${CSS_PREFIX}-blocklist-feedback`;
+        feedback.id = `${ta.id}-feedback`;
         feedback.setAttribute('role', 'status');
         feedback.hidden = true;
         const channelOptions = storageKey === 'keyword_blocklist' ? undefined : { channel: true };
@@ -7833,6 +7884,9 @@
         payload.className = `${CSS_PREFIX}-blocklist-textarea`;
         payload.rows = 5;
         payload.spellcheck = false;
+        payload.id = `${CSS_PREFIX}-import-payload`;
+        payload.setAttribute('aria-label', 'Settings to import or export');
+        payload.setAttribute('aria-describedby', `${CSS_PREFIX}-import-preview`);
         payload.placeholder = STRINGS.ui.blocklist.importPlaceholder;
 
         const actions = document.createElement('div');
@@ -7865,6 +7919,7 @@
         // in-session undo restores the pre-import snapshot.
         const importPreview = document.createElement('p');
         importPreview.className = `${CSS_PREFIX}-field-help ${CSS_PREFIX}-import-preview`;
+        importPreview.id = `${CSS_PREFIX}-import-preview`;
         importPreview.setAttribute('role', 'status');
         importPreview.hidden = true;
 
@@ -7872,7 +7927,7 @@
         undoImport.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
         undoImport.type = 'button';
         undoImport.textContent = STRINGS.ui.blocklist.importUndo;
-        undoImport.hidden = true;
+        undoImport.hidden = !hasUndoableImport();
 
         const importJson = document.createElement('button');
         importJson.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-primary`;
@@ -7901,19 +7956,20 @@
         }
 
         importJson.addEventListener('click', () => {
-            if (!pendingImport || pendingImport.raw !== payload.value) {
+            if (!pendingImport || pendingImport.raw !== payload.value || Date.now() > pendingImport.expiresAt) {
                 const preview = importSettingsPayload(payload.value, 'json-preview');
                 if (!preview.ok) {
                     resetImportPreview();
                     showToast(preview.error, 'error');
                     return;
                 }
-                pendingImport = { raw: payload.value };
+                pendingImport = { raw: payload.value, armedAt: Date.now(), expiresAt: Date.now() + 30000 };
                 importPreview.textContent = describeDiff(preview.diff, preview.unknown);
                 importPreview.hidden = false;
                 importJson.textContent = STRINGS.ui.blocklist.importConfirm;
                 return;
             }
+            if (Date.now() - pendingImport.armedAt < 350) return;
             const result = importSettingsPayload(payload.value, 'json');
             resetImportPreview();
             if (!result.ok) {
@@ -7926,6 +7982,13 @@
             refreshSettingsUI(true);
             undoImport.hidden = !hasUndoableImport();
             showToast(STRINGS.ui.blocklist.importedSettings(result.count), 'success');
+        });
+
+        importJson.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !pendingImport) return;
+            event.preventDefault();
+            event.stopPropagation();
+            resetImportPreview();
         });
 
         undoImport.addEventListener('click', () => {
@@ -7948,29 +8011,41 @@
         importText.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
         importText.type = 'button';
         importText.textContent = STRINGS.ui.blocklist.importChannelText;
-        importText.addEventListener('click', () => {
-            const result = importSettingsPayload(payload.value, 'text');
-            loadState();
-            refreshSettingsUI(true);
-            showToast(result.ok ? STRINGS.ui.blocklist.channelBlocklistImported : result.error, result.ok ? 'success' : 'error');
+        const cancelTextImport = attachArmedAction(importText, {
+            idleLabel: STRINGS.ui.blocklist.importChannelText,
+            armedLabel: 'Replace channel list — confirm',
+            getSignature: () => payload.value,
+            onConfirm() {
+                const result = importSettingsPayload(payload.value, 'text');
+                loadState();
+                refreshSettingsUI(true);
+                showToast(result.ok ? STRINGS.ui.blocklist.channelBlocklistImported : result.error, result.ok ? 'success' : 'error');
+            }
         });
+        payload.addEventListener('input', cancelTextImport);
 
         const importMigration = document.createElement('button');
         importMigration.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
         importMigration.type = 'button';
         importMigration.textContent = STRINGS.ui.blocklist.importMigration;
-        importMigration.addEventListener('click', () => {
-            const result = importSettingsPayload(payload.value, 'migration');
-            if (!result.ok) {
+        const cancelMigrationImport = attachArmedAction(importMigration, {
+            idleLabel: STRINGS.ui.blocklist.importMigration,
+            armedLabel: 'Merge lists and enable filters — confirm',
+            getSignature: () => payload.value,
+            onConfirm() {
+                const result = importSettingsPayload(payload.value, 'migration');
+                if (!result.ok) {
+                    if (result.rejected && result.rejected.length) payload.value = STRINGS.ui.blocklist.rejectedEntries(result.rejected);
+                    showToast(result.error, 'error');
+                    return;
+                }
+                loadState();
+                refreshSettingsUI(true);
                 if (result.rejected && result.rejected.length) payload.value = STRINGS.ui.blocklist.rejectedEntries(result.rejected);
-                showToast(result.error, 'error');
-                return;
+                showToast(STRINGS.ui.blocklist.migrationImported(result.channels, result.keywords, result.rejected && result.rejected.length), 'success');
             }
-            loadState();
-            refreshSettingsUI(true);
-            if (result.rejected && result.rejected.length) payload.value = STRINGS.ui.blocklist.rejectedEntries(result.rejected);
-            showToast(STRINGS.ui.blocklist.migrationImported(result.channels, result.keywords, result.rejected && result.rejected.length), 'success');
         });
+        payload.addEventListener('input', cancelMigrationImport);
 
         actions.append(copyJson, copyText, importJson, importText, importMigration, undoImport);
         wrap.append(payload, importPreview, actions);
@@ -7993,6 +8068,8 @@
         function makeInput(key, placeholder) {
             const inp = document.createElement('input');
             inp.type = 'number';
+            inp.id = `${CSS_PREFIX}-${key}`;
+            inp.setAttribute('aria-label', key === 'duration_min' ? 'Minimum video length in seconds' : 'Maximum video length in seconds');
             inp.min = '0';
             inp.placeholder = placeholder;
             inp.className = `${CSS_PREFIX}-input`;
@@ -8090,8 +8167,23 @@
         copyBtn.textContent = STRINGS.ui.diagnosticsSection.copyDiagnostics;
         copyBtn.addEventListener('click', copyDiagnosticsToClipboard);
         const issuesLink = createExternalLinkButton(ISSUES_URL, STRINGS.ui.diagnosticsSection.openIssues, `${CSS_PREFIX}-btn-ghost`);
-        diagnosticsActions.append(copyBtn, issuesLink);
-        diagnosticsGroup.appendChild(diagnosticsActions);
+        const download = document.createElement('button');
+        download.type = 'button';
+        download.id = `${CSS_PREFIX}-download-diagnostics`;
+        download.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
+        download.textContent = 'Download report';
+        download.addEventListener('click', downloadDiagnosticsReport);
+        diagnosticsActions.append(copyBtn, download, issuesLink);
+        const review = document.createElement('details');
+        review.className = `${CSS_PREFIX}-diagnostics-review`;
+        const reviewLabel = document.createElement('summary'); reviewLabel.textContent = 'Review the report';
+        const preview = document.createElement('textarea');
+        preview.className = `${CSS_PREFIX}-blocklist-textarea`;
+        preview.readOnly = true;
+        preview.setAttribute('aria-label', 'Redacted diagnostic report');
+        review.addEventListener('toggle', () => { if (review.open) preview.value = buildDiagnosticsReport(); });
+        review.append(reviewLabel, preview);
+        diagnosticsGroup.append(diagnosticsActions, review);
 
         const recoveryGroup = createActionGroup(
             STRINGS.ui.diagnosticsSection.resetLocalState,
@@ -8140,6 +8232,8 @@
                 showToast(STRINGS.ui.diagnosticsSection.defaultsRestored, 'success');
             }
         });
+        const recoveryHelp = createRecoveryHelp();
+        if (recoveryHelp) recoveryGroup.appendChild(recoveryHelp);
         recoveryActions.append(resetStats, restore);
         recoveryGroup.appendChild(recoveryActions);
 
@@ -8543,13 +8637,23 @@
             if (saved[feature.key]) delete saved[feature.key];
             else saved[feature.key] = true;
             if (!setSetting('favorite_features', saved)) {
-                showToast('Could not save favorites.', 'warn');
+                showToast('Could not save favorites. Check browser storage permissions, then try again.', 'warn');
                 return;
             }
             refreshSettingsUI(true);
             (document.getElementById(favorite.id) || document.getElementById(`${CSS_PREFIX}-master-toggle`))?.focus();
         });
         wrapper.append(row, favorite);
+        if (feature.technical) {
+            const details = document.createElement('details');
+            details.className = `${CSS_PREFIX}-technical-details`;
+            details.open = !!state.settingsQuery && matchesSettingsQuery(state.settingsQuery, feature.key, feature.technical);
+            const summary = document.createElement('summary'); summary.textContent = 'Technical details';
+            summary.setAttribute('aria-label', `Technical details: ${feature.label}`);
+            const body = document.createElement('p'); body.textContent = feature.technical;
+            details.append(summary, body);
+            wrapper.appendChild(details);
+        }
         return wrapper;
     }
 
@@ -8604,7 +8708,13 @@
 
     function getFocusableElements(root) {
         return [...root.querySelectorAll('button, [href], input, textarea, select, summary, [tabindex]:not([tabindex="-1"])')]
-            .filter(el => !(el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') && el.getClientRects().length > 0);
+            .filter(el => {
+                if (el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true' || !el.getClientRects().length) return false;
+                for (let parent = el.parentElement; parent && parent !== root; parent = parent.parentElement) {
+                    if (parent.tagName === 'DETAILS' && !parent.open && !parent.querySelector('summary')?.contains(el)) return false;
+                }
+                return true;
+            });
     }
 
     function handleDialogKeydown(event) {
@@ -8637,8 +8747,10 @@
         }
     }
 
-    function attachArmedAction(button, { idleLabel, armedLabel, onConfirm, timeout = 3200 }) {
+    function attachArmedAction(button, { idleLabel, armedLabel, onConfirm, timeout = 10000, getSignature = () => '' }) {
         let armed = false;
+        let armedAt = 0;
+        let signature = '';
         let timer = null;
 
         const reset = () => {
@@ -8654,8 +8766,10 @@
         button.textContent = idleLabel;
         button.dataset.armed = 'false';
         button.addEventListener('click', () => {
-            if (!armed) {
+            if (!armed || Date.now() - armedAt > timeout || signature !== getSignature()) {
                 armed = true;
+                armedAt = Date.now();
+                signature = getSignature();
                 button.dataset.armed = 'true';
                 button.textContent = armedLabel;
                 showToast(STRINGS.ui.armedAction(idleLabel), 'warn');
@@ -8663,9 +8777,18 @@
                 return;
             }
 
+            // A double-click must not accidentally confirm a destructive action.
+            if (Date.now() - armedAt < 350) return;
             reset();
             onConfirm();
         });
+        button.addEventListener('blur', reset);
+        button.addEventListener('keydown', event => {
+            if (armed && event.key === 'Escape') {
+                event.preventDefault(); event.stopPropagation(); reset();
+            }
+        });
+        return reset;
     }
 
     // Features whose on/off state directly changes the cosmetic stylesheet.
@@ -8708,7 +8831,11 @@
     function setFeatureEnabled(key, checked, label) {
         const overrides = getFeatureOverrides();
         overrides[key] = checked;
-        setSetting('feature_overrides', overrides);
+        if (!setSetting('feature_overrides', overrides)) {
+            refreshSettingsUI(true);
+            showToast('This option could not be saved. Check browser storage permissions, then try again.', 'warn');
+            return;
+        }
         state.features[key] = checked;
         if (COSMETIC_AFFECTING_FEATURES.has(key)) {
             updateCosmeticCSS();
@@ -8745,8 +8872,12 @@
     }
 
     function setScriptEnabled(enabled) {
+        if (!setSetting('enabled', enabled)) {
+            refreshSettingsUI(true);
+            showToast('The change could not be saved. Check browser storage permissions, then try again.', 'warn');
+            return;
+        }
         state.enabled = enabled;
-        setSetting('enabled', enabled);
         updateCosmeticCSS();
         updateClutterCSS();
         refreshSettingsUI(true);
@@ -8784,8 +8915,10 @@
             await navigator.clipboard.writeText(text);
             return true;
         } catch (e) {
+            const previousFocus = document.activeElement;
+            let textarea;
             try {
-                const textarea = document.createElement('textarea');
+                textarea = document.createElement('textarea');
                 textarea.value = text;
                 textarea.setAttribute('readonly', 'true');
                 textarea.style.position = 'fixed';
@@ -8793,12 +8926,30 @@
                 textarea.style.left = '-9999px';
                 document.body.appendChild(textarea);
                 textarea.select();
-                const copied = document.execCommand('copy');
-                textarea.remove();
-                return copied;
+                return document.execCommand('copy');
             } catch (err) {
                 return false;
+            } finally {
+                textarea?.remove();
+                if (previousFocus?.isConnected) previousFocus.focus({preventScroll:true});
             }
+        }
+    }
+
+    async function downloadDiagnosticsReport() {
+        if (IS_EXTENSION_BUILD) await refreshDnrDiagnostics();
+        let objectUrl;
+        try {
+            objectUrl = URL.createObjectURL(new Blob([buildDiagnosticsReport()], {type:'text/plain;charset=utf-8'}));
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = `${SCRIPT_NAME}-diagnostics-v${SCRIPT_VERSION}.txt`;
+            document.body.appendChild(link); link.click(); link.remove();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 30000);
+            showToast('Diagnostic report downloaded. Review it before sharing.', 'success');
+        } catch (e) {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            showToast('Download was blocked. Use Copy Diagnostics or Review the report instead.', 'warn');
         }
     }
 
@@ -8841,16 +8992,27 @@
         return list.map(item => `${item.name}=${item.count}`).join(', ');
     }
 
-    function redactUrl(url) {
-        if (!url || typeof url !== 'string') return url;
-        return url
-            .replace(/([?&])v=[^&#]+/g, '$1v=[video-id]')
-            .replace(/\/shorts\/[^/?#]+/g, '/shorts/[video-id]')
-            .replace(/[?][^#]*/g, (match) => {
-                if (/^\?v=\[video-id\]$/.test(match)) return match;
-                if (/^\?v=\[video-id\]&/.test(match)) return '?v=[video-id]';
-                return '?[redacted]';
-            });
+    function redactUrl(value) {
+        if (!value || typeof value !== 'string') return '';
+        try {
+            const bareHost = /^[\w.-]+\.[A-Za-z]{2,}\//.test(value);
+            const url = new URL(bareHost ? `https://${value}` : value, location.href);
+            if (!/(^|\.)(youtube\.com|youtube-nocookie\.com|youtubekids\.com)$/.test(url.hostname)) return '[external URL]';
+            const known = /^\/(?:watch|shorts|results|playlist|feed|channel|live_chat|live_chat_replay)(?:\/|$)/.exec(url.pathname)?.[0].replace(/\/$/, '') || '';
+            let path = known || (/^\/youtubei\/v1\/[a-z_]+$/.test(url.pathname) ? url.pathname : '/[page]');
+            if (path === '/shorts') path += '/[video-id]';
+            if (path === '/channel') path += '/[channel-id]';
+            if (['/', '/feed/trending'].includes(url.pathname)) path = url.pathname;
+            if (path === '/watch' && url.searchParams.has('v')) path += '?v=[video-id]';
+            return (/^https?:\/\//.test(value) || bareHost ? url.hostname : '') + path;
+        } catch (e) { return '[URL omitted]'; }
+    }
+
+    function diagnosticBrowserHint() {
+        const ua = typeof navigator !== 'undefined' ? String(navigator.userAgent || '') : '';
+        const browser = /(?:Firefox|Edg|Chrome)\/\d+/.exec(ua)?.[0] || 'Unknown browser';
+        const os = /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';
+        return `${browser} / ${os}`;
     }
 
     function sanitizeDnrDiagnostics(value) {
@@ -9051,7 +9213,7 @@
             ? [...state.trappedRoots].join(', ')
             : STRINGS.common.none;
         const coverage = sanitizeFilterCoverage(state.filters?.coverage);
-        const uaHint = typeof navigator !== 'undefined' ? (navigator.userAgent || STRINGS.common.unknown) : STRINGS.common.unknown;
+        const uaHint = diagnosticBrowserHint();
         const injectionStatus = getInjectionTimingStatus();
         return [
             `${SCRIPT_NAME} v${SCRIPT_VERSION}`,
@@ -9067,15 +9229,15 @@
             `${report.protectionEnabled}: ${isEnabled()}`,
             `${report.filterSource}: ${getFilterSourceLabel()}`,
             `${report.filterIntegrity}: ${getFilterIntegrityLabel()}`,
-            `${report.filterIntegrityDetail}: ${state.filterIntegrityMessage || STRINGS.common.none}`,
-            `${report.filterUrl}: ${redactUrl(resolveFilterUrl())}`,
-            `${report.filterVersion}: ${state.filters?.version || STRINGS.common.unknown}`,
+            `${report.filterIntegrityDetail}: ${getFilterIntegrityLabel()}`,
+            `${report.filterUrl}: ${isDefaultFilterUrl() ? 'Default signed source' : '[custom source omitted]'}`,
+            `${report.filterVersion}: ${isDefaultFilterUrl() && /^[0-9.\-]{1,40}$/.test(String(state.filters?.version || '')) ? state.filters.version : '[version omitted]'}`,
             `${report.lastSync}: ${state.lastFilterUpdate ? new Date(state.lastFilterUpdate).toISOString() : STRINGS.common.never}`,
-            `${report.lastError}: ${state.filterError || STRINGS.common.none}`,
+            `${report.lastError}: ${state.filterError ? 'Rule refresh failed; current rules retained' : STRINGS.common.none}`,
             `${report.rulesActive}: ${getRuleCount()}`,
             `${report.pruneKeys}: ${(state.filters?.pruneKeys || []).length}`,
             `${report.cosmeticSelectors}: ${(state.filters?.cosmeticSelectors || []).length}`,
-            `${report.interceptPatterns}: ${(state.filters?.interceptPatterns || []).join(' · ') || STRINGS.common.none}`,
+            `${report.interceptPatterns}: ${DEFAULT_FILTERS.interceptPatterns.filter(pattern => (state.filters?.interceptPatterns || []).includes(pattern)).join(' · ') || STRINGS.common.none} (custom patterns omitted)`,
             `${report.appliedSelectors}: ${coverage.appliedSelectors}`,
             `${report.appliedPrunePaths}: ${coverage.appliedPrunePaths}`,
             `${report.networkOnlyRules}: ${coverage.networkOnlyRules}`,
@@ -9092,10 +9254,10 @@
             `${report.communityCache}: ${Object.entries(getCommunityCacheStatus()).map(([name, info]) => `${name}=${info.entries}`).join(', ')}`,
             `${report.communityApiCooldown}: ${Object.entries(getApiCooldownStatus()).map(([k, v]) => `${k}=${v}`).join(', ')}`,
             `${report.webpackSignatureSource}: ${state.webpackSignatureSource || STRINGS.common.unknown}`,
-            `${report.webpackSignatureVersion}: ${state.webpackSignatureVersion || STRINGS.common.unknown}`,
+            `${report.webpackSignatureVersion}: ${/^[0-9.\-]{1,40}$/.test(String(state.webpackSignatureVersion || '')) ? state.webpackSignatureVersion : '[version omitted]'}`,
             `${report.webpackSignatureTokens}: ${(state.webpackSignatureDatabase?.tokens || []).length}`,
             `${report.webpackSignatureIntegrity}: ${state.webpackSignatureIntegrity || STRINGS.common.unknown}`,
-            `${report.webpackSignatureError}: ${state.webpackSignatureError || STRINGS.common.none}`,
+            `${report.webpackSignatureError}: ${state.webpackSignatureError ? 'Signature refresh failed' : STRINGS.common.none}`,
             `${report.channelBlockEntries}: ${parseBlocklist(getSetting('channel_blocklist', ''), { channel: true }).length}`,
             `${report.keywordBlockEntries}: ${parseBlocklist(getSetting('keyword_blocklist', '')).length}`,
             `${report.adAllowEntries}: ${parseBlocklist(getSetting('ad_allowlist', ''), { channel: true }).length}`,
@@ -9106,7 +9268,7 @@
             `${report.stats}: blocked=${state.stats.blocked}, pruned=${state.stats.pruned}, ssapSkipped=${state.stats.ssapSkipped}, sponsorSkipped=${state.stats.sponsorSkipped}, ssaiDetected=${state.stats.ssaiDetected || 0}`,
             `${report.enabledFeatures}: ${enabledFeatures}`,
             `${report.disabledFeatures}: ${disabledFeatures}`
-        ].join('\n');
+        ].map(line => line.replace(/[\r\n\u0000-\u001f]/g, ' ').slice(0, 768)).join('\n').slice(0, 16384);
     }
 
     function handleExtensionSettingsSync(event) {
