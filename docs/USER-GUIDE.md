@@ -84,6 +84,20 @@ For an old upstream installation, saved settings do not automatically transfer t
 a different script or extension identity. Use the Control Center's settings
 export/import tools. Zynubo accepts the original project's settings format.
 
+## Playback speed
+
+Open **Video tools → Playback speed**, choose a value from **0.25× to 10×** in
+steps of 0.25, then click **Apply speed** or press Enter. **Reset to 1×** returns
+the current video to normal speed. Editing the number alone does not apply it.
+
+The control does not start playback or save a speed for later videos. YouTube's
+own speed controls remain available. Ads and live streams are excluded; resume
+Zynubo before using this control if the page engine is paused.
+
+Above 4×, some browsers may silence audio. See the browser's
+[playback-rate behavior](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/playbackRate).
+The control reports a rejected speed and lets you try a lower value.
+
 ## Settings and imports
 
 Advanced options use plain-language names. Expand **Technical details** to see the

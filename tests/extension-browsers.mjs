@@ -52,6 +52,12 @@ ${mode === 'userscript' ? '<script src="/core.js"></script>' : ''}
     payload.launcherStatus = document.getElementById('ytab-launcher').dataset.status;
     document.getElementById('ytab-star-fetchIntercept').click();
     payload.favoriteAvailable = !!document.getElementById('ytab-favorite-toggle-fetchIntercept');
+    document.querySelector('[data-section-id="ytab-section-enhance"]').click();
+    const speed = document.getElementById('ytab-playback-speed');
+    speed.value = '10'; document.getElementById('ytab-speed-apply').click();
+    payload.speedMaximum = document.querySelector('video').playbackRate === 10;
+    document.getElementById('ytab-speed-reset').click();
+    payload.speedReset = document.querySelector('video').playbackRate === 1;
     document.getElementById('ytab-close-btn').click();
     // DOM fixture reports are deliberately unsigned test evidence, not product status.
     window.fixtureResult = payload;
@@ -176,6 +182,8 @@ function check(report, expected) {
     assert.equal(report.launcherOpensPanel, true);
     assert.equal(report.shortcutOpensPanel, true);
     assert.equal(report.launcherStatus, 'attention', 'Fixture refresh failure must remain visible');
+    assert.equal(report.speedMaximum, true);
+    assert.equal(report.speedReset, true);
     assert.equal(report.favoriteAvailable, true);
     if (expected === 'extension') {
         assert.equal(report.runtimeStatus?.initialized, true, 'Isolated runtime status bridge');

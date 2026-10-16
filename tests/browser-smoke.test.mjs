@@ -1004,3 +1004,60 @@ test('support tools confirm imports, preserve undo and download redacted diagnos
         });
     }
 });
+
+
+test('playback speed changes only the current recorded video after explicit input', {skip:!browserPath}, async t => {
+    const browser = await chromium.launch({executablePath:browserPath, headless:true});
+    t.after(() => browser.close());
+    for (const mode of ['userscript', 'extension']) {
+        await t.test(mode, async () => {
+            const context = await browser.newContext();
+            try {
+                await installRoutes(context);
+                const page = await context.newPage();
+                if (mode === 'userscript') await installUserscriptMode(page); else await installExtensionMode(page);
+                await page.goto('https://www.youtube.com/watch?v=speed-fixture');
+                await openControlCenter(page, mode);
+                await page.locator('[data-section-id="ytab-section-enhance"]').click();
+                const speed = page.getByRole('spinbutton', {name:'Playback speed', exact:true});
+                const rate = () => page.locator('video.html5-main-video').evaluate(video => video.playbackRate);
+                assert.equal(await rate(), 1);
+                await speed.fill('10');
+                assert.equal(await rate(), 1, 'Editing alone must not change playback');
+                await page.getByRole('button', {name:'Apply speed', exact:true}).click();
+                assert.equal(await rate(), 10);
+                assert.equal(await page.locator('video').evaluate(video => video.paused), true, 'Changing speed must not start playback');
+                await speed.fill('11');
+                await speed.press('Enter');
+                assert.equal(await rate(), 10, 'Out-of-range values must be rejected');
+                assert.equal(await speed.getAttribute('aria-invalid'), 'true');
+                await page.getByRole('button', {name:'Reset to 1×', exact:true}).click();
+                assert.equal(await rate(), 1);
+                await speed.fill('0.25'); await speed.press('Enter');
+                assert.equal(await rate(), 0.25);
+                await page.evaluate(() => { document.querySelector('video').playbackRate = 2; });
+                await page.waitForFunction(() => document.getElementById('ytab-speed-current').textContent === 'Current speed: 2×');
+                await speed.fill('4'); await speed.press('Enter');
+                await page.evaluate(() => {
+                    const old = document.querySelector('video'); old.replaceWith(old.cloneNode());
+                    document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                assert.equal(await rate(), 1, 'A replacement video must retain its own default');
+                await page.evaluate(() => document.getElementById('movie_player').classList.add('ad-showing'));
+                await speed.fill('3'); await speed.press('Enter');
+                assert.equal(await rate(), 1, 'An ad must not receive the requested content speed');
+                await page.waitForFunction(() => document.getElementById('ytab-speed-apply').disabled);
+                await page.evaluate(() => {
+                    const player = document.getElementById('movie_player');
+                    player.classList.remove('ad-showing'); player.classList.add('ytp-live');
+                });
+                await page.waitForFunction(() => document.getElementById('ytab-speed-current').textContent.includes('recorded videos'));
+                assert.equal(await speed.isDisabled(), true);
+                await page.evaluate(() => document.getElementById('movie_player').classList.remove('ytp-live'));
+                await page.waitForFunction(() => !document.getElementById('ytab-speed-apply').disabled);
+                await page.getByPlaceholder('Find a setting…').fill('playback speed');
+                assert.equal(await speed.isVisible(), true, 'Speed controls must be searchable');
+            } finally { await context.close(); }
+        });
+    }
+});

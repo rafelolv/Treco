@@ -47,6 +47,7 @@ function createTestHarness(options = {}) {
             className: '', id: '', textContent: '', innerHTML: '', type: '',
             style: { cssText: '' }, dataset: {}, value: '', rows: 0,
             spellcheck: true, disabled: false, checked: false, open: false,
+            closest: () => null, playbackRate: 1,
             setAttribute: noop, getAttribute: () => null,
             addEventListener: noop, removeEventListener: noop,
             appendChild(c) { return c; }, append: noop, prepend: noop,
@@ -165,6 +166,7 @@ function createTestHarness(options = {}) {
         getInjectionTimingStatus,
         buildDiagnosticsReport,
         getRecoveryAdvice,
+        applyPlaybackSpeed,
         sanitizeDnrDiagnostics,
         formatDnrDiagnosticsReport,
         getDnrDiagnosticsPresentation,
@@ -2401,4 +2403,25 @@ test('recovery advice gives bounded actions for rule, engine and startup failure
     h.state.engineHealth.FetchProxy='failed';
     assert.equal(h.getRecoveryAdvice().action,'reload');
     assert.equal(JSON.stringify(h.getRecoveryAdvice()).includes('raw error'),false);
+});
+
+
+test('manual playback speed rejects invalid values and player failures', () => {
+    const video = {playbackRate:1, duration:120, closest:()=>null};
+    const h = createTestHarness({querySelector:selector => selector.includes('video.html5-main-video') ? video : null});
+    for (const rate of [NaN, Infinity, -1, 0, 0.1, 1.1, 10.25, 16, '2', null]) {
+        assert.equal(h.applyPlaybackSpeed(rate).ok, false);
+        assert.equal(video.playbackRate, 1);
+    }
+    assert.equal(h.applyPlaybackSpeed(10).ok, true);
+    assert.equal(video.playbackRate, 10);
+    assert.equal(h.applyPlaybackSpeed(1).ok, true);
+    video.duration = Infinity;
+    assert.equal(h.applyPlaybackSpeed(2).ok, false);
+    assert.equal(video.playbackRate, 1);
+    video.duration = 120;
+    Object.defineProperty(video, 'playbackRate', {get:()=>1, set:()=>{throw Error('Private player failure');}});
+    const failure = h.applyPlaybackSpeed(10);
+    assert.equal(failure.ok, false);
+    assert.equal(failure.message.includes('Private'), false);
 });

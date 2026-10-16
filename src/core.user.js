@@ -7007,7 +7007,7 @@
         toolActions.append(quickRefresh, diagnosticsJump);
         for (const [label, description, sectionId] of [
             ['Ad blocking', 'Ads, playback and cleanup', SECTION_IDS.core],
-            ['Video tools', 'Dislikes, titles and original audio', SECTION_IDS.enhance],
+            ['Video tools', 'Playback speed, dislikes and original audio', SECTION_IDS.enhance],
             ['Page layout', 'Choose what stays on YouTube', SECTION_IDS.clutter]
         ]) {
             const link = document.createElement('button');
@@ -7283,6 +7283,99 @@
         return section;
     }
 
+    function getPlaybackSpeedTarget() {
+        if (!isEnabled() || isPaused()) return {message:'Resume Zynubo to change playback speed.'};
+        const video = document.querySelector('#movie_player video.html5-main-video') || document.querySelector('video.html5-main-video');
+        if (!video) return {message:'Open a video to change playback speed.'};
+        const player = video.closest('#movie_player, .html5-video-player');
+        if (player?.classList.contains('ad-showing') || player?.classList.contains('ad-interrupting')) {
+            return {message:'Playback speed is available after the ad.'};
+        }
+        if (video.duration === Infinity || player?.classList.contains('ytp-live')) {
+            return {message:'Playback speed is available for recorded videos.'};
+        }
+        return {video};
+    }
+
+    function applyPlaybackSpeed(rate) {
+        if (typeof rate !== 'number' || !Number.isFinite(rate) || rate < 0.25 || rate > 10 || !Number.isInteger(rate * 4)) {
+            return {ok:false, message:'Choose a speed from 0.25× to 10× in steps of 0.25.'};
+        }
+        const target = getPlaybackSpeedTarget();
+        if (!target.video) return {ok:false, message:target.message};
+        try {
+            // Only change the current video after an explicit user action.
+            // Do not start playback, change mute/pitch, or force a persistent rate.
+            target.video.playbackRate = rate;
+            if (Math.abs(target.video.playbackRate - rate) > 0.001) {
+                return {ok:false, message:'The player did not accept this speed. Try a lower value.'};
+            }
+            return {ok:true, message:`Playback speed set to ${rate}× for this video.`};
+        } catch (e) {
+            return {ok:false, message:'This browser could not apply that speed. Try a lower value.'};
+        }
+    }
+
+    function updatePlaybackSpeedControls() {
+        const current = document.getElementById(`${CSS_PREFIX}-speed-current`);
+        if (!current) return;
+        const target = getPlaybackSpeedTarget();
+        current.textContent = target.video ? `Current speed: ${Number(target.video.playbackRate.toFixed(2))}×` : target.message;
+        for (const id of ['speed-apply', 'speed-reset', 'playback-speed']) {
+            const control = document.getElementById(`${CSS_PREFIX}-${id}`);
+            if (control) control.disabled = !target.video;
+        }
+    }
+
+    function createPlaybackSpeedControls() {
+        const field = document.createElement('div');
+        field.className = `${CSS_PREFIX}-field ${CSS_PREFIX}-playback-speed`;
+        const label = document.createElement('label');
+        label.className = `${CSS_PREFIX}-field-label`;
+        label.htmlFor = `${CSS_PREFIX}-playback-speed`;
+        label.textContent = 'Playback speed';
+        const help = document.createElement('p');
+        help.id = `${CSS_PREFIX}-speed-help`;
+        help.className = `${CSS_PREFIX}-field-help`;
+        help.textContent = 'Set the current video from 0.25× to 10×. Above 4×, some browsers may mute audio. This choice is not saved for other videos.';
+        const current = document.createElement('p');
+        current.id = `${CSS_PREFIX}-speed-current`;
+        current.className = `${CSS_PREFIX}-field-help`;
+        const input = document.createElement('input');
+        input.id = label.htmlFor;
+        input.type = 'number'; input.min = '0.25'; input.max = '10'; input.step = '0.25';
+        input.className = `${CSS_PREFIX}-input`;
+        const target = getPlaybackSpeedTarget();
+        const initialRate = target.video?.playbackRate || 1;
+        input.value = String(initialRate >= 0.25 && initialRate <= 10 ? Math.round(initialRate * 4) / 4 : 1);
+        input.setAttribute('aria-describedby', `${help.id} ${current.id}`);
+        const actions = document.createElement('div');
+        actions.className = `${CSS_PREFIX}-btn-row`;
+        const apply = document.createElement('button');
+        apply.type = 'button'; apply.id = `${CSS_PREFIX}-speed-apply`;
+        apply.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-primary`;
+        apply.textContent = 'Apply speed';
+        const reset = document.createElement('button');
+        reset.type = 'button'; reset.id = `${CSS_PREFIX}-speed-reset`;
+        reset.className = `${CSS_PREFIX}-btn ${CSS_PREFIX}-btn-secondary`;
+        reset.textContent = 'Reset to 1×';
+        const changeSpeed = rate => {
+            const result = applyPlaybackSpeed(rate);
+            input.setAttribute('aria-invalid', String(!result.ok));
+            if (result.ok) input.value = String(rate);
+            showToast(result.message, result.ok ? 'success' : 'warn');
+            updatePlaybackSpeedControls();
+        };
+        apply.addEventListener('click', () => changeSpeed(input.valueAsNumber));
+        reset.addEventListener('click', () => changeSpeed(1));
+        input.addEventListener('keydown', event => {
+            if (event.key === 'Enter') { event.preventDefault(); changeSpeed(input.valueAsNumber); }
+        });
+        actions.append(apply, reset);
+        field.append(label, help, input, actions, current);
+        return field;
+    }
+
     function createFeatureSection(group, query = '') {
         const visibleFeatures = group.features.filter(feat => matchesSettingsQuery(
             query,
@@ -7293,12 +7386,13 @@
             feat.desc,
             feat.technical || ''
         ));
-        if (!visibleFeatures.length) return null;
+        const showSpeed = group.sectionId === SECTION_IDS.enhance && matchesSettingsQuery(query, group.title, 'playback speed video faster slower acceleration 10x 10× 1×');
+        if (!visibleFeatures.length && !showSpeed) return null;
         const enabledCount = visibleFeatures.filter(feat => state.features[feat.key] !== false).length;
         const section = createSection(
             group.title,
             group.description,
-            createPill(STRINGS.ui.onPill(enabledCount, visibleFeatures.length), getFeatureGroupTone(enabledCount, visibleFeatures.length)),
+            visibleFeatures.length ? createPill(STRINGS.ui.onPill(enabledCount, visibleFeatures.length), getFeatureGroupTone(enabledCount, visibleFeatures.length)) : null,
             group.sectionId
         );
         const surface = createSurface();
@@ -7316,6 +7410,7 @@
                 : feat;
             list.appendChild(createToggleRow(effective));
         }
+        if (showSpeed) surface.appendChild(createPlaybackSpeedControls());
         surface.appendChild(list);
         // Community data sources deserve visible credit — SponsorBlock and
         // DeArrow data are CC BY-NC-SA licensed (attribution required), and
@@ -8704,6 +8799,7 @@
         }
         updatePanelStatus();
         updateStatsDisplay();
+        updatePlaybackSpeedControls();
     }
 
     function getFocusableElements(root) {
@@ -9512,7 +9608,7 @@
 
         // Stats counter update interval (panel only repaints when open)
         registerInterval(() => {
-            if (state.settingsOpen) updateStatsDisplay();
+            if (state.settingsOpen) { updateStatsDisplay(); updatePlaybackSpeedControls(); }
         }, STATS_UI_REFRESH_MS);
 
         // SPA navigation handling

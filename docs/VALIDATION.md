@@ -343,3 +343,36 @@ cached after a force push; their refresh is separate from verifying branch ances
 - Browser evidence is synthetic and uses simulated manager APIs. Actual
   Violentmonkey installation and live YouTube playback/ad blocking were not
   validated. No new release tag or store submission was created.
+
+
+## 1.7.0 manual playback speed — 2026-10-16
+
+- Video tools offers a labeled 0.25×–10× numeric control in quarter steps, an
+  explicit Apply speed button/Enter action, current-rate display and Reset to 1×.
+  Search finds the control. It changes only the current main video's native
+  playbackRate; it never calls play(), changes mute/pitch, writes speed settings
+  or installs a navigation/ratechange override. Ads, live streams and paused or
+  disabled page protection block the action. It uses the existing panel timer.
+- Invalid values and native setter failures produce bounded, actionable messages.
+  Help explains that high playback rates may silence audio in some browsers;
+  10× is an available manual rate, not a universal playback-quality guarantee.
+- npm run package passed all five unit/contract suites, including new invalid-rate,
+  live-video and setter-error regressions. Versions are synchronized at 1.7.0;
+  both extension engines are byte-identical. No dependency, API permission, host
+  match, consent default, signed-data or filtering-algorithm changes were made.
+- Chromium for Testing 149.0.7827.55 passed the full UI matrix: 32 scenarios
+  (39 including parent groups), with zero skips. New scenarios in both modes
+  verify explicit application, 0.25×/10×/1×, invalid input, paused media staying
+  paused, native rate changes, replacement videos, ad/live guards and search.
+  Responsive layouts and speed scenarios were repeated after the final button
+  spacing adjustment. The desktop Video tools capture was visually inspected.
+- Temporary integration checks on Chromium 149.0.7827.55 and Firefox 157.0
+  confirmed that the installed extensions and userscript fixtures accept 10×
+  and reset to 1×. Firefox lint reported zero errors, notices or warnings.
+  The short synthetic video/comment/chat/navigation gate passed both modes.
+- Repeated archive generation produced identical SHA256SUMS. Documentation and
+  generated userscript match the editable reviewer source archive.
+- Tests use synthetic pages, simulated manager APIs and temporary profiles.
+  Actual Violentmonkey installation, live YouTube playback at 10× and high-speed
+  audio/video quality were not verified. No new release tag or store submission
+  was created; existing published ZIP links remain separate from main updates.

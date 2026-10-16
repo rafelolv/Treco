@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.0 — Unreleased
+
+- Set the current video to 0.25×–10× from Video tools, with a one-click reset to normal speed.
+- Keep manual speed changes away from ads and live streams without forcing a rate on later videos.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.6.0 — Unreleased
 
 - Explain startup and rule-update problems with direct recovery actions.

@@ -97,3 +97,12 @@ publishing changed signed data. Never commit private keys.
 References: [Chrome content scripts](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts),
 [Firefox content scripts](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/content_scripts),
 [background differences](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/background).
+
+
+Playback speed is a manual Video tools action, not an installed filtering engine.
+It validates quarter-step values between 0.25 and 10 before setting the current
+main video's native playbackRate. It does not call play(), set defaultPlaybackRate,
+change mute/pitch, add a storage key, or enforce speed during navigation/ratechange.
+Ads, live player state and paused/disabled page protection block the action. The
+existing panel statistics timer refreshes the read-only speed/availability display
+while the panel is open; no additional interval or observer is installed.

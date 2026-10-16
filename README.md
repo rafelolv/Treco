@@ -16,6 +16,7 @@ Zynubo is a free, open-source tool for YouTube. It lets you:
 - **Skip sponsor segments** with SponsorBlock, if you enable it.
 - **Clean up your feed** by hiding Shorts, comments and other distractions you choose.
 - **Filter videos** by channel, keyword or length.
+- **Adjust playback speed** up to 10× for the current video, with a quick reset to 1×.
 
 ## Install
 
