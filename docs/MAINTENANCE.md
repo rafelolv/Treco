@@ -31,7 +31,9 @@ and use CI secrets for any future authorized signing workflow. Preserve domain
 separation, artifact roles, monotonic revisions, expiry and rollback protection.
 The signer in tools/ is inherited tooling, not an authorized publishing pipeline.
 
-CI validates pull requests and pushes; it never publishes. GitHub releases and
+Ordinary CI validates pull requests and main pushes; it never publishes.
+The separate Release workflow publishes validated GitHub assets on authorized
+new version tags; it never submits to stores. GitHub releases and
 store submissions require separate explicit authorization. See RELEASING.md.
 
 Development dependency audit (2026-10-16): web-ext 10.8.0 is the current official

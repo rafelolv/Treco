@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — Unreleased
+## 1.1.0 — 2026-10-16
 
 - Redesign the Control Center with a graphite-and-paper palette, a red Z mark and quieter typography.
 - Show one settings section at a time and keep matching sections visible during search.

@@ -4,11 +4,17 @@ Zynubo extensions run without Tampermonkey or another userscript manager. They
 share the userscript's engine and Control Center. Keep only one Zynubo method
 enabled in each browser profile.
 
-There are currently no published release ZIPs, signed XPIs or store listings.
-For a setup without build commands, use the [recommended userscript](../README.md#install).
-The instructions below are for local extension builds.
+Download version 1.1.0:
 
-## Get the local packages
+- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-chromium-v1.1.0.zip)
+- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-firefox-v1.1.0.zip)
+- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/SHA256SUMS)
+
+No build commands are needed to install these downloads. Extract the ZIP and
+follow the browser instructions below. These are unsigned local packages; no
+signed XPI or browser-store listing is available yet.
+
+## Build the packages yourself (optional)
 
 With Node.js 24, npm and Python 3 installed, run from a checkout of this repository:
 
@@ -27,7 +33,7 @@ This generates the following files for the current version (1.1.0):
 | `dist/SHA256SUMS` | Checksums of the generated download files. |
 
 The build also produces ready-to-load `dist/chromium/` and `dist/firefox/` folders.
-Future official downloads will be listed on [GitHub Releases](https://github.com/rafelolv/Zynubo/releases).
+Official packaged downloads are listed on [GitHub Releases](https://github.com/rafelolv/Zynubo/releases).
 No release ZIP is presented as a store-signed package.
 
 ## Chrome, Brave and Edge

@@ -4,7 +4,8 @@
   <p>Less interruption. More YouTube.</p>
   <p>
     <a href="https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install userscript"></a>
-    <a href="docs/EXTENSIONS.md"><img src="https://img.shields.io/badge/Local_extensions-252720?style=for-the-badge" alt="Local extensions — installation guide"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-chromium-v1.1.0.zip"><img src="https://img.shields.io/badge/Download_Chromium-252720?style=for-the-badge" alt="Download Chromium extension"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-firefox-v1.1.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Firefox temporary extension"></a>
   </p>
   <p><a href="docs/USER-GUIDE.md">User guide</a> · <a href="https://github.com/rafelolv/Zynubo/issues">Get help</a></p>
 </div>
@@ -30,9 +31,9 @@ Keep **one Zynubo installation** enabled. Disable older upstream scripts and oth
 
 Extensions run without a userscript manager. Follow the **[local extension guide](docs/EXTENSIONS.md)** for installation and updates.
 
-There are no published Zynubo release ZIPs or browser-store listings yet. Local packages must currently be built from the repository. Firefox local installs are temporary and disappear when the browser closes; a normal persistent install requires Mozilla signing.
+Download the ZIP for your browser using the buttons above or [GitHub Releases](https://github.com/rafelolv/Zynubo/releases/latest). Chromium ZIPs load through Developer mode. Firefox ZIPs are unsigned and work only as temporary installs; they disappear when Firefox closes.
 
-Future packaged downloads will appear on [GitHub Releases](https://github.com/rafelolv/Zynubo/releases). Store signing and availability are separate from GitHub downloads.
+Zynubo has no browser-store listing or signed XPI yet. Follow the guide to extract and load the ZIP; neither package needs build commands or a userscript manager.
 
 </details>
 

@@ -96,3 +96,17 @@ cached after a force push; their refresh is separate from verifying branch ances
   cross-device synchronization is claimed. Narrow viewport checks are desktop
   browser emulation. Blocking engines, defaults, consent, storage namespaces,
   signed-data revisions and add-on IDs were preserved.
+
+## GitHub release 1.1.0 preparation — 2026-10-16
+
+- Repeated npm run package, Firefox lint and temporary-profile Chromium/Firefox
+  integration checks; all passed. The full 22-scenario UI fixture matrix passed.
+- Rebuilt ZIPs twice with identical SHA256SUMS. The release validator checked
+  exact asset names, checksums, versions, bundled engine and reviewer source.
+  An altered userscript was rejected by a separate corruption check.
+- Reviewed the new tag-only Release workflow: validation has read-only repository
+  access; the dependent publication job alone receives contents: write and the
+  ephemeral GitHub token. It refuses existing releases, downloads the published
+  assets and verifies checksums. Ordinary main/PR CI remains non-publishing.
+- Release notes distinguish unsigned GitHub ZIPs from store signing/approval.
+  No live YouTube or store compatibility claim has been added.

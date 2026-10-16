@@ -20,8 +20,18 @@
 8. Report the URL and actual verification. A GitHub release does not imply store
    signing, approval or availability.
 
-CI only validates and uploads temporary Actions artifacts. It never creates tags,
-releases or store submissions. No upload workflow is enabled for this initial setup.
+Ordinary push/PR CI only validates and uploads temporary Actions artifacts.
+The separate Release workflow publishes only on a new `v*` tag. Its read-only
+validation job rebuilds, lints, tests browsers and checks the exact archives. Only
+the dependent publication job receives `contents: write` and the temporary GitHub
+token. It refuses existing releases and verifies downloaded asset checksums.
+A tag push is therefore a publication action: push it only for an authorized
+release. No workflow submits to stores. Release notes live in docs/releases/.
+
+When using this workflow for step 6, push the new annotated tag and wait for
+both jobs. Do not publish a second copy locally or retry by moving the tag.
+If publication partially succeeds, inspect existing release assets before any
+retry; the workflow intentionally refuses to replace a published release.
 
 ## Store preparation
 
