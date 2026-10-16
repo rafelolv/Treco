@@ -4,11 +4,11 @@ Zynubo extensions run without Tampermonkey or another userscript manager. They
 share the userscript's engine and Control Center. Keep only one Zynubo method
 enabled in each browser profile.
 
-Download version 1.1.0:
+Download the published release (1.3.2):
 
-- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-chromium-v1.1.0.zip)
-- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-firefox-v1.1.0.zip)
-- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/SHA256SUMS)
+- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.3.2/Zynubo-chromium-v1.3.2.zip)
+- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.3.2/Zynubo-firefox-v1.3.2.zip)
+- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.3.2/SHA256SUMS)
 
 No build commands are needed to install these downloads. Extract the ZIP and
 follow the browser instructions below. These are unsigned local packages; no
@@ -23,13 +23,13 @@ npm ci
 npm run package
 ```
 
-This generates the following files for the current version (1.1.0):
+This generates files for the version in `package.json` (`VERSION` below):
 
 | File | Purpose |
 | --- | --- |
-| `dist/Zynubo-chromium-v1.1.0.zip` | Local Chrome, Brave or Edge extension. |
-| `dist/Zynubo-firefox-v1.1.0.zip` | Temporary Firefox extension or input for a future signing submission. |
-| `dist/Zynubo-source-v1.1.0.zip` | Editable source for reviewers and contributors. |
+| `dist/Zynubo-chromium-vVERSION.zip` | Local Chrome, Brave or Edge extension. |
+| `dist/Zynubo-firefox-vVERSION.zip` | Temporary Firefox extension or input for a future signing submission. |
+| `dist/Zynubo-source-vVERSION.zip` | Editable source for reviewers and contributors. |
 | `dist/SHA256SUMS` | Checksums of the generated download files. |
 
 The build also produces ready-to-load `dist/chromium/` and `dist/firefox/` folders.
