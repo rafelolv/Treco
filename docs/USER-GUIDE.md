@@ -93,6 +93,10 @@ The button shows the actual speed and also works in fullscreen. It appears on
 recorded videos with a desktop player control bar, outside ads and live streams.
 It does not float over live chat. Other layouts still have the panel control.
 
+To remove the player button, enable **Video tools → Hide player speed button**.
+This preference is saved; turn it off to show the button again. Hiding it does
+not change the current speed or remove the panel control.
+
 You can also open **Video tools → Playback speed**, choose a value from **0.25× to 10×** in
 steps of 0.25, then click **Apply speed** or press Enter. **Reset to 1×** returns
 the current video to normal speed. Editing the number alone does not apply it.

@@ -705,6 +705,10 @@
                         label: 'Force original audio',
                         desc: 'Switches back to the original-language audio track when YouTube defaults to an auto-dubbed or translated track.'
                     },
+                    hidePlayerSpeedButton: {
+                        label: 'Hide player speed button',
+                        desc: 'Removes the speed button from the video player. Playback speed remains available in Video tools.'
+                    },
                     volumeBoost: {
                         label: 'Volume boost (up to 5x)',
                         desc: 'Adds a gain slider under the player so you can amplify quiet videos past the browser\u2019s 100% ceiling.'
@@ -957,6 +961,7 @@
             returnYoutubeDislike: false,
             forceOriginalAudio: false,
             volumeBoost: false,
+            hidePlayerSpeedButton: false,
             shortsRedirect: false,
             channelBlocker: false,
             keywordBlocker: false,
@@ -1037,7 +1042,8 @@
                 { key: 'dearrow', ...featureCopy('enhance', 'dearrow') },
                 { key: 'returnYoutubeDislike', ...featureCopy('enhance', 'returnYoutubeDislike') },
                 { key: 'forceOriginalAudio', ...featureCopy('enhance', 'forceOriginalAudio') },
-                { key: 'volumeBoost', ...featureCopy('enhance', 'volumeBoost') }
+                { key: 'volumeBoost', ...featureCopy('enhance', 'volumeBoost') },
+                { key: 'hidePlayerSpeedButton', ...featureCopy('enhance', 'hidePlayerSpeedButton') }
             ]
         },
         {
@@ -7290,7 +7296,7 @@
         const player = target.video?.closest('#movie_player, .html5-video-player');
         const controls = player?.querySelector('.ytp-right-controls');
         const remove = () => { playerSpeedUI?.destroy(); playerSpeedUI = null; };
-        if (window.top !== window.self || !controls || !target.video ||
+        if (state.features.hidePlayerSpeedButton || window.top !== window.self || !controls || !target.video ||
             /^\/(?:embed|shorts|live_chat|live_chat_replay)(?:\/|$)/.test(location.pathname)) {
             remove(); return;
         }

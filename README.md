@@ -4,8 +4,8 @@
   <p>Block ads, skip sponsors and make YouTube your own.</p>
   <p>
     <a href="https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install Zynubo userscript"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.7.0/Zynubo-chromium-v1.7.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Zynubo extension for Chrome, Brave and Edge"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.7.0/Zynubo-firefox-v1.7.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Zynubo temporary Firefox extension"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-chromium-v1.9.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Zynubo extension for Chrome, Brave and Edge"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-firefox-v1.9.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Zynubo temporary Firefox extension"></a>
   </p>
   <p><a href="#install">Installation</a> · <a href="#use-zynubo">How to use</a> · <a href="#need-help">Get help</a></p>
 </div>
@@ -49,6 +49,8 @@ Keep only **one Zynubo installation** enabled in each browser.
 1. **Open settings:** click **Zynubo** in YouTube's top-right header, or press **Alt+Shift+Z** outside a text field. You can also use your userscript manager's menu or the extension's toolbar icon.
 2. **Find an option:** choose a section or use **Find a setting**. Each option explains what it does; expand **Technical details** if you want more information.
 3. **Make it yours:** turn options on or off. Changes save automatically. Star your favorites to keep them together in **Overview**.
+
+In **Video tools**, enable **Hide player speed button** to remove the speed button from the player. You can still change speed from the panel.
 
 ![Zynubo settings in the dark theme](docs/images/control-center-v1.5.0-dark.png)
 

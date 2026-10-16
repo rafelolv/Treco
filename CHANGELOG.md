@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0 — 2026-10-16
+
+- Hide the player speed button with a saved Video tools option while keeping panel speed controls available.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.8.0 — Unreleased
 
 - Adjust playback speed from a compact button and slider in the video player without opening settings.

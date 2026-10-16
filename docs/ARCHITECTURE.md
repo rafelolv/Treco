@@ -118,3 +118,10 @@ popover closes on outside click, focus leaving, Escape or opening the main panel
 its keys and pointer actions do not bubble into the player's playback shortcuts.
 It is absent in child frames, embedded/Shorts/chat pages, ads, live streams or
 paused/disabled protection. No setting, permission or runtime dependency is added.
+
+
+The hidePlayerSpeedButton feature defaults to false. Its saved boolean uses the
+existing validated feature_overrides map and ordinary import/export/storage
+broker, with no new permission or storage namespace. Reconciliation removes the
+player button/popover while hidden; setting it back to false recreates the UI
+without changing playback speed. Manual panel speed actions are independent.

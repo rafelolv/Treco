@@ -420,3 +420,30 @@ and verifies downloaded assets; no store submission is authorized.
 - All browser evidence is synthetic, with temporary profiles and simulated
   manager APIs. Actual Violentmonkey installation and real YouTube/native-toolbar
   layouts, fullscreen playback and high-speed audio quality were not verified.
+
+## 1.9.0 visibility preference and release preparation — 2026-10-16
+
+- Added Video tools → Hide player speed button, off by default so existing
+  installations retain their player control. Its boolean is saved in the existing
+  validated feature_overrides map. Hiding removes the button and popover during
+  navigation/reconciliation without changing playback speed or panel controls.
+- Unit regression checks the default and loading a saved preference. The two
+  player UI scenarios additionally verify saved overrides, removal of both nodes,
+  panel speed changes while hidden, staying hidden across navigation/reconciliation
+  and showing the button again without changing the current rate.
+- Chromium for Testing 149.0.7827.55 passed the full 34-scenario UI matrix (42
+  with parent groups), with zero failures or skips. Temporary installation/integration passed in Chromium
+  149.0.7827.55 and Firefox 157.0, including hide/show through the actual shared
+  panel in userscript and extension fixtures. Firefox lint had zero errors,
+  notices or warnings; the short stability gate passed both modes.
+- npm run package checks source/engine parity, licenses, versions and unit/contract
+  suites. Repeated archives are compared through SHA256SUMS and the exact release
+  files are inspected before publication. All public formats use version 1.9.0.
+- The maintainer authorized this GitHub release. It includes the previously
+  unreleased 1.8.0 player UI; README and extension downloads target v1.9.0. The
+  tag-triggered workflow repeats validation, publishes five assets and verifies
+  downloaded checksums. No store submission or signing is authorized.
+- Evidence remains synthetic, with simulated manager APIs and temporary profiles.
+  Actual Violentmonkey installation, live YouTube blocking/native player layouts
+  and high-speed audio quality were not verified. No permissions, signed data,
+  filtering algorithms, storage namespaces or runtime dependencies changed.

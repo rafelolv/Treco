@@ -2425,3 +2425,10 @@ test('manual playback speed rejects invalid values and player failures', () => {
     assert.equal(failure.ok, false);
     assert.equal(failure.message.includes('Private'), false);
 });
+
+
+test('player speed button visibility defaults to shown and loads its saved preference', () => {
+    assert.equal(createTestHarness().state.features.hidePlayerSpeedButton, false);
+    const h = createTestHarness({storage:{ytab_feature_overrides:{hidePlayerSpeedButton:true}}});
+    assert.equal(h.state.features.hidePlayerSpeedButton, true);
+});

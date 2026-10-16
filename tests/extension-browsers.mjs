@@ -66,6 +66,13 @@ ${mode === 'userscript' ? '<script src="/core.js"></script>' : ''}
     payload.playerSpeedMaximum = document.querySelector('video').playbackRate === 10 && speedButton.textContent === '10×';
     document.querySelector('#ytab-player-speed-popup button').click();
     payload.playerSpeedReset = document.querySelector('video').playbackRate === 1;
+    document.getElementById('ytab-launcher').click();
+    document.querySelector('[data-section-id="ytab-section-enhance"]').click();
+    document.getElementById('ytab-toggle-hidePlayerSpeedButton').click();
+    payload.playerSpeedHidden = !document.getElementById('ytab-player-speed-button') && !document.getElementById('ytab-player-speed-popup');
+    document.getElementById('ytab-toggle-hidePlayerSpeedButton').click();
+    payload.playerSpeedShown = !!document.getElementById('ytab-player-speed-button') && document.querySelector('video').playbackRate === 1;
+    document.getElementById('ytab-close-btn').click();
     // DOM fixture reports are deliberately unsigned test evidence, not product status.
     window.fixtureResult = payload;
 })();
@@ -189,6 +196,8 @@ function check(report, expected) {
     assert.equal(report.launcherOpensPanel, true);
     assert.equal(report.shortcutOpensPanel, true);
     assert.equal(report.launcherStatus, 'attention', 'Fixture refresh failure must remain visible');
+    assert.equal(report.playerSpeedHidden, true);
+    assert.equal(report.playerSpeedShown, true);
     assert.equal(report.playerSpeedMaximum, true);
     assert.equal(report.playerSpeedReset, true);
     assert.equal(report.speedMaximum, true);

@@ -4,11 +4,11 @@ Zynubo extensions run without Tampermonkey or another userscript manager. They
 share the userscript's engine and Control Center. Keep only one Zynubo method
 enabled in each browser profile.
 
-Download the published release (1.7.0):
+Download the published release (1.9.0):
 
-- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.7.0/Zynubo-chromium-v1.7.0.zip)
-- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.7.0/Zynubo-firefox-v1.7.0.zip)
-- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.7.0/SHA256SUMS)
+- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-chromium-v1.9.0.zip)
+- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-firefox-v1.9.0.zip)
+- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/SHA256SUMS)
 
 No build commands are needed to install these downloads. Extract the ZIP and
 follow the browser instructions below. These are unsigned local packages; no

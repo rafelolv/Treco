@@ -1146,6 +1146,27 @@ test('player speed button stays in native controls and follows video lifecycle',
                 await page.evaluate(() => { document.getElementById('movie_player').classList.remove('ytp-live'); document.dispatchEvent(new Event('yt-navigate-finish')); });
                 await button.waitFor({state:'visible'});
                 await page.locator('#ytab-launcher').click();
+                await page.locator('[data-section-id="ytab-section-enhance"]').click();
+                const hideSpeed = page.getByRole('switch', {name:'Toggle Hide player speed button',exact:true});
+                await hideSpeed.check();
+                assert.equal(await button.count(), 0, 'Hiding removes the button');
+                assert.equal(await popup.count(), 0, 'Hiding removes the popover');
+                const saved = await page.evaluate(mode => mode === 'userscript' ? window.__ytabStore.ytab_feature_overrides : JSON.parse(localStorage.getItem('__ytab_ext_settings__')).ytab_feature_overrides, mode);
+                assert.equal(saved.hidePlayerSpeedButton, true, 'The preference must be saved');
+                await page.getByRole('spinbutton',{name:'Playback speed',exact:true}).fill('2');
+                await page.getByRole('button',{name:'Apply speed',exact:true}).click();
+                assert.equal(await page.evaluate(() => document.querySelector('video').playbackRate), 2, 'The panel speed control must remain available');
+                await page.locator('#ytab-close-btn').click();
+                await page.evaluate(() => document.dispatchEvent(new Event('yt-navigate-finish')));
+                await page.waitForTimeout(1600);
+                assert.equal(await button.count(), 0, 'Navigation and reconciliation must respect the preference');
+                await page.locator('#ytab-launcher').click();
+                await page.locator('[data-section-id="ytab-section-enhance"]').click();
+                assert.equal(await hideSpeed.isChecked(), true);
+                await hideSpeed.uncheck();
+                await button.waitFor({state:'visible'});
+                assert.equal(await button.textContent(), '2×', 'Showing the button must not change speed');
+                await page.locator('[data-section-id="ytab-section-overview"]').click();
                 await page.locator('#ytab-master-toggle').uncheck();
                 assert.equal(await button.count(), 0, 'Disabling protection removes the player UI');
             } finally { await context.close(); }
