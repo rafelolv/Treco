@@ -10,7 +10,7 @@ import zipfile
 
 root = Path(__file__).resolve().parent.parent
 config = json.loads((root / 'build/distribution.json').read_text())
-assert config['repository'] == 'rafelolv/Zynubo'
+assert config['repository'] == 'rafelolv/Treco'
 repository = config['repository']
 readme = (root / 'README.md').read_text()
 links = set(re.findall(r'releases/download/v(\d+\.\d+\.\d+)/(Zynubo|Treco)-(?:chromium|firefox)-v\d+\.\d+\.\d+\.zip', readme))
@@ -55,8 +55,13 @@ for name,digest in checksums.items():
 script_name=f'{brand}.user.js'
 script = files[script_name].decode()
 assert re.search(rf'^// @version\s+{re.escape(version)}\s*$', script, re.M)
+# Immutable releases retain the metadata repository they were built with.
+with zipfile.ZipFile(io.BytesIO(files[f'{brand}-source-v{version}.zip'])) as source:
+    archived_project = json.loads(source.read('package.json'))['repository']['url'].removesuffix('.git')
+assert archived_project in canonical_projects
+archived_repository = archived_project.removeprefix('https://github.com/')
 for field, suffix in [('downloadURL',script_name),('updateURL',script_name)]:
-    assert re.search(rf'^// @{field}\s+https://raw\.githubusercontent\.com/{repository}/main/{re.escape(suffix)}\s*$', script,re.M)
+    assert re.search(rf'^// @{field}\s+https://raw\.githubusercontent\.com/{archived_repository}/main/{re.escape(suffix)}\s*$', script,re.M)
 icon = fetch(f'https://raw.githubusercontent.com/{repository}/main/icon.png', 256 * 1024)
 assert icon[:8]==b'\x89PNG\r\n\x1a\n' and int.from_bytes(icon[16:20],'big')==128 and int.from_bytes(icon[20:24],'big')==128
 package_icons=[]
@@ -65,7 +70,7 @@ for browser in ['chromium','firefox']:
     with zipfile.ZipFile(io.BytesIO(files[f'{brand}-{browser}-v{version}.zip'])) as archive:
         assert archive.testzip() is None
         manifest=json.loads(archive.read('manifest.json'))
-        assert manifest['version']==version and manifest['homepage_url']==project
+        assert manifest['version']==version and manifest['homepage_url']==archived_project
         info=json.loads(archive.read('build-info.json'))
         assert info['version']==version and info['coreSha256']==checksums[script_name]
         engine=archive.read('main.js');engines.append(engine)
@@ -86,5 +91,5 @@ with zipfile.ZipFile(io.BytesIO(files[f'{brand}-source-v{version}.zip'])) as sou
         assert icon_field.startswith('data:image/png;base64,')
         assert base64.b64decode(icon_field.split(',',1)[1],validate=True)==package_icons[0]
     else:
-        assert icon_field==f'https://raw.githubusercontent.com/{repository}/main/icon.png'
+        assert icon_field==f'https://raw.githubusercontent.com/{archived_repository}/main/icon.png'
 print(f'Published v{version}: README links, five assets, checksums, userscript metadata, both engines, icons and reviewer source verified.')

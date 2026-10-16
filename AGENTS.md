@@ -4,7 +4,7 @@ Maintained by rafelolv. Read docs/MAINTENANCE.md and docs/ARCHITECTURE.md.
 
 - Use English in source, comments, UI, metadata, documentation and commits. Discuss work with the maintainer in Portuguese.
 - Maintain main. Use repository-local Git identity Rafael <82127878+rafelolv@users.noreply.github.com>. Maintain the independent Treco history; do not reintroduce upstream commit ancestry or add co-authors automatically. Rewrite published history only with explicit maintainer authorization. Preserve source provenance and required license notices.
-- Preserve LICENSE, copyright, third-party notices, service attribution and signed data provenance. Present inherited work honestly. Current branding, installation and support links belong to rafelolv/Zynubo/main and its issues.
+- Preserve LICENSE, copyright, third-party notices, service attribution and signed data provenance. Present inherited work honestly. Current branding, installation and support links belong to rafelolv/Treco/main and its issues.
 - Edit the engine only in src/core.user.js, adapters and popup only in src/extension/, panel styles and shared design tokens in src/ui/, and build logic in build/. Treco.user.js, its compatibility copy Zynubo.user.js and icon.png are generated and committed. Never hand-edit dist/ or copied browser engines.
 - images/icon.svg is the canonical T logo. Compile it into the panel stylesheet at build time and generate all PNGs from it. Keep icons legible at 16px, UI accessible, and decoration restrained.
 - Keep one shared engine. Both extension packages receive the same generated main.js. Any shared logic change needs validation in the userscript, Chromium extension and Firefox extension. UI, icon, metadata and packaging updates also follow synchronized versioning.

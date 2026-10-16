@@ -4,7 +4,7 @@
   "version": "__VERSION__",
   "description": "The Complete YouTube Toolkit. All the tricks you need for a better YouTube.",
   "author": "rafelolv",
-  "homepage_url": "https://github.com/rafelolv/Zynubo",
+  "homepage_url": "https://github.com/rafelolv/Treco",
   "minimum_chrome_version": "121",
   "icons": {
     "16": "icons/icon16.png",

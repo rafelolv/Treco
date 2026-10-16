@@ -88,7 +88,7 @@ unrelated application exports and future schemas.
 
 Remote resources are declarative data, never executable JavaScript. The inherited
 Ed25519 trust anchor authenticates the unchanged signed data. URLs now point to
-rafelolv/Zynubo, including mirrors. Until publication these URLs may return 404;
+rafelolv/Treco, including mirrors. Until publication these URLs may return 404;
 failed refreshes retain cached/built-in rules. The inherited signer cannot
 create compatible signatures without the original private key. Rotate the key
 explicitly, rebuild all formats and preserve revision/rollback semantics before

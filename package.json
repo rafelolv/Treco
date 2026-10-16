@@ -1,6 +1,6 @@
 {
   "name": "treco",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "private": true,
   "scripts": {
     "build": "node build/build.mjs",
@@ -22,7 +22,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rafelolv/Zynubo.git"
+    "url": "https://github.com/rafelolv/Treco.git"
   },
   "engines": {
     "node": ">=22"

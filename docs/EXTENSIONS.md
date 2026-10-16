@@ -6,9 +6,9 @@ enabled in each browser profile.
 
 Download **Treco 1.10.0**:
 
-- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip)
-- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip)
-- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/SHA256SUMS)
+- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip)
+- [Firefox temporary ZIP](https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip)
+- [Checksums](https://github.com/rafelolv/Treco/releases/download/v1.10.0/SHA256SUMS)
 
 No build commands are needed to install these downloads. Extract the ZIP and
 follow the browser instructions below. These are unsigned local packages; no
@@ -33,7 +33,7 @@ This generates files for the version in `package.json` (`VERSION` below):
 | `dist/SHA256SUMS` | Checksums of the generated download files. |
 
 The build also produces ready-to-load `dist/chromium/` and `dist/firefox/` folders.
-Official packaged downloads are listed on [GitHub Releases](https://github.com/rafelolv/Zynubo/releases).
+Official packaged downloads are listed on [GitHub Releases](https://github.com/rafelolv/Treco/releases).
 No release ZIP is presented as a store-signed package.
 
 ## Chrome, Brave and Edge

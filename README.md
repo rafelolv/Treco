@@ -3,9 +3,9 @@
   <h1>Treco</h1>
   <p><strong>The Complete YouTube Toolkit</strong><br>All the tricks you need for a better YouTube.</p>
   <p>
-    <a href="https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install Treco userscript"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Treco extension for Chrome, Brave and Edge"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Treco temporary Firefox extension"></a>
+    <a href="https://raw.githubusercontent.com/rafelolv/Treco/main/Treco.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install Treco userscript"></a>
+    <a href="https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Treco extension for Chrome, Brave and Edge"></a>
+    <a href="https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Treco temporary Firefox extension"></a>
   </p>
   <p><a href="#install">Installation</a> · <a href="#use-treco">How to use</a> · <a href="#need-help">Get help</a></p>
 </div>
@@ -18,7 +18,7 @@ Treco is a free, open-source tool for YouTube. It lets you:
 - **Filter videos** by channel, keyword or length.
 - **Adjust playback speed** up to 10× from a button in the video player, with a quick reset to 1×.
 
-Treco was previously named Zynubo. The repository address remains the same so existing update links keep working.
+Treco was previously named Zynubo. Older Zynubo repository links redirect to Treco; current installation and support links use the new address.
 
 ## Install
 
@@ -33,7 +33,7 @@ Treco was previously named Zynubo. The repository address remains the same so ex
 ### Userscript
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/). These browser add-ons run scripts like Treco.
-2. **[Click here to install Treco](https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js)** and confirm in your manager.
+2. **[Click here to install Treco](https://raw.githubusercontent.com/rafelolv/Treco/main/Treco.user.js)** and confirm in your manager.
 3. Open or reload [YouTube](https://www.youtube.com/).
 
 If the link opens plain text, follow the [manual installation steps](docs/USER-GUIDE.md#manual-installation). If Treco does not start on Chrome, check **Allow User Scripts** in your manager's extension details.
@@ -70,7 +70,7 @@ SponsorBlock, DeArrow and Return YouTube Dislike ask for permission before conne
 
 Start by reloading YouTube. If the problem continues, temporarily disable other YouTube blockers and older Treco installations, then follow the **[troubleshooting guide](docs/USER-GUIDE.md#troubleshooting)**.
 
-Still stuck? **[Report a problem](https://github.com/rafelolv/Zynubo/issues/new?template=bug_report.yml)** with your browser, Treco version and what happened. In **Diagnostics**, you can review, copy or download a report. Review it before sharing; never post cookies, tokens or private URLs.
+Still stuck? **[Report a problem](https://github.com/rafelolv/Treco/issues/new?template=bug_report.yml)** with your browser, Treco version and what happened. In **Diagnostics**, you can review, copy or download a report. Review it before sharing; never post cookies, tokens or private URLs.
 
 YouTube changes can affect playback and blocking. An active status does not guarantee that every ad was blocked.
 

@@ -28,10 +28,10 @@
 // @connect      sponsor.ajay.app
 // @connect      dearrow-thumb.ajay.app
 // @connect      returnyoutubedislikeapi.com
-// @homepageURL  https://github.com/rafelolv/Zynubo
-// @supportURL   https://github.com/rafelolv/Zynubo/issues
-// @downloadURL  https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js
-// @updateURL    https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js
+// @homepageURL  https://github.com/rafelolv/Treco
+// @supportURL   https://github.com/rafelolv/Treco/issues
+// @downloadURL  https://raw.githubusercontent.com/rafelolv/Treco/main/Treco.user.js
+// @updateURL    https://raw.githubusercontent.com/rafelolv/Treco/main/Treco.user.js
 // ==/UserScript==
 
 /*!
@@ -88,23 +88,23 @@
 
     const SCRIPT_NAME = 'Treco';
     const SCRIPT_VERSION = '__VERSION__';
-    const PROJECT_URL = 'https://github.com/rafelolv/Zynubo';
+    const PROJECT_URL = 'https://github.com/rafelolv/Treco';
     const ISSUES_URL = `${PROJECT_URL}/issues`;
-    const FILTER_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/youtube-adblock-filters.txt';
-    const FILTER_MANIFEST_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/youtube-adblock-filters.manifest.json';
-    const FILTER_SIGNATURE_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/youtube-adblock-filters.txt.sig';
-    const WEBPACK_SIGNATURE_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/webpack-ad-signatures.json';
-    const WEBPACK_SIGNATURE_MANIFEST_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/webpack-ad-signatures.manifest.json';
-    const WEBPACK_SIGNATURE_SIG_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/webpack-ad-signatures.json.sig';
+    const FILTER_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Treco/refs/heads/main/youtube-adblock-filters.txt';
+    const FILTER_MANIFEST_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Treco/refs/heads/main/youtube-adblock-filters.manifest.json';
+    const FILTER_SIGNATURE_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Treco/refs/heads/main/youtube-adblock-filters.txt.sig';
+    const WEBPACK_SIGNATURE_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Treco/refs/heads/main/webpack-ad-signatures.json';
+    const WEBPACK_SIGNATURE_MANIFEST_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Treco/refs/heads/main/webpack-ad-signatures.manifest.json';
+    const WEBPACK_SIGNATURE_SIG_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Treco/refs/heads/main/webpack-ad-signatures.json.sig';
     const FILTER_PUBLIC_KEY_BASE64 = 'MCowBQYDK2VwAyEAdkjPuIDzXFI9UPn5w4t4selqoqbT4WCinGI58a2/a6E=';
     const FILTER_URL_MIRRORS = [
-        'https://cdn.jsdelivr.net/gh/rafelolv/Zynubo@main/youtube-adblock-filters.txt',
+        'https://cdn.jsdelivr.net/gh/rafelolv/Treco@main/youtube-adblock-filters.txt',
     ];
     const FILTER_MANIFEST_URL_MIRRORS = [
-        'https://cdn.jsdelivr.net/gh/rafelolv/Zynubo@main/youtube-adblock-filters.manifest.json',
+        'https://cdn.jsdelivr.net/gh/rafelolv/Treco@main/youtube-adblock-filters.manifest.json',
     ];
     const FILTER_SIGNATURE_URL_MIRRORS = [
-        'https://cdn.jsdelivr.net/gh/rafelolv/Zynubo@main/youtube-adblock-filters.txt.sig',
+        'https://cdn.jsdelivr.net/gh/rafelolv/Treco@main/youtube-adblock-filters.txt.sig',
     ];
     const FILTER_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
     const FILTER_MAX_BYTES = 5 * 1024 * 1024; // 5MB safety cap on remote lists
@@ -1357,7 +1357,7 @@
     function loadState() {
         const cached = sanitizeFilterPayload(getSetting('filters_cache', null));
         const cacheTime = getSetting('filters_cache_time', 0);
-        const cacheUrl = getSetting('filters_cache_url', FILTER_URL_DEFAULT);
+        const cacheUrl = canonicalFilterSourceUrl(getSetting('filters_cache_url', FILTER_URL_DEFAULT));
         const cachedIntegrity = getSetting('filters_integrity', '');
         const cachedIntegrityMessage = getSetting('filters_integrity_message', '');
         const featureOverrides = getFeatureOverrides();
@@ -2249,8 +2249,14 @@
      * FILTER FETCHER
      * ===================================================================== */
 
+    function canonicalFilterSourceUrl(value) {
+        // Recognize only our exact former signed sources; custom URLs stay intact.
+        const sources = [FILTER_URL_DEFAULT, ...FILTER_URL_MIRRORS];
+        return sources.find(url => url.replace('/rafelolv/Treco', '/rafelolv/Zynubo') === value) || value;
+    }
+
     function resolveFilterUrl() {
-        let url = getSetting('filter_url', FILTER_URL_DEFAULT);
+        let url = canonicalFilterSourceUrl(getSetting('filter_url', FILTER_URL_DEFAULT));
         // Guard against a corrupted or malicious saved setting. If the stored
         // URL is not a valid http(s) URL, silently restore the default so the
         // user is never stranded with a broken source.

@@ -8,7 +8,7 @@ interface without a manager. Choose one installation method per browser profile.
 
 If the install link opens plain text:
 
-1. Open the [complete Treco userscript](https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js) and copy its contents.
+1. Open the [complete Treco userscript](https://raw.githubusercontent.com/rafelolv/Treco/main/Treco.user.js) and copy its contents.
 2. Open your userscript manager's dashboard and create a new script.
 3. Replace the example code with the complete copied file, including the metadata at the top, and save.
 4. Keep Treco enabled and reload YouTube.
@@ -150,7 +150,7 @@ report**. The text report is limited to 16,384 characters and omits video/channe
 contents, custom source URLs and raw errors. Review it before sharing. If clipboard
 access is blocked, download the report instead.
 
-If you still need help, [open an issue](https://github.com/rafelolv/Zynubo/issues/new?template=bug_report.yml).
+If you still need help, [open an issue](https://github.com/rafelolv/Treco/issues/new?template=bug_report.yml).
 Include browser and Treco versions, installation method, the YouTube surface
 (main site, Music, TV or Kids) and steps to reproduce. Redact diagnostics; never
 post cookies, authorization tokens or private URLs. Actual tested browsers and

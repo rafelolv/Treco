@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 
 // Main userscript updates and packaged release downloads are separate channels.
 export function verifyDistributionReferences({readme, script, config, manifests, version, iconData}) {
-    assert.equal(config.repository, 'rafelolv/Zynubo');
+    assert.equal(config.repository, 'rafelolv/Treco');
     const links = [...readme.matchAll(/releases\/download\/v(\d+\.\d+\.\d+)\/(Zynubo|Treco)-(?:chromium|firefox)-v\d+\.\d+\.\d+\.zip/g)];
     const versions = links.map(match=>match[1]);
     assert.equal(new Set(links.map(match=>match[2])).size,1);

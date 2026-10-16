@@ -64,7 +64,7 @@ test('distribution references reject stale versions, wrong owners and mismatched
     const input={readme:fs.readFileSync('README.md','utf8'), script, config:JSON.parse(fs.readFileSync('build/distribution.json')), manifests:['chromium','firefox'].map(browser=>JSON.parse(fs.readFileSync(`dist/${browser}/manifest.json`))), version,iconData:`data:image/png;base64,${fs.readFileSync('icon.png').toString('base64')}`};
     assert.doesNotThrow(()=>verifyDistributionReferences(input));
     assert.throws(()=>verifyDistributionReferences({...input, script:script.replace(/@version +\S+/, '@version      0.0.1')}));
-    assert.throws(()=>verifyDistributionReferences({...input, readme:input.readme.replaceAll('github.com/rafelolv/Zynubo/releases/download/', 'github.com/other/repo/releases/download/')}));
+    assert.throws(()=>verifyDistributionReferences({...input, readme:input.readme.replaceAll('github.com/rafelolv/Treco/releases/download/', 'github.com/other/repo/releases/download/')}));
     const manifests=structuredClone(input.manifests); manifests[0].icons[128]='icons/old.png';
     assert.throws(()=>verifyDistributionReferences({...input,manifests}));
 });

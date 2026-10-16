@@ -166,6 +166,8 @@ function createTestHarness(options = {}) {
         getInjectionTimingStatus,
         buildDiagnosticsReport,
         getRecoveryAdvice,
+        canonicalFilterSourceUrl,
+        resolveFilterUrl,
         applyPlaybackSpeed,
         sanitizeDnrDiagnostics,
         formatDnrDiagnosticsReport,
@@ -2440,4 +2442,18 @@ test('Treco preserves settings imports from both previous product names', () => 
         assert.equal(h.importSettingsPayload(JSON.stringify({app,version:1,settings:{channel_blocklist:'@example'}}),'json-preview').ok,true,app);
     }
     assert.equal(h.buildSettingsExportPayload().app,'Treco');
+});
+
+
+test('former official filter sources resolve to Treco without rewriting custom URLs', () => {
+    const old = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/youtube-adblock-filters.txt';
+    const current = old.replace('/Zynubo/', '/Treco/');
+    const h = createTestHarness({storage:{ytab_filter_url:old}});
+    assert.equal(h.resolveFilterUrl(), current);
+    assert.equal(h.canonicalFilterSourceUrl(old), current);
+    const mirror = 'https://cdn.jsdelivr.net/gh/rafelolv/Zynubo@main/youtube-adblock-filters.txt';
+    assert.equal(h.canonicalFilterSourceUrl(mirror), mirror.replace('/Zynubo@','/Treco@'));
+    for (const custom of [old+'?custom=1','https://example.com/rafelolv/Zynubo/list.txt']) {
+        assert.equal(h.canonicalFilterSourceUrl(custom), custom);
+    }
 });

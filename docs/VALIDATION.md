@@ -511,3 +511,29 @@ the two known rafelolv project names and requires every asset to match the relea
 resolved project URL. The published audit then passed, including embedded metadata
 icons and both engines. This follow-up changes only auditing/documentation; the
 published tag and release assets are unchanged.
+
+
+## 1.10.1 canonical repository links — 2026-10-16
+
+- Active userscript metadata, project/support links, extension homepage/popup,
+  default signed data URLs, mirrors, README, guides, package repository and
+  distribution config now point directly to rafelolv/Treco. Git origin fetch/push
+  URLs use the new repository. Existing published notes and archives are immutable.
+- Exact former official filter-source preferences resolve to their Treco aliases;
+  cached-source comparison uses the same normalization. Custom sources remain
+  unchanged. No setting is silently rewritten and signed data/key/revision bytes
+  are preserved. Regression tests cover the old default, mirror and custom URLs.
+- All eight canonical data/manifest/signature endpoints were downloaded and
+  matched repository files byte-for-byte. npm run package validates all five
+  unit/contract suites, versions, license, shared engines and reproducible builds.
+- Temporary integration passed in Chromium 149.0.7827.55 and Firefox 157.0 using
+  synthetic pages and manager APIs. Firefox lint had zero errors, notices or
+  warnings. The short synthetic video/comment/chat/navigation gate passed both
+  modes. Layout and interaction code are unchanged; the 1.10.0 full UI evidence
+  above remains separate from real YouTube playback checks, which were not run.
+- The published-release audit checks immutable metadata/homepage URLs against the
+  repository recorded in that release's reviewer source. Current config uses
+  Treco while v1.10.0 retains its original embedded update/homepage aliases.
+- Public runtime metadata is synchronized at 1.10.1. Generated extension packages
+  have the same engine. No new release tag was created; v1.10.0 assets retain their
+  original contents and continue to work through GitHub redirects.

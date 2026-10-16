@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.1 — Unreleased
+
+- Point installation, updates, signed rule sources and support directly to rafelolv/Treco.
+- Keep earlier official filter-source preferences and cached rules compatible with the renamed repository.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.10.0 — 2026-10-16
 
 - Rename the application to Treco with a new T logo and the Complete YouTube Toolkit identity.
