@@ -24,7 +24,7 @@ Extension generation strips only userscript metadata and inserts the inherited
 GM adapters and command hooks from `src/extension/`. Both packages receive an
 identical generated `main.js`; packaging never maintains a second engine.
 `src/extension/network-rules.json` drives packaged DNR output and is checked
-against core intercept patterns. The canonical Z logo is `images/icon.svg`;
+against core intercept patterns. The canonical T logo is `images/icon.svg`;
 Sharp creates all runtime PNGs; the same SVG is embedded in the panel stylesheet.
 `src/ui/theme.json` is the shared panel/popup palette and `src/ui/panel.css` is the
 canonical scoped panel stylesheet. CSS is embedded as a string during the build;
@@ -79,11 +79,11 @@ against a malicious page and not live blocking evidence.
 The duplicate claim uses a synchronous cancelable document event before adapters
 or engines initialize. It works without changing storage namespaces or internal
 compatibility counters. Existing `ytab_*`, `__ytab_*`, event names, signed filenames,
-key IDs and monotonic data revisions remain intact. Zynubo uses new public
-installation metadata and a new Firefox add-on ID. There is no automatic transfer
+key IDs and monotonic data revisions remain intact. Treco uses new public
+installation metadata while preserving the existing Firefox add-on ID. There is no automatic transfer
 of manager storage or upstream extension storage to a different install identity;
 use the existing settings export/import controls if needed. The importer accepts
-the legacy YoutubeAdblock envelope as well as Zynubo, while still rejecting
+the legacy YoutubeAdblock and Zynubo envelopes as well as Treco, while still rejecting
 unrelated application exports and future schemas.
 
 Remote resources are declarative data, never executable JavaScript. The inherited
@@ -125,3 +125,11 @@ existing validated feature_overrides map and ordinary import/export/storage
 broker, with no new permission or storage namespace. Reconciliation removes the
 player button/popover while hidden; setting it back to false recreates the UI
 without changing playback speed. Manual panel speed actions are independent.
+
+
+Treco is the current product name. The GitHub repository and wire/storage
+identities retain their existing names for compatibility. Treco.user.js is the
+canonical generated installer; Zynubo.user.js is a byte-identical update alias.
+The metadata icon is a build-time PNG data URL generated from images/icon.svg,
+matching the packaged 128px icon and avoiding a stale remote icon cache. Author
+metadata names rafelolv; inherited MIT notices remain in the source and legal files.

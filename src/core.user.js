@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         Zynubo
+// @name         Treco
 // @namespace    https://github.com/rafelolv
 // @version      __VERSION__
-// @description  Local YouTube ad blocking with signed rules, plus an in-page Control Center that explains what is running.
-// @author       rafelolv (based on Matthew Parker's MIT-licensed work)
+// @description  The Complete YouTube Toolkit. All the tricks you need for a better YouTube.
+// @author       rafelolv
 // @license      MIT
-// @icon         https://raw.githubusercontent.com/rafelolv/Zynubo/main/icon.png
+// @icon         __ICON_DATA__
 // @match        https://www.youtube.com/*
 // @match        https://m.youtube.com/*
 // @match        https://music.youtube.com/*
@@ -30,8 +30,8 @@
 // @connect      returnyoutubedislikeapi.com
 // @homepageURL  https://github.com/rafelolv/Zynubo
 // @supportURL   https://github.com/rafelolv/Zynubo/issues
-// @downloadURL  https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js
-// @updateURL    https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js
+// @downloadURL  https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js
+// @updateURL    https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js
 // ==/UserScript==
 
 /*!
@@ -86,7 +86,7 @@
      * CONSTANTS & CONFIG
      * ===================================================================== */
 
-    const SCRIPT_NAME = 'Zynubo';
+    const SCRIPT_NAME = 'Treco';
     const SCRIPT_VERSION = '__VERSION__';
     const PROJECT_URL = 'https://github.com/rafelolv/Zynubo';
     const ISSUES_URL = `${PROJECT_URL}/issues`;
@@ -210,8 +210,8 @@
         access: {
             toolbarButton: 'Toolbar Button',
             userscriptMenu: 'Userscript Menu',
-            extensionHint: 'Click Zynubo on the YouTube page or use the browser toolbar button.',
-            userscriptHint: 'Click Zynubo on the YouTube page to open the Control Center any time.'
+            extensionHint: 'Click Treco on the YouTube page or use the browser toolbar button.',
+            userscriptHint: 'Click Treco on the YouTube page to open the Control Center any time.'
         },
         filters: {
             sourceLabels: {
@@ -248,7 +248,7 @@
             defaultVerified: updated => `Default Rule Library verified with Ed25519${updated ? ` (${updated})` : ''}.`,
             customSourceLoadedWithoutSignature: 'Custom Rule Library source loaded without signature verification.',
             allSourcesUnreachable: 'All filter sources (primary + mirrors) were unreachable. Your current rules stayed active.',
-            remoteUnreachable: 'The remote list was unreachable, so Zynubo stayed on the last known rule set.',
+            remoteUnreachable: 'The remote list was unreachable, so Treco stayed on the last known rule set.',
             remoteTooLarge: maxMb => `Remote filter list exceeds ${maxMb}MB limit.`,
             invalidJsonSchema: 'Invalid JSON filter schema.',
             noUsableRules: 'The remote list produced no usable rules.',
@@ -283,17 +283,17 @@
             },
             protected: 'Protected',
             remoteDescription: 'Remote rules are live and the fallback remains ready if the source goes away.',
-            cachedDescription: 'Cached rules are active while Zynubo waits for a fresher remote copy.',
-            staleDescription: 'Previously saved rules are active while Zynubo refreshes in the background.',
+            cachedDescription: 'Cached rules are active while Treco waits for a fresher remote copy.',
+            staleDescription: 'Previously saved rules are active while Treco refreshes in the background.',
             builtInDescription: 'Built-in rules are active, so protection still works even without a remote list.'
         },
         injectionTiming: {
             confirmedTitle: 'Document-start confirmed',
             lateTitle: 'Late injection suspected',
-            confirmedDescription: (readyState, elapsedText) => `Zynubo evaluated while the document was ${readyState} (${elapsedText}), so manager setup looks correct. If ads still appear, refresh rules or check engine health instead of reinstalling.`,
+            confirmedDescription: (readyState, elapsedText) => `Treco evaluated while the document was ${readyState} (${elapsedText}), so manager setup looks correct. If ads still appear, refresh rules or check engine health instead of reinstalling.`,
             extensionProduct: 'extension content script',
             userscriptProduct: 'userscript manager',
-            lateDescription: (readyState, elapsedText, product) => `Zynubo evaluated after document-start (${readyState}, ${elapsedText}). This usually points to ${product} setup, such as Chrome's "Allow User Scripts" toggle, a disabled manager, or a manager that missed @run-at document-start. Reload YouTube after fixing setup; rule refreshes cannot recover player responses that loaded before the script.`
+            lateDescription: (readyState, elapsedText, product) => `Treco evaluated after document-start (${readyState}, ${elapsedText}). This usually points to ${product} setup, such as Chrome's "Allow User Scripts" toggle, a disabled manager, or a manager that missed @run-at document-start. Reload YouTube after fixing setup; rule refreshes cannot recover player responses that loaded before the script.`
         },
         toastTitles: {
             info: 'Heads Up',
@@ -310,15 +310,15 @@
         },
         volumeBoost: {
             tag: 'Boost',
-            title: 'Zynubo volume boost'
+            title: 'Treco volume boost'
         },
         ui: {
             controlCenter: 'Control Center',
             settingsTitle: 'Settings',
-            headerDescription: 'Zynubo settings for YouTube. Choose a section or search for a setting.',
+            headerDescription: 'Treco settings for YouTube. Choose a section or search for a setting.',
             findSetting: 'Find a setting',
             findSettingPlaceholder: 'Find a setting…',
-            closeControlCenter: 'Close the Zynubo Control Center',
+            closeControlCenter: 'Close the Treco Control Center',
             notifications: 'Control Center notifications',
             footerHint: 'Tab moves between controls. Press Esc to close.',
             settingsNavigation: 'Settings sections',
@@ -350,7 +350,7 @@
                 ? 'Pause the page engine. Extension network rules stay active.'
                 : 'Pause the page engine without changing your saved settings.',
             masterSwitchResume: 'Resume blocking instantly with your saved settings intact.',
-            toggleProtection: 'Toggle Zynubo protection',
+            toggleProtection: 'Toggle Treco protection',
             ruleLibrary: 'Rule Library',
             diagnostics: 'Diagnostics',
             currentPage: 'Current Page',
@@ -382,10 +382,10 @@
                 if (preProxied.length) body += ` Pre-proxied by another extension: ${preProxied.join(', ')}.`;
                 return body + ' Another extension or YouTube may have claimed these first. Remaining engines are still active; reloading the page usually wins the race back.';
             },
-            coexistenceBody: preProxied => `Another extension already hooked: ${preProxied.join(', ')}. Zynubo replaced them with its own proxies. If you see unexpected behavior, try disabling the other blocker.`,
+            coexistenceBody: preProxied => `Another extension already hooked: ${preProxied.join(', ')}. Treco replaced them with its own proxies. If you see unexpected behavior, try disabling the other blocker.`,
             refreshing: 'Refreshing…',
             refreshRules: 'Refresh Rules',
-            ruleLibraryDescription: 'Choose the source that feeds cosmetic selectors and remote rule updates. Zynubo keeps your last working rules or the built-in fallback ready if a refresh fails.',
+            ruleLibraryDescription: 'Choose the source that feeds cosmetic selectors and remote rule updates. Treco keeps your last working rules or the built-in fallback ready if a refresh fails.',
             sourceUrl: 'Source URL',
             filterHelpExtension: 'Point this at a raw EasyList or uBO-style source. Extension installs work best with hosts that allow direct browser fetches from YouTube pages.',
             filterHelpUserscript: 'Point this at a raw EasyList or uBO-style source. Refreshing applies new rules without dropping your current protection.',
@@ -484,7 +484,7 @@
                 adAllowedChannelsHelp: 'Ads will play on videos from these channels. Supports names, UC IDs, @handles, channel URLs, and regex.',
                 importExport: 'Import / Export',
                 importExportHelp: 'Move blocklists and local settings between installs without changing your cached rule library.',
-                importPlaceholder: 'Paste Zynubo JSON, BlockTube/FilterTube-style JSON, or plain channel names / @handles / UC IDs. Use keyword: or title: prefixes for keyword text imports.',
+                importPlaceholder: 'Paste Treco JSON, BlockTube/FilterTube-style JSON, or plain channel names / @handles / UC IDs. Use keyword: or title: prefixes for keyword text imports.',
                 copyJson: 'Copy JSON',
                 settingsJsonCopied: 'Settings JSON copied.',
                 settingsJsonClipboardFallback: 'Clipboard unavailable. JSON is in the import box.',
@@ -500,9 +500,9 @@
                 migrationImported: (channels, keywords, rejectedCount) => `Migration imported ${channels} channel and ${keywords} keyword ${channels + keywords === 1 ? 'entry' : 'entries'}${rejectedCount ? `; ${rejectedCount} rejected.` : '.'}`,
                 migrationNoSupportedEntries: 'Migration import did not find supported channel or keyword entries.',
                 importJsonParseError: 'Import JSON could not be parsed.',
-                importJsonNoSupportedSettings: 'Import JSON did not contain supported Zynubo settings.',
+                importJsonNoSupportedSettings: 'Import JSON did not contain supported Treco settings.',
                 importWrongApp: 'That export came from a different application.',
-                importFutureSchema: (found, supported) => `That export uses settings schema v${found}; this version supports up to v${supported}. Update Zynubo first.`,
+                importFutureSchema: (found, supported) => `That export uses settings schema v${found}; this version supports up to v${supported}. Update Treco first.`,
                 importInvalidField: (key, reason) => `${key}: ${reason}`,
                 importInvalidUrl: 'must be a valid http(s) URL',
                 importInvalidType: 'has an unsupported value type',
@@ -571,12 +571,12 @@
             armedAction: label => `${label}: click again within 10 seconds to confirm. Escape cancels.`,
             featureToggle: (label, enabled) => `${label} ${enabled ? 'enabled' : 'disabled'}.`,
             protectionResumed: 'Protection resumed across every engine.',
-            protectionPausedToast: 'Protection paused. Zynubo stays installed and ready to resume.',
+            protectionPausedToast: 'Protection paused. Treco stays installed and ready to resume.',
             diagnosticsCopied: 'Diagnostics copied. You can paste them into a bug report or note.',
             diagnosticsClipboardFailed: 'Clipboard access was blocked. Use Download report in Diagnostics instead.',
             stillLoading: 'Control Center is still loading. Try again in a moment.',
-            loadedLate: hint => `Zynubo loaded late. Open Diagnostics for setup steps. ${hint}`,
-            activeToast: hint => `Zynubo is active. ${hint}`,
+            loadedLate: hint => `Treco loaded late. Open Diagnostics for setup steps. ${hint}`,
+            activeToast: hint => `Treco is active. ${hint}`,
             youtubeChanged: 'YouTube may have changed its ad delivery. Try refreshing rules from the Control Center.'
         },
         featureGroups: {
@@ -3814,7 +3814,7 @@
 
         function neutralizeScriptNode(script) {
             if (!detectFetchLiftPattern(script.textContent || '')) return;
-            script.textContent = '/* blocked by Zynubo */';
+            script.textContent = '/* blocked by Treco */';
             state.stats.domBypassBlocked = (state.stats.domBypassBlocked || 0) + 1;
         }
 
@@ -6444,7 +6444,7 @@
         const status = !isEnabled() ? 'paused' : attention ? 'attention' : 'enabled';
         const label = status === 'paused' ? 'Page engine paused' : status === 'attention' ? 'Page engine needs attention' : 'Page engine enabled';
         button.dataset.status = status;
-        button.title = `Open Zynubo Control Center (Alt+Shift+Z) — ${label}`;
+        button.title = `Open Treco Control Center (Alt+Shift+Z) — ${label}`;
         button.setAttribute('aria-description', label);
     }
 
@@ -6476,7 +6476,7 @@
             button.id = `${CSS_PREFIX}-launcher`;
             button.className = `${CSS_PREFIX}-launcher`;
             button.type = 'button';
-            button.title = 'Open Zynubo Control Center';
+            button.title = 'Open Treco Control Center';
             button.setAttribute('aria-label', button.title);
             button.setAttribute('aria-keyshortcuts', 'Alt+Shift+Z');
             button.setAttribute('aria-haspopup', 'dialog');
@@ -6775,7 +6775,13 @@
         const wordmark = document.createElement('span');
         wordmark.className = `${CSS_PREFIX}-nav-product`;
         wordmark.textContent = SCRIPT_NAME;
-        identity.append(mark, wordmark);
+        const brandCopy = document.createElement('div');
+        brandCopy.className = `${CSS_PREFIX}-brand-copy`;
+        const tagline = document.createElement('span');
+        tagline.className = `${CSS_PREFIX}-brand-tagline`;
+        tagline.textContent = 'The Complete YouTube Toolkit';
+        brandCopy.append(wordmark, tagline);
+        identity.append(mark, brandCopy);
         const shortcut = document.createElement('span');
         shortcut.className = `${CSS_PREFIX}-shortcut-hint`;
         shortcut.textContent = 'Alt + Shift + Z';
@@ -6851,7 +6857,7 @@
             return {title:'Rules could not be updated', detail:'Your current rules remain available. Retry the update; if it still fails, download a diagnostic report.', action:'refresh'};
         }
         if (getInjectionTimingStatus().likelyLate) {
-            return {title:'Zynubo started after the page loaded', detail:'Check that your manager or extension is enabled, then reload YouTube. Userscript managers may also need Allow User Scripts enabled.', action:'reload'};
+            return {title:'Treco started after the page loaded', detail:'Check that your manager or extension is enabled, then reload YouTube. Userscript managers may also need Allow User Scripts enabled.', action:'reload'};
         }
         return null;
     }
@@ -7404,7 +7410,7 @@
     }
 
     function getPlaybackSpeedTarget() {
-        if (!isEnabled() || isPaused()) return {message:'Resume Zynubo to change playback speed.'};
+        if (!isEnabled() || isPaused()) return {message:'Resume Treco to change playback speed.'};
         const video = document.querySelector('#movie_player video.html5-main-video') || document.querySelector('video.html5-main-video');
         if (!video) return {message:'Open a video to change playback speed.'};
         const player = video.closest('#movie_player, .html5-video-player');
@@ -7776,7 +7782,7 @@
         const envelope = (parsed.settings && typeof parsed.settings === 'object' && !Array.isArray(parsed.settings))
             ? parsed : null;
         const settings = envelope ? parsed.settings : parsed;
-        if (envelope && typeof parsed.app === 'string' && ![SCRIPT_NAME, 'YoutubeAdblock'].includes(parsed.app)) {
+        if (envelope && typeof parsed.app === 'string' && ![SCRIPT_NAME, 'Zynubo', 'YoutubeAdblock'].includes(parsed.app)) {
             return { ok: false, error: STRINGS.ui.blocklist.importWrongApp };
         }
         if (envelope && parsed.version != null) {

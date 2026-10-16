@@ -1,5 +1,5 @@
 /*
- * Zynubo - ISOLATED-world content script.
+ * Treco - ISOLATED-world content script.
  *
  * Bridges chrome.* APIs (which MAIN world cannot see) to the page-world
  * adblock core via custom DOM events. Runs at document_start.

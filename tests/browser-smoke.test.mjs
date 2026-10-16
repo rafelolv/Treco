@@ -390,7 +390,7 @@ async function assertAdExclusiveRequestsShortCircuit(page, requestLog) {
 async function exercisePanel(page, mode, surface) {
     await assert.equal(await page.locator('#ytab-dialog-title').textContent(), 'Overview');
     await assert.equal(await page.locator('.ytab-nav-button').count(), 10);
-    assert.equal(await page.locator('.ytab-topbar .ytab-nav-product').textContent(), 'Zynubo');
+    assert.equal(await page.locator('.ytab-topbar .ytab-nav-product').textContent(), 'Treco');
     assert.equal(await page.locator('.ytab-more-stats').evaluate(el => el.open), false);
     assert.equal(await page.locator('.ytab-metric:visible').count(), 0, 'Technical counters stay out of the initial view');
     assert.equal(await page.locator('.ytab-home-link').count(), 3);
@@ -432,7 +432,7 @@ async function exercisePanel(page, mode, surface) {
         await page.waitForSelector('#ytab-section-enhance .ytab-toggle-list', {state:'visible'});
         await page.click('#ytab-toggle-volumeBoost');
         await page.waitForSelector('ytmusic-player-bar #right-controls > #ytab-vol-boost', { timeout: 5000 });
-        await assert.equal(await page.locator('#ytab-vol-boost input[type="range"]').getAttribute('aria-label'), 'Zynubo volume boost');
+        await assert.equal(await page.locator('#ytab-vol-boost input[type="range"]').getAttribute('aria-label'), 'Treco volume boost');
     }
 
     if (mode === 'userscript' && surface.name === 'www-watch-dark') {
@@ -745,7 +745,7 @@ test('native dialogs stay actionable without stranding a backdrop or blocking pl
                 }));
                 await page.goto('https://www.youtube.com/watch?v=modal-test');
                 await page.waitForSelector('.ytab-panel', { state: 'attached' });
-                assert.equal(await page.locator('.ytab-overlay').isVisible(), false, 'Closed Zynubo UI must stay hidden: ' + JSON.stringify(await page.evaluate(() => ({
+                assert.equal(await page.locator('.ytab-overlay').isVisible(), false, 'Closed Treco UI must stay hidden: ' + JSON.stringify(await page.evaluate(() => ({
                     hasStyle: !!document.getElementById('ytab-ui'),
                     styleLength: document.getElementById('ytab-ui')?.textContent.length,
                     overlayVisibility: getComputedStyle(document.querySelector('.ytab-overlay')).visibility,
@@ -792,7 +792,7 @@ test('page launcher opens settings and survives delayed mastheads and navigation
                 }));
                 await page.goto('https://www.youtube.com/watch?v=launcher');
                 await page.waitForSelector('.ytab-panel', {state:'attached'});
-                const button = page.getByRole('button', { name: 'Open Zynubo Control Center', exact: true });
+                const button = page.getByRole('button', { name: 'Open Treco Control Center', exact: true });
                 assert.equal(await page.locator('#ytab-launcher').count(), 0, 'No floating fallback without a header');
                 // The keyboard shortcut remains available without a header.
                 await page.keyboard.press('Alt+Shift+KeyZ');
@@ -970,7 +970,7 @@ test('support tools confirm imports, preserve undo and download redacted diagnos
                 await page.getByRole('button',{name:'Merge lists and enable filters — confirm',exact:true}).press('Escape');
                 assert.equal(await readSetting('ytab_keyword_blocklist')||'','');
                 assert.equal(await page.locator('.ytab-overlay').isVisible(),true);
-                await payload.fill(JSON.stringify({app:'Zynubo',version:1,settings:{channel_blocklist:'@json'}}));
+                await payload.fill(JSON.stringify({app:'Treco',version:1,settings:{channel_blocklist:'@json'}}));
                 await page.getByRole('button',{name:'Import JSON',exact:true}).click();
                 assert.equal(await readSetting('ytab_channel_blocklist'),'@changed');
                 await page.getByRole('button',{name:'Apply import',exact:true}).press('Escape');
@@ -984,12 +984,12 @@ test('support tools confirm imports, preserve undo and download redacted diagnos
                 await page.locator('[data-section-id="ytab-section-diagnostics"]').click();
                 await page.getByText('Review the report',{exact:true}).click();
                 const preview=page.getByRole('textbox',{name:'Redacted diagnostic report'});
-                await page.waitForFunction(()=>document.querySelector('.ytab-diagnostics-review textarea')?.value.startsWith('Zynubo v'));
+                await page.waitForFunction(()=>document.querySelector('.ytab-diagnostics-review textarea')?.value.startsWith('Treco v'));
                 assert.equal(await preview.getAttribute('readonly'),'');
                 const downloadPromise=page.waitForEvent('download');
                 await page.locator('#ytab-download-diagnostics').click();
                 const download=await downloadPromise;
-                assert.match(download.suggestedFilename(),/^Zynubo-diagnostics-v\d+\.\d+\.\d+\.txt$/);
+                assert.match(download.suggestedFilename(),/^Treco-diagnostics-v\d+\.\d+\.\d+\.txt$/);
                 const report=fs.readFileSync(await download.path(),'utf8');
                 assert(report.length<=16384);
                 for(const secret of ['PRIVATE_VIDEO_ID','PRIVATE_LIST','@changed']) assert.equal(report.includes(secret),false,secret);

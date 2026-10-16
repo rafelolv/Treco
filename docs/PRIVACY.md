@@ -1,6 +1,6 @@
 # Privacy
 
-Zynubo has no telemetry. Settings and counters are stored locally; extension
+Treco has no telemetry. Settings and counters are stored locally; extension
 settings use the inherited browser storage sync allowlist when browser sync is
 available. Page-local mirrors are visible to YouTube scripts and are not secret
 storage. Do not put credentials into settings.

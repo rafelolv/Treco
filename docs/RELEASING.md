@@ -10,10 +10,10 @@
 4. Review the source ZIP: it must contain the editable source, lockfile, build
    commands and licenses, and no credentials or local browser profiles.
 5. Prepare concise English release notes using RELEASE-TEMPLATE.md. Refuse any
-   already-published tag/version. Do not reuse upstream tags as Zynubo versions.
+   already-published tag/version. Do not reuse upstream tags as Treco versions.
 6. With explicit authorization, push main and create a new annotated vX.Y.Z tag.
    Publish a GitHub release using the official GitHub CLI/API with the two ZIPs,
-   source ZIP, Zynubo.user.js and SHA256SUMS. Use a notes file, not shell-interpolated
+   source ZIP, Treco.user.js and SHA256SUMS. Use a notes file, not shell-interpolated
    multiline text. Never force-push or replace existing artifacts.
 7. Verify the release URL, tag commit and asset names; download the assets into a
    fresh directory and compare SHA256SUMS to the locally reviewed packages.
@@ -54,4 +54,4 @@ suitable for temporary development and as submission input, not store availabili
 Any future automation must use official APIs/CLI, least-privilege permissions,
 explicit release triggers and CI secrets only. It must refuse an existing version,
 verify exact artifacts before credential access and verify submission outcomes.
-Do not copy another project's AMO authorization: none is granted for Zynubo yet.
+Do not copy another project's AMO authorization: none is granted for Treco yet.

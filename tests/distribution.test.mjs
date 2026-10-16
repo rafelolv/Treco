@@ -61,7 +61,7 @@ test('extension declarations exclude chat and avoid mixed-purpose telemetry bloc
 
 
 test('distribution references reject stale versions, wrong owners and mismatched icons', () => {
-    const input={readme:fs.readFileSync('README.md','utf8'), script, config:JSON.parse(fs.readFileSync('build/distribution.json')), manifests:['chromium','firefox'].map(browser=>JSON.parse(fs.readFileSync(`dist/${browser}/manifest.json`))), version};
+    const input={readme:fs.readFileSync('README.md','utf8'), script, config:JSON.parse(fs.readFileSync('build/distribution.json')), manifests:['chromium','firefox'].map(browser=>JSON.parse(fs.readFileSync(`dist/${browser}/manifest.json`))), version,iconData:`data:image/png;base64,${fs.readFileSync('icon.png').toString('base64')}`};
     assert.doesNotThrow(()=>verifyDistributionReferences(input));
     assert.throws(()=>verifyDistributionReferences({...input, script:script.replace(/@version +\S+/, '@version      0.0.1')}));
     assert.throws(()=>verifyDistributionReferences({...input, readme:input.readme.replaceAll('github.com/rafelolv/Zynubo/releases/download/', 'github.com/other/repo/releases/download/')}));
@@ -83,5 +83,19 @@ test('shared themes keep readable text and visible keyboard focus', () => {
         }
         assert(ratio(colors.focus,colors.paper)>=3, `${name} focus outline`);
         assert(ratio(colors['accent-text'],colors.accent)>=4.5, `${name} primary button`);
+    }
+});
+
+
+test('Treco metadata embeds the canonical icon and preserves its legacy update file', () => {
+    assert.equal(fs.readFileSync('Treco.user.js','utf8'),script);
+    assert.match(script,/^\/\/ @name +Treco$/m);
+    assert.match(script,/^\/\/ @author +rafelolv$/m);
+    const icon=script.match(/^\/\/ @icon +(\S+)/m)[1];
+    assert.deepEqual(Buffer.from(icon.split(',')[1],'base64'),fs.readFileSync('icon.png'));
+    for (const browser of ['chromium','firefox']) {
+        const manifest=JSON.parse(fs.readFileSync(`dist/${browser}/manifest.json`));
+        assert.equal(manifest.name,'Treco');
+        assert.equal(manifest.action.default_title,'Treco');
     }
 });

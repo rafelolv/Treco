@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.0 — Unreleased
+
+- Rename the application to Treco with a new T logo and the Complete YouTube Toolkit identity.
+- Show rafelolv as the userscript author and embed the current icon in manager metadata.
+- Update the panel, popup, installers, package names and documentation to the new brand.
+- Preserve existing update endpoints, settings imports and extension identities during the rename.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.9.0 — 2026-10-16
 
 - Hide the player speed button with a saved Video tools option while keeping panel speed controls available.

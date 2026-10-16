@@ -2131,7 +2131,7 @@ test('a bypass script is neutralized before the DOM executes it', () => {
     // Rewriting it afterwards leaves the bypass already executed.
     const seen = h.__insertionLog.find(entry => entry.node === bypass);
     assert.ok(seen, 'the native appendChild should still run');
-    assert.equal(seen.text, '/* blocked by Zynubo */',
+    assert.equal(seen.text, '/* blocked by Treco */',
         'the script must already be neutralized when the DOM sees it');
     assert.equal(h.state.stats.domBypassBlocked, 1);
 });
@@ -2318,7 +2318,7 @@ test('the persistent master switch remains independent of a pause', () => {
 });
 
 
-test('Zynubo imports legacy upstream settings without weakening foreign-app rejection', () => {
+test('Treco imports legacy upstream settings without weakening foreign-app rejection', () => {
     const h = createTestHarness({ storage: {} });
     const result = h.importSettingsPayload(exportEnvelope({ keyword_blocklist: 'legacy' }, { app: 'YoutubeAdblock' }), 'json');
     assert.equal(result.ok, true);
@@ -2431,4 +2431,13 @@ test('player speed button visibility defaults to shown and loads its saved prefe
     assert.equal(createTestHarness().state.features.hidePlayerSpeedButton, false);
     const h = createTestHarness({storage:{ytab_feature_overrides:{hidePlayerSpeedButton:true}}});
     assert.equal(h.state.features.hidePlayerSpeedButton, true);
+});
+
+
+test('Treco preserves settings imports from both previous product names', () => {
+    const h = createTestHarness();
+    for (const app of ['Treco','Zynubo','YoutubeAdblock']) {
+        assert.equal(h.importSettingsPayload(JSON.stringify({app,version:1,settings:{channel_blocklist:'@example'}}),'json-preview').ok,true,app);
+    }
+    assert.equal(h.buildSettingsExportPayload().app,'Treco');
 });

@@ -447,3 +447,42 @@ and verifies downloaded assets; no store submission is authorized.
   Actual Violentmonkey installation, live YouTube blocking/native player layouts
   and high-speed audio quality were not verified. No permissions, signed data,
   filtering algorithms, storage namespaces or runtime dependencies changed.
+
+## 1.10.0 Treco rename — 2026-10-16
+
+- Current product metadata, panel, popup, toolbar/menu copy, settings exports,
+  documentation and generated package names use Treco. README uses The Complete
+  YouTube Toolkit and All the tricks you need for a better YouTube. The canonical
+  logo is a white T on the existing red tile, regenerated at 16/32/48/128 pixels.
+- Userscript metadata lists rafelolv as author. Its PNG data icon is generated
+  directly from the canonical SVG and matches icon.png and both 128px package
+  icons byte-for-byte. MIT copyright, license, source provenance and service
+  attribution remain in the source and legal files.
+- Treco.user.js is the canonical generated installer. Zynubo.user.js is an
+  identical compatibility update endpoint. GitHub repository URLs, the Firefox
+  ID, ytab/__ytab storage keys, zynubo wire events and signed data remain intact.
+  Imports accept Treco, Zynubo and the inherited YoutubeAdblock envelope; foreign
+  application exports are still rejected. Manual installs with a different name
+  can be separate manager entries; the guide explains export/import and keeping
+  one entry enabled.
+- npm run package passed all five unit/contract suites, versions, licenses,
+  source/engine parity and reproducible builds. New checks cover the embedded
+  icon, author/name, compatibility installer and old portable settings formats.
+  Repeated package generations have identical SHA256SUMS.
+- Chromium for Testing 149.0.7827.55 passed the complete UI matrix: 34 scenarios
+  (42 including parent groups), with zero failures/skips. Both themes, narrow and
+  short layouts, focus, search and player speed lifecycle passed. Current dark,
+  light, narrow, settings and popup screenshots replace the active documentation
+  previews with versioned files; the panel/popup captures were visually reviewed.
+- Temporary extension integration passed in Chromium 149.0.7827.55 and Firefox
+  157.0. Firefox lint reported zero errors, notices or warnings. The short
+  synthetic video/comment/chat/navigation gate passed both generated modes.
+- The read-only published audit still verifies the immutable v1.9.0 release.
+  Archived icons are compared with that release's reviewer source instead of the
+  moving main icon. Future Treco releases validate their embedded metadata icon
+  against their own package icon. Published assets/tags were not replaced.
+- Evidence is synthetic, using temporary profiles and simulated manager APIs.
+  Actual Violentmonkey/Tampermonkey update/installation, manager icon rendering,
+  live YouTube blocking and native playback were not validated. No new release
+  tag or store submission was created. Existing public ZIPs retain Zynubo 1.9.0;
+  new local outputs are Treco 1.10.0 and README explains that distinction.

@@ -13,7 +13,7 @@ const reports = new Map();
 let origin;
 const core = await fs.readFile('Zynubo.user.js', 'utf8');
 const version = JSON.parse(await fs.readFile('package.json')).version;
-const fixture = mode => `<!doctype html><html><head><meta charset="utf-8"><title>Zynubo fixture</title></head><body>
+const fixture = mode => `<!doctype html><html><head><meta charset="utf-8"><title>Treco fixture</title></head><body>
 <ytd-masthead><div id="end"><div id="buttons"></div></div></ytd-masthead>
 <div class="ad-div"><tp-yt-paper-dialog role="dialog" class="ad-div"><button id="native-action" class="ad-div">Continue</button></tp-yt-paper-dialog></div>
 <div class="ad-div" id="ordinary-ad">Advertisement</div>

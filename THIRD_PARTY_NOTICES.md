@@ -1,11 +1,11 @@
 # Third-party notices
 
-Zynubo is an independent continuation maintained by rafelolv. It derives from
+Treco (previously named Zynubo) is an independent continuation maintained by rafelolv. It derives from
 [SysAdminDoc/YoutubeAdblock](https://github.com/SysAdminDoc/YoutubeAdblock),
 commit `9e53f04`, copyright (c) 2025 Matthew Parker, under the MIT license in
 LICENSE. Inherited code is not claimed as original work by rafelolv.
-The original MIT notice and source provenance are preserved; Zynubo maintains
-an independent Git history. Zynubo integration,
+The original MIT notice and source provenance are preserved; Treco maintains
+an independent Git history. Treco integration,
 packaging, branding and documentation changes date from 2026-10-16.
 
 The separate `youtube-adblock-filters.txt` data identifies uBlock Origin/uAssets

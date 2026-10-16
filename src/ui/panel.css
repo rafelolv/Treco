@@ -1,4 +1,4 @@
-/* Scope styles to Zynubo's dialog, notifications, launcher and player controls. */
+/* Scope styles to Treco's dialog, notifications, launcher and player controls. */
 body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !important; }
 .ytab-overlay, .ytab-panel *, .ytab-panel *::before, .ytab-panel *::after,
 .ytab-toast-region, .ytab-toast-region * { box-sizing: border-box; }
@@ -271,3 +271,6 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-player-speed-popup > div { display: flex; gap: 8px; }
 .ytab-player-speed-popup button { min-height: 36px; padding: 6px 10px; border: 1px solid var(--z-faint); border-radius: 4px; background: var(--z-inset); color: var(--z-ink); cursor: pointer; font: inherit; }
 .ytab-player-speed-popup :focus-visible, .ytab-player-speed-button:focus-visible { outline: 2px solid var(--z-focus, #fff); outline-offset: 2px; }
+
+.ytab-brand-copy { display: grid; gap: 3px; min-width: 0; }
+.ytab-brand-tagline { color: var(--z-muted); font: 11px/1.4 var(--z-font); }

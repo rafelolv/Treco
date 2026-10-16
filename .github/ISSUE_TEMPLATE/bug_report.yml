@@ -1,11 +1,11 @@
 name: Bug report
-description: Report a reproducible Zynubo problem.
+description: Report a reproducible Treco problem.
 body:
   - type: input
     id: versions
     attributes:
-      label: Browser, Zynubo version and distribution
-      placeholder: Firefox 157, Zynubo 1.0.0, temporary extension
+      label: Browser, Treco version and distribution
+      placeholder: Firefox 157, Treco 1.0.0, temporary extension
     validations:
       required: true
   - type: textarea

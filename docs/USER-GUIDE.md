@@ -1,4 +1,4 @@
-# Zynubo user guide
+# Treco user guide
 
 For the simplest setup, follow [Install](../README.md#install). The userscript
 works through Tampermonkey or Violentmonkey; standalone extensions use the same
@@ -8,20 +8,20 @@ interface without a manager. Choose one installation method per browser profile.
 
 If the install link opens plain text:
 
-1. Open the [complete Zynubo userscript](https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js) and copy its contents.
+1. Open the [complete Treco userscript](https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js) and copy its contents.
 2. Open your userscript manager's dashboard and create a new script.
 3. Replace the example code with the complete copied file, including the metadata at the top, and save.
-4. Keep Zynubo enabled and reload YouTube.
+4. Keep Treco enabled and reload YouTube.
 
-Live and replay chat are excluded from the page engine. The Zynubo button stays
+Live and replay chat are excluded from the page engine. The Treco button stays
 in the main page header; chat messages use their own native page APIs.
 
 ## Open settings
 
-Click **Zynubo** in the top-right YouTube header. The button stays in the main page header; it does not float over videos or appear inside live chat. If the header is unavailable, use Alt+Shift+Z or the menu below. The button opens the same Control Center in both installations.
+Click **Treco** in the top-right YouTube header. The button stays in the main page header; it does not float over videos or appear inside live chat. If the header is unavailable, use Alt+Shift+Z or the menu below. The button opens the same Control Center in both installations.
 
-- **Userscript alternative:** open the manager menu and choose **Zynubo: Open Control Center**.
-- **Extension:** click Zynubo in the browser toolbar, then **Open settings**.
+- **Userscript alternative:** open the manager menu and choose **Treco: Open Control Center**.
+- **Extension:** click Treco in the browser toolbar, then **Open settings**.
 
 Press **Alt+Shift+Z** to open or close settings. The shortcut stays inactive in
 text fields and comment editors. The page button's dot shows whether the engine
@@ -65,12 +65,18 @@ packaged browser network rules remain active while the extension is enabled,
 including when a userscript owns the current page. Disable the extension in your
 browser's extension settings to stop those network rules too.
 
-If the userscript and extension are enabled together, only the first Zynubo page
+If the userscript and extension are enabled together, only the first Treco page
 engine starts. This guard does not coordinate other blockers or older upstream
-installations. Keep one Zynubo method enabled and disable competing YouTube
+installations. Keep one Treco method enabled and disable competing YouTube
 blockers when investigating a problem.
 
 ## Updates
+
+Treco is the new name of Zynubo. Update the existing entry in your manager when
+possible; do not leave both entries enabled. Existing update URLs remain available.
+A separate new manager entry has separate storage, so export settings before moving
+to a different installation and import them afterward. Treco accepts old Zynubo
+exports. The Firefox add-on identity and extension storage keys are unchanged.
 
 - **Userscript:** use your manager's update checker. The install/update URL follows the generated script on this repository's `main` branch.
 - **Local Chromium extension:** replace the files in the same extracted folder with a new package, reload the extension from the browser's extensions page, then reload YouTube. Keeping the same folder helps preserve the unpacked installation identity.
@@ -82,7 +88,7 @@ through their store after the relevant signing/review process.
 
 For an old upstream installation, saved settings do not automatically transfer to
 a different script or extension identity. Use the Control Center's settings
-export/import tools. Zynubo accepts the original project's settings format.
+export/import tools. Treco accepts the original project's settings format.
 
 ## Playback speed
 
@@ -103,7 +109,7 @@ the current video to normal speed. Editing the number alone does not apply it.
 
 The control does not start playback or save a speed for later videos. YouTube's
 own speed controls remain available. Ads and live streams are excluded; resume
-Zynubo before using this control if the page engine is paused.
+Treco before using this control if the page engine is paused.
 
 Above 4×, some browsers may silence audio. See the browser's
 [playback-rate behavior](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/playbackRate).
@@ -124,10 +130,10 @@ contain your lists; keep them private.
 
 ## Troubleshooting
 
-1. Confirm Zynubo is enabled and permitted to run on YouTube.
+1. Confirm Treco is enabled and permitted to run on YouTube.
 2. Reload the page after installation, updating or changing browser permissions.
 3. On Chromium, check your manager's **Allow User Scripts** setting if available.
-4. Disable other Zynubo installations, older upstream scripts and competing YouTube blockers, then reload.
+4. Disable other Treco installations, older upstream scripts and competing YouTube blockers, then reload.
 5. Open the Control Center and check engine health. Try **Refresh Rules** if the rule source needs attention. Current cached or built-in rules remain available when refresh fails.
 6. For a temporary break, use **Temporary pause**. See the browser-network limitation above if using an extension.
 
@@ -145,7 +151,7 @@ contents, custom source URLs and raw errors. Review it before sharing. If clipbo
 access is blocked, download the report instead.
 
 If you still need help, [open an issue](https://github.com/rafelolv/Zynubo/issues/new?template=bug_report.yml).
-Include browser and Zynubo versions, installation method, the YouTube surface
+Include browser and Treco versions, installation method, the YouTube surface
 (main site, Music, TV or Kids) and steps to reproduce. Redact diagnostics; never
 post cookies, authorization tokens or private URLs. Actual tested browsers and
 known validation limits are recorded in [VALIDATION.md](VALIDATION.md).

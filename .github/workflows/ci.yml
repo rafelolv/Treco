@@ -17,7 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run package
       - run: npm run lint:firefox
-      - run: git diff --exit-code -- Zynubo.user.js icon.png
+      - run: git diff --exit-code -- Treco.user.js Zynubo.user.js icon.png
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:stability
       - run: npm run test:browser:upstream
@@ -29,8 +29,8 @@ jobs:
           ZYNUBO_FIREFOX: ${{ steps.firefox.outputs.firefox-path }}
       - uses: actions/upload-artifact@v4
         with:
-          name: zynubo-unsigned
+          name: treco-unsigned
           path: |
             dist/*.zip
-            dist/Zynubo.user.js
+            dist/Treco.user.js
             dist/SHA256SUMS

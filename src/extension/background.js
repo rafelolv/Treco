@@ -1,5 +1,5 @@
 /*
- * Zynubo - MV3 service worker.
+ * Treco - MV3 service worker.
  *
  * Owns: action button clicks, right-click context menu,
  * message routing between the popup/menu UI and the active tab's content
@@ -781,7 +781,7 @@ function rebuildContextMenu() {
             // doesn't leave the user with a half-built menu.
             chrome.contextMenus.create({
                 id: CONTEXT_MENU_ROOT,
-                title: 'Zynubo',
+                title: 'Treco',
                 contexts: ['action', 'page'],
                 documentUrlPatterns: [
                     '*://*.youtube.com/*',

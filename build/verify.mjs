@@ -7,7 +7,11 @@ import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const pkg = JSON.parse(await fs.readFile('package.json'));
-const script = await fs.readFile('Zynubo.user.js', 'utf8');
+const script = await fs.readFile('Treco.user.js', 'utf8');
+assert.equal(script, await fs.readFile('Zynubo.user.js','utf8'));
+assert(script.includes('// @name         Treco'));
+assert(script.includes('// @author       rafelolv\n'));
+assert(!script.includes('__ICON_DATA__'));
 assert.equal(script, await compileCore(await fs.readFile('src/core.user.js', 'utf8'), pkg.version));
 assert(script.includes(`// @version      ${pkg.version}`));
 assert(script.includes('Copyright (c) 2025 Matthew Parker'));
@@ -44,7 +48,7 @@ for (const browser of ['chromium', 'firefox']) {
     }
     assert.equal(await fs.readFile(`${dir}/LICENSE`, 'utf8'), await fs.readFile('LICENSE', 'utf8'));
 }
-verifyDistributionReferences({readme:await fs.readFile('README.md','utf8'), script, config:JSON.parse(await fs.readFile('build/distribution.json','utf8')), manifests, version:pkg.version});
+verifyDistributionReferences({readme:await fs.readFile('README.md','utf8'), script, config:JSON.parse(await fs.readFile('build/distribution.json','utf8')), manifests, version:pkg.version, iconData:`data:image/png;base64,${(await fs.readFile('icon.png')).toString('base64')}`});
 assert.deepEqual(manifests[0].background, { service_worker: 'background.js' });
 assert.deepEqual(manifests[1].background, { scripts: ['background.js'] });
 assert.equal(manifests[1].browser_specific_settings.gecko.id, 'zynubo@rafelolv.github.io');

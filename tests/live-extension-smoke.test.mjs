@@ -147,7 +147,7 @@ test('live production extension blocks an ad-only image request and reports boun
         const overlay = document.querySelector('.ytab-overlay.ytab-active');
         return overlay && Number(getComputedStyle(overlay).opacity) >= 0.99;
     });
-    assert.match(await page.locator('#ytab-dialog-title').textContent(), /Zynubo/);
+    assert.match(await page.locator('#ytab-dialog-title').textContent(), /Treco/);
 
     await page.click('.ytab-nav-button[data-section-id="ytab-section-diagnostics"]');
     await page.waitForFunction(() => {

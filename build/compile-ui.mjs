@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import sharp from 'sharp';
 const read = name => fs.readFile(name, 'utf8');
 export async function compileStyles(surface) {
     const theme = JSON.parse(await read('src/ui/theme.json'));
@@ -15,5 +16,6 @@ export async function compileStyles(surface) {
 export async function compileCore(source, version) {
     if (source.split('__PANEL_CSS__').length !== 2) throw Error('Expected one canonical panel stylesheet anchor');
     const stylesheet = JSON.stringify(await compileStyles('panel'));
-    return source.replaceAll('__VERSION__', version).replace('__PANEL_CSS__', () => stylesheet);
+    const icon = await sharp('images/icon.svg').resize(128,128).png().toBuffer();
+    return source.replace('__ICON_DATA__', () => `data:image/png;base64,${icon.toString('base64')}`).replaceAll('__VERSION__', version).replace('__PANEL_CSS__', () => stylesheet);
 }

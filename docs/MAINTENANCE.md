@@ -1,7 +1,7 @@
 # Maintenance
 
 Read AGENTS.md first. Work on main. Edit only canonical source and src/ui/ styles; regenerate and
-commit Zynubo.user.js and icon.png alongside changes. Never edit dist/.
+commit Treco.user.js, the identical Zynubo.user.js update alias and icon.png alongside changes. Never edit dist/.
 Use `npm ci` from the committed lockfile. Node 24.21.0 (.nvmrc) and Python 3 form the reference
 build; pin dependency changes in the lockfile and review them separately.
 

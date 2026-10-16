@@ -1,4 +1,4 @@
-/* Shared theme tokens and the canonical Z mark keep all entry points consistent. */
+/* Shared theme tokens and the canonical T mark keep all entry points consistent. */
 * { box-sizing: border-box; }
 :root { color-scheme: var(--z-scheme); font: 13px/1.5 var(--z-font); background: var(--z-paper); color: var(--z-ink); }
 body { width: 320px; margin: 0; border-top: 3px solid var(--z-accent); }

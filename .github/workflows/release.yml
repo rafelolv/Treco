@@ -26,12 +26,12 @@ jobs:
           const version = JSON.parse(fs.readFileSync('package.json')).version;
           if (!/^\d+\.\d+\.\d+$/.test(version) || process.env.RELEASE_TAG !== `v${version}`) throw Error('Tag/version mismatch');
           const notes = fs.readFileSync(`docs/releases/v${version}.md`, 'utf8');
-          if (!notes.startsWith(`# Zynubo v${version}\n`)) throw Error('Missing release notes');
+          if (!notes.startsWith(`# Treco v${version}\n`)) throw Error('Missing release notes');
           NODE
       - run: npm ci
       - run: npm run package
       - run: npm run lint:firefox
-      - run: git diff --exit-code -- Zynubo.user.js icon.png
+      - run: git diff --exit-code -- Treco.user.js Zynubo.user.js icon.png
       - run: npx playwright-core install --with-deps chromium
       - run: npm run test:stability
       - run: npm run test:browser:upstream
@@ -48,8 +48,8 @@ jobs:
           name: release-files
           if-no-files-found: error
           path: |
-            dist/Zynubo-*.zip
-            dist/Zynubo.user.js
+            dist/Treco-*.zip
+            dist/Treco.user.js
             dist/SHA256SUMS
   publish:
     needs: validate
@@ -78,8 +78,8 @@ jobs:
             exit 1
           fi
           gh release create "$RELEASE_TAG" --repo "$REPOSITORY" --verify-tag --latest \
-            --title "Zynubo $RELEASE_TAG" --notes-file "docs/releases/$RELEASE_TAG.md" \
-            release-files/Zynubo-*.zip release-files/Zynubo.user.js release-files/SHA256SUMS
+            --title "Treco $RELEASE_TAG" --notes-file "docs/releases/$RELEASE_TAG.md" \
+            release-files/Treco-*.zip release-files/Treco.user.js release-files/SHA256SUMS
           gh release view "$RELEASE_TAG" --repo "$REPOSITORY" --json url,tagName,assets
           mkdir downloaded
           gh release download "$RELEASE_TAG" --repo "$REPOSITORY" --dir downloaded
