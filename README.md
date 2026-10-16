@@ -1,129 +1,81 @@
-# Zynubo
+<div align="center">
+  <img src="images/icon.svg" width="72" height="72" alt="Zynubo logo">
+  <h1>Zynubo</h1>
+  <p>Less interruption. More YouTube.</p>
+  <p>
+    <a href="https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install userscript"></a>
+    <a href="docs/EXTENSIONS.md"><img src="https://img.shields.io/badge/Local_extensions-252720?style=for-the-badge" alt="Local extensions — installation guide"></a>
+  </p>
+  <p><a href="docs/USER-GUIDE.md">User guide</a> · <a href="https://github.com/rafelolv/Zynubo/issues">Get help</a></p>
+</div>
 
-<img src="images/icon.svg" width="64" height="64" alt="Zynubo Z logo">
-
-Your YouTube enhancement suite: block ads, skip sponsors with consent, and
-customize your experience from one Control Center.
-
-Zynubo offers a userscript and independent Chromium (Chrome, Brave, Edge) and
-Firefox extensions. Extensions do not need Tampermonkey. All formats share the
-same engine. Version 1.1.0 brings a redesigned Control Center with focused sections and
-matching browser popups. No version can promise coverage of every YouTube experiment.
-
-![Zynubo Control Center](docs/images/control-center-dark.png)
-
-Local fixture capture of the redesigned panel. See [light, narrow-screen and popup previews](docs/UI.md);
-these images do not demonstrate live YouTube ad blocking.
+Zynubo blocks ads, skips sponsors when you allow it, and helps you customize YouTube. Use the userscript or a standalone browser extension — both share the same engine and settings interface.
 
 ## Install
 
-No Zynubo store listing or signed release has been published as part of this
-setup. Until a release is available, build the local packages below. The
-[releases page](https://github.com/rafelolv/Zynubo/releases) will contain official
-downloads when published; do not install a similarly named third-party listing.
+### Userscript — recommended
 
-### Userscript
+This is the easiest setup for **Chrome, Brave, Edge and Firefox**. No terminal or repository download needed.
 
-1. Install Tampermonkey or Violentmonkey in your browser.
-2. Open [Zynubo.user.js](https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js) after the repository has been published, or import the local generated file into your manager.
-3. Confirm installation and reload YouTube. Open **Zynubo: Open Control Center** from your manager menu.
+1. Install [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/), a browser add-on that runs userscripts.
+2. **[Install Zynubo](https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js)** and confirm the installation in your manager.
+3. Open [YouTube](https://www.youtube.com/) and reload the page.
 
-On Chromium, your manager may require **Allow User Scripts** in its extension
-settings. Page-context injection is necessary to intercept player responses;
-manager configuration can affect timing and access to GM APIs.
+Keep **one Zynubo installation** enabled. Disable older upstream scripts and other YouTube-specific blockers while checking for conflicts.
 
-### Chrome, Brave and Edge
+**Chrome + Tampermonkey:** if nothing happens, check **Allow User Scripts** in the manager's extension details. If the install link opens plain text, use the [manual installation guide](docs/USER-GUIDE.md#manual-installation).
 
-1. Extract `Zynubo-chromium-v1.1.0.zip` into a permanent folder.
-2. Open `chrome://extensions`, `brave://extensions` or `edge://extensions`.
-3. Enable **Developer mode**, choose **Load unpacked**, and select the folder.
-4. Reload YouTube and open the Zynubo toolbar popup.
+<details>
+<summary><strong>Standalone extensions for Chrome, Brave, Edge and Firefox</strong></summary>
 
-The unsigned ZIP is for local testing or store submission, not a signed CRX.
-The declared Chromium baseline is 121; actual tested versions are recorded in
-[validation](docs/VALIDATION.md).
+Extensions run without a userscript manager. Follow the **[local extension guide](docs/EXTENSIONS.md)** for installation and updates.
 
-### Firefox
+There are no published Zynubo release ZIPs or browser-store listings yet. Local packages must currently be built from the repository. Firefox local installs are temporary and disappear when the browser closes; a normal persistent install requires Mozilla signing.
 
-1. Extract `Zynubo-firefox-v1.1.0.zip`.
-2. Open `about:debugging#/runtime/this-firefox`, select **Load Temporary Add-on**,
-   then select the extracted `manifest.json`.
-3. Reload YouTube and open the toolbar popup.
+Future packaged downloads will appear on [GitHub Releases](https://github.com/rafelolv/Zynubo/releases). Store signing and availability are separate from GitHub downloads.
 
-Firefox 140+ is required by this build. Temporary installs disappear after the
-browser closes. The ZIP is unsigned and cannot provide a normal persistent
-install. Persistent distribution requires Mozilla signing and, for a public
-AMO listing, review. No signed XPI or AMO approval is claimed here.
+</details>
 
-## Use and update
+## Quick start
 
-Open the popup on a supported YouTube page, then **Open Control Center**.
-Choose a section from the sidebar (scrollable navigation on narrow screens) or
-use **Find a setting** to search across sections. Changes save automatically.
-The Overview shows the main counters; **More counters** reveals technical totals.
-The popup reports an actual engine response, enabled/paused state and degraded
-initialization. It does not certify that ads are blocked. Other websites and
-unresponsive tabs show an unavailable state. The Control Center contains engine
-health, rule integrity, recovery and optional focus settings.
+1. Open your userscript manager's menu and choose **Zynubo: Open Control Center**. With the extension, click the Zynubo toolbar icon, then **Open Control Center**.
+2. Use **Overview** to check the page engine and counters. Choose a settings section or search with **Find a setting**.
+3. Turn on the options you want. Changes save automatically.
 
-SponsorBlock, DeArrow and Return YouTube Dislike require individual consent.
-DeArrow remains userscript-only. Extension community API access is optional;
-grant it through the extension context menu only if needed. Services receive
-video-related identifiers when enabled; read [privacy](docs/PRIVACY.md).
+SponsorBlock, DeArrow and Return YouTube Dislike ask for permission before contacting their services. DeArrow is available only in the userscript. [Privacy details](docs/PRIVACY.md).
 
-Use one distribution per browser profile. A document-wide claim prevents a
-second Zynubo engine when both are enabled; the first to start owns the page.
-The extension's declarative network rules still apply while installed, even
-when the userscript owns the page or the page engine is paused. This inherited
-separation is not a complete browser-layer off switch. Disable the extension to
-stop its network rules. Other blockers and older upstream installations are
-outside this duplicate guard; disable them during validation.
+![Zynubo Control Center](docs/images/control-center-dark.png)
 
-Userscript updates use this repository's main branch. For local extensions,
-replace the extracted files with the new version, reload the extension, then
-reload YouTube. Keep the same directory to avoid changing an unpacked Chromium
-identity. Future store installs will update through the store using their
-original extension IDs. Do not run an old and new userscript entry together.
+[Light theme, narrow layout and popup previews](docs/UI.md). These captures use local test pages.
 
-## Limits and support
+## Useful tips
 
-YouTube changes frequently. Server-stitched ads, account experiments, late
-injection, competing scripts and browser policies can reduce effectiveness.
-Tests against simulated pages do not prove live playback or live ad blocking.
-Stable inherited behavior is kept separate from the historical upstream backlog;
-no experimental features were promoted automatically.
+- **Updates:** your userscript manager checks the script on `main` for updates. Local extensions need a manual file replacement and reload. [Update guide](docs/USER-GUIDE.md#updates).
+- **Pause:** the page switch and temporary pause stop the page engine. With an extension installed, its browser network rules remain active; disable the extension to stop those too.
+- **Status:** an engine response means it initialized, not that every ad was blocked. YouTube changes can affect playback and blocking.
 
-Report problems at [Zynubo issues](https://github.com/rafelolv/Zynubo/issues).
-Include browser and distribution versions, the affected YouTube surface and
-redacted engine diagnostics. Never include cookies, tokens or private URLs.
+## Help
 
-## Build and maintain
+Start with [troubleshooting](docs/USER-GUIDE.md#troubleshooting). If the problem persists, **[report it here](https://github.com/rafelolv/Zynubo/issues/new?template=bug_report.yml)** with your browser, Zynubo version, installation method and what happened. Never share tokens, cookies or private URLs.
 
-Requires Node 22+, npm and Python 3. Use Node 24 for the reference build.
+<details>
+<summary><strong>Development and validation</strong></summary>
+
+Use Node.js 24 (the reference version is in `.nvmrc`), npm and Python 3:
 
 ```sh
 npm ci
 npm run check
-npm run lint:firefox
-npm run test:extensions:browser
-npm run package
 ```
 
-Outputs: `Zynubo.user.js`, `dist/chromium/`, `dist/firefox/`, two extension ZIPs,
-a reviewer source ZIP, the userscript and `dist/SHA256SUMS`.
-Build dependencies are development-only. The runtime has no npm dependencies
-and downloads no executable code. Signed filter/signature data are refreshed
-from this project's repository; the inherited public verification key and
-revision 8 remain unchanged. A new maintainer signing key needs an explicit
-rotation before changing signed data. Built-in rules remain a fallback.
+Edit the shared engine in `src/core.user.js`, styles in `src/ui/`, and browser adapters in `src/extension/`. Generate the userscript and extension folders with `npm run build`, or create ZIPs with `npm run package`.
 
-Read [maintenance](docs/MAINTENANCE.md), [architecture](docs/ARCHITECTURE.md),
-[release instructions](docs/RELEASING.md) and [validation](docs/VALIDATION.md).
+Browser tests use simulated pages and do not prove live YouTube ad blocking. See [validation](docs/VALIDATION.md), [contributing](CONTRIBUTING.md), [maintenance](docs/MAINTENANCE.md) and [releasing](docs/RELEASING.md).
 
-## License and origin
+</details>
 
-The inherited engine is MIT-licensed, copyright (c) 2025 Matthew Parker.
-Zynubo is maintained independently by rafelolv with its own Git history.
-Upstream provenance and required notices remain documented. See [LICENSE](LICENSE), [third-party notices](THIRD_PARTY_NOTICES.md)
-and the [base assessment](docs/BASE-ASSESSMENT.md). External filter data and
-community service data retain their separate terms and attribution.
+---
+
+Maintained by [rafelolv](https://github.com/rafelolv) · [MIT License](LICENSE) · [Changelog](CHANGELOG.md)
+
+Based on Matthew Parker's YoutubeAdblock. Required attribution and separate filter/service terms are preserved in [third-party notices](THIRD_PARTY_NOTICES.md).
