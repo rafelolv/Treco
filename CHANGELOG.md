@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 — Unreleased
+
+- Keep the Zynubo button exclusively in the main page header; remove the floating fallback that could overlap live chat.
+- Exclude live chat, replay chat and embedded frames from page-button placement.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.3.0 — Unreleased
 
 - Open or close the Control Center with Alt+Shift+Z outside text fields.

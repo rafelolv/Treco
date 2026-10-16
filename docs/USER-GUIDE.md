@@ -15,7 +15,7 @@ If the install link opens plain text:
 
 ## Open settings
 
-Click **Zynubo** in the top-right YouTube header. On pages without a supported header, look for it at the bottom right. The button opens the same Control Center in both installations.
+Click **Zynubo** in the top-right YouTube header. The button stays in the main page header; it does not float over videos or appear inside live chat. If the header is unavailable, use Alt+Shift+Z or the menu below. The button opens the same Control Center in both installations.
 
 - **Userscript alternative:** open the manager menu and choose **Zynubo: Open Control Center**.
 - **Extension:** click Zynubo in the browser toolbar, then **Open Control Center**.

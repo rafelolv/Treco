@@ -6408,9 +6408,18 @@
     }
 
     function ensurePageLauncher() {
-        // Embedded players should not gain controls outside the player UI.
-        if (!document.body || location.pathname.startsWith('/embed/')) return;
+        // Keep the launcher in the main page's header, never over chat or video.
         let button = document.getElementById(`${CSS_PREFIX}-launcher`);
+        if (!document.body || window.top !== window.self ||
+            /^\/(?:embed|live_chat|live_chat_replay)(?:\/|$)/.test(location.pathname)) {
+            button?.remove();
+            return;
+        }
+        const header = document.querySelector('ytd-masthead #end #buttons, ytmusic-nav-bar #right-content');
+        if (!header) {
+            button?.remove();
+            return;
+        }
         if (!button) {
             button = document.createElement('button');
             button.id = `${CSS_PREFIX}-launcher`;
@@ -6431,10 +6440,7 @@
             button.append(mark, label, status);
             button.addEventListener('click', () => toggleSettings(true));
         }
-        const header = document.querySelector('ytd-masthead #end #buttons, ytmusic-nav-bar #right-content');
-        const host = header || document.body;
-        button.classList.toggle(`${CSS_PREFIX}-launcher-floating`, !header);
-        if (button.parentElement !== host) host.prepend(button);
+        if (button.parentElement !== header) header.prepend(button);
         updatePageLauncherStatus();
     }
 

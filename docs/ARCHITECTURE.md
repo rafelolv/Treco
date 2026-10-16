@@ -18,11 +18,12 @@ there is no runtime stylesheet download or HTML parsing. Source files remain
 readable and unminified.
 
 The page launcher opens the same Control Center as the manager menu and extension
-commands. It mounts inside the YouTube/YouTube Music header when present and uses
-a fixed bottom-right fallback elsewhere, except embedded players. A tracked
+commands. It mounts only inside the main page's YouTube/YouTube Music header.
+There is no floating fallback; child frames, live chat/replay and embedded
+players are excluded even if they contain a matching header. A tracked
 1.5-second reconciliation timer and YouTube navigation events recover lazy or
 replaced headers without observing the entire DOM. Shared theme tokens and the
-canonical logo style the launcher; floating notifications leave room above it.
+canonical logo style the launcher. Missing headers leave keyboard/menu access available.
 
 Alt+Shift+Z toggles the panel outside text fields and editable comments. The
 launcher dot reports page-engine enablement, pause or refresh/engine warnings;

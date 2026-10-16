@@ -43,6 +43,8 @@ function findBrowserPath() {
     return candidates.find(candidate => fs.existsSync(candidate)) || null;
 }
 
+const fixtureHeader = '<ytd-masthead><div id="end"><div id="buttons" style="display:flex;justify-content:flex-end;padding:8px"></div></div></ytd-masthead>';
+
 function fixtureHtml(label) {
     const light = /[?&]theme=light(?:&|$)/.test(label);
     return `<!doctype html>
@@ -59,6 +61,7 @@ function fixtureHtml(label) {
   </style>
 </head>
 <body>
+  ${fixtureHeader}
   <div id="page">
     <div id="owner"><div id="channel-name"><a href="/@SmokeChannel">Smoke Channel</a></div></div>
     <div id="upload-info"><div id="channel-name"><a href="/@SmokeChannel">Smoke Channel</a></div></div>
@@ -768,29 +771,17 @@ test('page launcher opens settings and survives delayed mastheads and navigation
                 const page = await context.newPage();
                 if (mode === 'userscript') await installUserscriptMode(page);
                 else await installExtensionMode(page);
+                await page.route('https://www.youtube.com/watch?v=launcher', route => route.fulfill({
+                    contentType: 'text/html', body: fixtureHtml('launcher').replace(fixtureHeader, '')
+                }));
                 await page.goto('https://www.youtube.com/watch?v=launcher');
+                await page.waitForSelector('.ytab-panel', {state:'attached'});
                 const button = page.getByRole('button', { name: 'Open Zynubo Control Center', exact: true });
-                await button.waitFor();
-                assert.equal(await button.count(), 1);
-                assert.equal(await button.evaluate(el => el.classList.contains('ytab-launcher-floating')), true);
-                const bounds = await button.boundingBox();
-                assert(bounds.x >= 0 && bounds.x + bounds.width <= 320);
-                assert(bounds.y >= 0 && bounds.y + bounds.height <= 568);
-                await button.click();
+                assert.equal(await page.locator('#ytab-launcher').count(), 0, 'No floating fallback without a header');
+                // The keyboard shortcut remains available without a header.
+                await page.keyboard.press('Alt+Shift+KeyZ');
                 await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
                 await page.keyboard.press('Escape');
-                assert.equal(await button.evaluate(el => el === document.activeElement), true);
-                await button.press('Enter');
-                await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
-                await page.keyboard.press('Escape');
-                await fs.promises.mkdir(path.join(repoRoot, 'dist/ui-preview'), { recursive: true });
-                const toast = page.locator('body > .ytab-toast-region');
-                if (await toast.isVisible()) {
-                    const toastBounds = await toast.boundingBox();
-                    const buttonBounds = await button.boundingBox();
-                    assert(toastBounds.y + toastBounds.height <= buttonBounds.y, 'Notifications must not cover the launcher');
-                }
-                await page.screenshot({ path: path.join(repoRoot, `dist/ui-preview/launcher-${mode}-mobile.png`) });
                 // Hydration creates the masthead after DOMContentLoaded.
                 await page.evaluate(() => {
                     const header = document.createElement('ytd-masthead');
@@ -800,25 +791,52 @@ test('page launcher opens settings and survives delayed mastheads and navigation
                     end.append(buttons); header.append(end); document.body.prepend(header);
                 });
                 await page.waitForFunction(() => document.querySelector('ytd-masthead #buttons > #ytab-launcher'));
-                assert.equal(await button.evaluate(el => el.classList.contains('ytab-launcher-floating')), false);
-                await page.setViewportSize({ width: 1440, height: 900 });
-                await page.screenshot({ path: path.join(repoRoot, `dist/ui-preview/launcher-${mode}-header.png`) });
-                // The old masthead and button are removed by an SPA replacement.
-                await page.evaluate(() => {
-                    document.querySelector('ytd-masthead').remove();
-                    document.dispatchEvent(new Event('yt-navigate-finish'));
-                });
-                await button.waitFor();
                 assert.equal(await button.count(), 1);
-                assert.equal(await button.evaluate(el => el.classList.contains('ytab-launcher-floating')), true);
+                const bounds = await button.boundingBox();
+                assert(bounds.x >= 0 && bounds.x + bounds.width <= 320);
+                assert.equal(await button.evaluate(el => getComputedStyle(el).position), 'static');
                 await button.click();
                 await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
                 await page.keyboard.press('Escape');
+                assert.equal(await button.evaluate(el => el === document.activeElement), true);
+                await page.setViewportSize({ width: 1440, height: 900 });
+                await page.screenshot({ path: path.join(repoRoot, `dist/ui-preview/launcher-${mode}-header.png`) });
+                // Removing only the host container leaves no orphaned floating button.
+                await page.evaluate(() => {
+                    document.getElementById('buttons').remove();
+                    document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                assert.equal(await page.locator('#ytab-launcher').count(), 0);
+                await page.evaluate(() => {
+                    const buttons = document.createElement('div'); buttons.id = 'buttons';
+                    document.querySelector('ytd-masthead #end').append(buttons);
+                    document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                await button.waitFor();
                 // Repeated navigation never duplicates the launcher.
                 await page.evaluate(() => {
                     for (let i = 0; i < 3; i++) document.dispatchEvent(new Event('yt-navigate-finish'));
                 });
                 assert.equal(await button.count(), 1);
+                await page.evaluate(() => {
+                    const chat = document.createElement('iframe'); chat.src = '/live_chat?v=fixture';
+                    chat.id = 'live-chat-frame'; document.body.append(chat);
+                });
+                const chat = page.frameLocator('#live-chat-frame');
+                await chat.locator('.ytab-panel').waitFor({state:'attached'});
+                assert.equal(await chat.locator('#ytab-launcher').count(), 0, 'No launcher inside live chat');
+                await page.evaluate(() => {
+                    const child = document.createElement('iframe'); child.src = '/watch?v=child';
+                    child.id = 'watch-frame'; document.body.append(child);
+                });
+                const child = page.frameLocator('#watch-frame');
+                await child.locator('.ytab-panel').waitFor({state:'attached'});
+                assert.equal(await child.locator('#ytab-launcher').count(), 0, 'Child frames must not receive the main-page button');
+                for (const path of ['/live_chat', '/live_chat_replay', '/embed/fixture']) {
+                    await page.goto(`https://www.youtube.com${path}`);
+                    await page.waitForSelector('.ytab-panel', {state:'attached'});
+                    assert.equal(await page.locator('#ytab-launcher').count(), 0, `No launcher on ${path}`);
+                }
             } finally { await context.close(); }
         });
     }

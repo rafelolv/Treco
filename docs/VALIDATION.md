@@ -192,3 +192,29 @@ cached after a force push; their refresh is separate from verifying branch ances
   unchanged. No new permissions or published release tags/assets were added.
 - Tests use synthetic routes, simulated manager APIs and temporary profiles;
   no actual Violentmonkey installation or live YouTube compatibility is claimed.
+
+## 1.3.1 header-only launcher — 2026-10-16
+
+- Removed the floating page-button fallback. The launcher now requires a main
+  document and a supported YouTube/YouTube Music header. It is excluded from
+  live chat, replay chat, embedded players and every child frame, including
+  frames that contain a matching header. Missing/replaced headers leave no
+  button over the page; keyboard and menu access remain available.
+- The focused launcher regression passed on Brave Origin Nightly 154.1.98.28
+  in userscript and extension modes. It checks absence without a header,
+  shortcut access, delayed header mounting, normal document-flow placement,
+  removal/replacement of the header container, repeated navigation, live-chat
+  frames, generic child frames and standalone live/replay/embed routes.
+- The synthetic fixture intentionally includes a matching header in excluded
+  routes and frames so the test verifies placement policy, not just missing
+  host markup. No production host or frame permission was expanded.
+- npm run check passed 221 unit/contract cases, license checks, synchronized
+  1.3.1 metadata, shared-engine parity and reproducible build verification.
+- The full Chromium suite passed 28 scenarios (33 including parent groups).
+  Temporary installation checks passed on Chromium for Testing 149.0.7827.55
+  and Firefox 157.0. Firefox lint reported zero errors, notices or warnings;
+  npm run package produced the synchronized 1.3.1 artifacts.
+- Browser evidence uses synthetic responses and temporary profiles. No actual
+  Violentmonkey installation, live YouTube broadcast or live chat was tested.
+  Signed data, feature defaults, storage namespaces and published release assets
+  remain unchanged.

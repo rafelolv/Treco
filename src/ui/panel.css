@@ -220,8 +220,6 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-launcher:hover { background: var(--z-hover); }
 .ytab-launcher:focus-visible { outline: 2px solid var(--z-focus); outline-offset: 3px; }
 .ytab-launcher-mark { width: 22px; height: 22px; flex: 0 0 22px; background: var(--z-logo) center / contain no-repeat; }
-.ytab-launcher-floating { position: fixed; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 2147483644; margin: 0; box-shadow: 0 2px 8px rgb(0 0 0 / 18%); }
-body:has(> .ytab-launcher-floating) > .ytab-toast-region { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 48px); }
 
 .ytab-launcher-status { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--z-success); }
 .ytab-launcher[data-status="paused"] .ytab-launcher-status { background: var(--z-faint); }
