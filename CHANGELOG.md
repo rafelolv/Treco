@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0 — Unreleased
+
+- Redesign the Control Center with a graphite-and-paper palette, a red Z mark and quieter typography.
+- Show one settings section at a time and keep matching sections visible during search.
+- Replace nested setting cards with aligned rows and move technical counters into More counters.
+- Match the extension popup and icons to the shared visual identity.
+- Fix narrow layouts and keep keyboard focus on visible controls when navigating or rebuilding settings.
+
+Validation and limitations:
+- See docs/VALIDATION.md for browser versions, automated results and fixture captures.
+- Real YouTube playback and store availability require separate validation.
+
 ## 1.0.0 — Unreleased
 
 - Establish Zynubo as an independent continuation with documented upstream provenance and preserved license notices.

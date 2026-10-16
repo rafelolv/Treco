@@ -79,6 +79,10 @@ async function prepare(browser) {
     await fs.writeFile(`${dir}/test-worker.js`, "importScripts('background.js', 'test-driver.js');");
     await fs.writeFile(`${dir}/test-driver.js`, `
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
+    if (message?.type === 'test:open' && sender.tab) {
+        chrome.tabs.sendMessage(sender.tab.id, {type:'ytab:open-panel'}).then(() => reply({ok:true}), () => reply({ok:false}));
+        return true;
+    }
     if (message?.type !== 'test:status' || !sender.tab) return;
     chrome.tabs.sendMessage(sender.tab.id, {type:'zynubo:status'}).then(reply, () => reply({initialized:false}));
     return true;
@@ -96,6 +100,14 @@ chrome.tabs.create({url:${JSON.stringify(origin + '/userscript')}});
             const result = JSON.parse(node.textContent);
             if (result.mode === 'extension') {
                 result.runtimeStatus = await chrome.runtime.sendMessage({type:'test:status'});
+                await chrome.runtime.sendMessage({type:'test:open'});
+                await new Promise(resolve => setTimeout(resolve,200));
+                const panel = document.querySelector('.ytab-panel');
+                const rect = panel.getBoundingClientRect();
+                result.panelOpened = !!document.querySelector('.ytab-overlay.ytab-active');
+                result.panelFits = rect.width <= innerWidth && rect.height <= innerHeight;
+                result.visibleSections = [...document.querySelectorAll('.ytab-layout > .ytab-section')].filter(el => !el.hidden).length;
+                result.background = getComputedStyle(panel).backgroundColor;
             }
             await fetch(${JSON.stringify(origin + '/report')}, {method:'POST',body:JSON.stringify({...result,browser:${JSON.stringify(browser)}})});
             return;
@@ -119,7 +131,13 @@ function check(report, expected) {
     assert.equal(report.title, 'Keep this title');
     assert.equal(report.duplicatePrevented, true);
     assert.equal(report.panelBuilt, true);
-    if (expected === 'extension') assert.equal(report.runtimeStatus?.initialized, true, 'Isolated runtime status bridge');
+    if (expected === 'extension') {
+        assert.equal(report.runtimeStatus?.initialized, true, 'Isolated runtime status bridge');
+        assert.equal(report.panelOpened, true);
+        assert.equal(report.panelFits, true);
+        assert.equal(report.visibleSections, 1);
+        assert.equal(report.background, 'rgb(250, 249, 245)');
+    }
 }
 try {
     // Add a DOM text report for the isolated probe, without object-world access.
@@ -144,8 +162,10 @@ try {
     const popup = await context.newPage();
     await popup.goto(worker.url().replace(/[^/]+$/, 'popup.html'));
     await popup.waitForFunction(() => document.getElementById('status').textContent.includes('No engine response'));
+    await fs.mkdir('dist/ui-preview', {recursive:true});
+    await popup.locator('body').screenshot({path:'dist/ui-preview/popup.png'});
     assert.equal(await popup.locator('#open').isDisabled(),true);
-    console.log(`PASS Chromium ${context.browser()?.version() || execFileSync(executablePath,['--version']).toString().trim()}: temporary extension, page interception, duplicate claim, userscript fixture, runtime status, popup unavailable state.`);
+    console.log(`PASS Chromium ${context.browser()?.version() || execFileSync(executablePath,['--version']).toString().trim()}: temporary extension, page interception, duplicate claim, userscript fixture, runtime status, redesigned panel bounds/theme, popup unavailable state.`);
     await context.close(); context = null;
 
     const firefoxDir = await prepare('firefox');
@@ -169,7 +189,7 @@ try {
     await waitFor(() => reports.get('firefox:extension'), 'Firefox extension report');
     await waitFor(() => reports.get('firefox:userscript'), 'Firefox userscript report');
     check(reports.get('firefox:extension'), 'extension'); check(reports.get('firefox:userscript'), 'userscript');
-    console.log(`PASS ${execFileSync(firefoxPath,['--version']).toString().trim()}: temporary add-on via Firefox RDP, page interception, duplicate claim, userscript fixture, cross-world runtime status.`);
+    console.log(`PASS ${execFileSync(firefoxPath,['--version']).toString().trim()}: temporary add-on via Firefox RDP, page interception, duplicate claim, userscript fixture, cross-world runtime status, redesigned panel bounds/theme.`);
     console.log('LIMIT: loopback fixtures and simulated manager APIs; no real YouTube playback, manager installation, store signing or cross-device sync validation.');
 } finally {
     remote?.disconnect();

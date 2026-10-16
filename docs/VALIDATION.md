@@ -69,3 +69,30 @@ setup. This update changes ancestry and documentation only; runtime source,
 versions, signing data and compatibility identifiers remain unchanged. The local
 check suite was rerun for this update. GitHub contributor statistics can remain
 cached after a force push; their refresh is separate from verifying branch ancestry.
+
+## 1.1.0 visual redesign — 2026-10-16
+
+- `npm run check` passed: all 220 unit/contract cases, generated source parity,
+  version/hash checks, license preflight and reproducible extension rebuilds.
+- `npm run test:browser:upstream` passed all 22 scenarios (24 including parent
+  test groups) on Chromium for Testing 149.0.7827.55. The existing 12 surface
+  combinations now also check the redesigned section navigation; 10 additional
+  cases cover both distributions at 320x568, 390x844, 768x1024, 960x540 and
+  1440x900 in light/dark fixture themes. Checks cover single-page visibility,
+  search across pages, empty search, Escape-to-clear, focus wrapping, checkbox
+  state/focus after rebuild, horizontal overflow and reopening on Overview.
+- `npm run test:extensions:browser` passed on Chromium for Testing 149.0.7827.55
+  and Firefox 157.0 with temporary profiles. In addition to existing runtime
+  checks, both installed packages opened the redesigned panel through the
+  isolated bridge and verified its theme, bounds and single visible section.
+  The real Chromium popup's unavailable state was captured as well.
+- `npm run lint:firefox` passed with zero errors, notices or warnings.
+- Native browser captures were visually inspected in dark/light themes and on
+  narrow screens. Examples are in docs/images/; extended captures remain in
+  dist/ui-preview/ and dist/browser-smoke/. All use synthetic local data.
+- `npm run package` rebuilt the synchronized 1.1.0 userscript, Chromium/Firefox
+  ZIPs and reviewer source. Repeated ZIP generation produced matching checksums.
+- No live YouTube playback, actual mobile browser, store signing/submission or
+  cross-device synchronization is claimed. Narrow viewport checks are desktop
+  browser emulation. Blocking engines, defaults, consent, storage namespaces,
+  signed-data revisions and add-on IDs were preserved.

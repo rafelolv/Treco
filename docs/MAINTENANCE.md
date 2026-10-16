@@ -1,12 +1,13 @@
 # Maintenance
 
-Read AGENTS.md first. Work on main. Edit only canonical source; regenerate and
+Read AGENTS.md first. Work on main. Edit only canonical source and src/ui/ styles; regenerate and
 commit Zynubo.user.js and icon.png alongside changes. Never edit dist/.
 Use `npm ci` from the committed lockfile. Node 24.21.0 (.nvmrc) and Python 3 form the reference
 build; pin dependency changes in the lockfile and review them separately.
 
 Run `npm run check`, `npm run lint:firefox`, then browser integration checks after
-core/adapter/popup changes. `npm run package` regenerates and verifies all outputs.
+core/adapter/popup changes. Run npm run test:browser:upstream for UI changes,
+including search, section visibility, focus, both themes and narrow layouts. `npm run package` regenerates and verifies all outputs.
 Repeat packaging and compare SHA256SUMS when changing build logic. ZIP entries
 have fixed times, order and permissions. Reproducibility is measured within the
 same pinned toolchain; zlib/Sharp/platform upgrades require a fresh comparison.

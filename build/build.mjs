@@ -2,12 +2,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import sharp from 'sharp';
+import { compileCore, compileStyles } from './compile-ui.mjs';
 
 const read = name => fs.readFile(name, 'utf8');
 const pkg = JSON.parse(await read('package.json'));
 if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) throw Error('Use a three-part semantic version.');
 const source = await read('src/core.user.js');
-const userscript = source.replaceAll('__VERSION__', pkg.version);
+const userscript = await compileCore(source, pkg.version);
 if (userscript.includes('__VERSION__')) throw Error('Unresolved version.');
 await fs.writeFile('Zynubo.user.js', userscript);
 const body = userscript.replace(/^\/\/ ==UserScript==[\s\S]*?\/\/ ==\/UserScript==\s*/, '');
@@ -52,6 +53,7 @@ for (const browser of ['chromium', 'firefox']) {
             content = content.slice(0, start) +
                 "async function getDnrDiagnostics() { return unavailableDnrDiagnostics('api-unavailable'); }\n\n" + content.slice(end);
         }
+        if (file === 'popup.css') content = await compileStyles('popup');
         await fs.writeFile(`${dir}/${file}`, content);
     }
     for (const file of ['LICENSE', 'THIRD_PARTY_NOTICES.md']) await fs.copyFile(file, `${dir}/${file}`);

@@ -7,8 +7,13 @@ customize your experience from one Control Center.
 
 Zynubo offers a userscript and independent Chromium (Chrome, Brave, Edge) and
 Firefox extensions. Extensions do not need Tampermonkey. All formats share the
-same engine. Version 1.0.0 is the initial independent Zynubo baseline, not a
-promise that every YouTube experiment is covered.
+same engine. Version 1.1.0 brings a redesigned Control Center with focused sections and
+matching browser popups. No version can promise coverage of every YouTube experiment.
+
+![Zynubo Control Center](docs/images/control-center-dark.png)
+
+Local fixture capture of the redesigned panel. See [light, narrow-screen and popup previews](docs/UI.md);
+these images do not demonstrate live YouTube ad blocking.
 
 ## Install
 
@@ -29,7 +34,7 @@ manager configuration can affect timing and access to GM APIs.
 
 ### Chrome, Brave and Edge
 
-1. Extract `Zynubo-chromium-v1.0.0.zip` into a permanent folder.
+1. Extract `Zynubo-chromium-v1.1.0.zip` into a permanent folder.
 2. Open `chrome://extensions`, `brave://extensions` or `edge://extensions`.
 3. Enable **Developer mode**, choose **Load unpacked**, and select the folder.
 4. Reload YouTube and open the Zynubo toolbar popup.
@@ -40,7 +45,7 @@ The declared Chromium baseline is 121; actual tested versions are recorded in
 
 ### Firefox
 
-1. Extract `Zynubo-firefox-v1.0.0.zip`.
+1. Extract `Zynubo-firefox-v1.1.0.zip`.
 2. Open `about:debugging#/runtime/this-firefox`, select **Load Temporary Add-on**,
    then select the extracted `manifest.json`.
 3. Reload YouTube and open the toolbar popup.
@@ -53,6 +58,9 @@ AMO listing, review. No signed XPI or AMO approval is claimed here.
 ## Use and update
 
 Open the popup on a supported YouTube page, then **Open Control Center**.
+Choose a section from the sidebar (scrollable navigation on narrow screens) or
+use **Find a setting** to search across sections. Changes save automatically.
+The Overview shows the main counters; **More counters** reveals technical totals.
 The popup reports an actual engine response, enabled/paused state and degraded
 initialization. It does not certify that ads are blocked. Other websites and
 unresponsive tabs show an unavailable state. The Control Center contains engine

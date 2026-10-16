@@ -33,6 +33,7 @@ function findBrowserPath() {
         return process.env.YTAB_BROWSER_PATH;
     }
     const candidates = [
+        chromium.executablePath(),
         '/usr/bin/google-chrome', '/usr/bin/chromium',
         'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
@@ -383,7 +384,7 @@ async function assertAdExclusiveRequestsShortCircuit(page, requestLog) {
 }
 
 async function exercisePanel(page, mode, surface) {
-    await assert.match(await page.locator('#ytab-dialog-title').textContent(), /Zynubo/);
+    await assert.equal(await page.locator('#ytab-dialog-title').textContent(), 'Overview');
     await assert.equal(await page.locator('.ytab-nav-button').count(), 10);
     await assert.equal(await page.locator('.ytab-nav-button[aria-current="page"]').textContent(), 'Overview');
     await assert.equal(await page.locator('.ytab-panel').evaluate(el => getComputedStyle(el).colorScheme), surface.theme);
@@ -578,6 +579,10 @@ test('browser smoke matrix opens Control Center across modes and surfaces', { sk
                 await openControlCenter(page, mode);
                 await assertPanelLayout(page, surface.width, surface.height);
                 if (surface.name === 'www-watch-dark' || surface.name === 'www-watch-light') {
+                    fs.mkdirSync(path.join(repoRoot, 'dist', 'ui-preview'), { recursive: true });
+                    await page.locator('.ytab-panel').screenshot({
+                        path: path.join(repoRoot, 'dist', 'ui-preview', `${mode}-${surface.theme}-panel.png`)
+                    });
                     await page.screenshot({
                         path: path.join(screenshotDir, `${mode}-${surface.name}-initial.png`),
                         fullPage: false,
@@ -596,6 +601,84 @@ test('browser smoke matrix opens Control Center across modes and surfaces', { sk
                 await page.waitForFunction(() => !document.querySelector('.ytab-overlay')?.classList.contains('ytab-active'));
                 await assert.equal(await page.locator('.ytab-toast-region').evaluate(el => el.parentElement === document.body), true);
                 await context.close();
+            });
+        }
+    }
+});
+
+
+// Regression checks for the redesigned navigation and the old narrow-screen overflow.
+test('responsive settings pages preserve search, focus and aligned controls', { skip: !browserPath }, async t => {
+    const browser = await chromium.launch({ executablePath: browserPath, headless: true });
+    t.after(() => browser.close());
+    const previewDir = path.join(repoRoot, 'dist', 'ui-preview');
+    fs.mkdirSync(previewDir, { recursive: true });
+    for (const mode of ['userscript', 'extension']) {
+        for (const size of [
+            { name: 'mobile-320', width: 320, height: 568, light: false },
+            { name: 'mobile', width: 390, height: 844, light: false },
+            { name: 'tablet', width: 768, height: 1024, light: false },
+            { name: 'short', width: 960, height: 540, light: false },
+            { name: 'desktop-light', width: 1440, height: 900, light: true }
+        ]) {
+            await t.test(`${mode} ${size.name}`, async () => {
+                const context = await browser.newContext({ viewport: { width: size.width, height: size.height }, reducedMotion: 'reduce' });
+                try {
+                    await installRoutes(context);
+                    const page = await context.newPage();
+                    if (mode === 'userscript') await installUserscriptMode(page);
+                    else await installExtensionMode(page);
+                    await page.goto(`https://www.youtube.com/watch?v=smoketest01${size.light ? '&theme=light' : ''}`);
+                    await openControlCenter(page, mode);
+                    await assertPanelLayout(page, size.width, size.height);
+                    await page.screenshot({ path: path.join(previewDir, `${mode}-${size.name}.png`) });
+                    const visiblePages = () => page.locator('.ytab-layout > .ytab-section:visible').count();
+                    assert.equal(await visiblePages(), 1);
+                    const navigation = page.locator('.ytab-nav-button');
+                    for (const sectionId of ['core', 'enhance', 'blocklist', 'diagnostics']) {
+                        await page.locator(`[data-section-id="ytab-section-${sectionId}"]`).click();
+                        assert.equal(await visiblePages(), 1);
+                        assert.equal(await page.locator(`#ytab-section-${sectionId}`).isVisible(), true);
+                        await assertPanelLayout(page, size.width, size.height);
+                    }
+                    // An invisible page must never become the end of the focus trap.
+                    await navigation.first().focus();
+                    await page.keyboard.press('Shift+Tab');
+                    assert.equal(await page.evaluate(() => !!document.activeElement?.closest('#ytab-section-diagnostics')), true);
+                    await page.keyboard.press('Tab');
+                    assert.equal(await navigation.first().evaluate(el => el === document.activeElement), true);
+                    const search = page.locator('#ytab-settings-search');
+                    await search.fill('block');
+                    await page.waitForFunction(() => [...document.querySelectorAll('.ytab-layout > .ytab-section')].filter(el => !el.hidden).length > 1);
+                    await search.fill('zzzz-no-setting');
+                    await page.getByText('No Matching Settings', { exact: true }).waitFor();
+                    await search.fill('volume');
+                    await page.locator('#ytab-toggle-volumeBoost').waitFor({ state: 'visible' });
+                    // Escape clears the search first, preserving the dialog.
+                    await search.press('Escape');
+                    assert.equal(await search.inputValue(), '');
+                    assert.equal(await page.locator('.ytab-overlay').getAttribute('aria-hidden'), null);
+                    assert.equal(await visiblePages(), 1);
+                    await page.locator('[data-section-id="ytab-section-core"]').click();
+                    // Use a real visible row; the feature set's first checkbox is stable by DOM.
+                    const first = page.locator('#ytab-section-core input[type="checkbox"]').first();
+                    const id = await first.getAttribute('id');
+                    const before = await first.isChecked();
+                    await first.focus();
+                    await first.press('Space');
+                    assert.equal(await page.locator(`#${id}`).isChecked(), !before);
+                    assert.equal(await page.evaluate(id => document.activeElement.id === id, id), true);
+                    assert.equal(await page.locator('#ytab-section-core').isVisible(), true);
+                    // Detect horizontal overflow at the actual scroll surface and row boundaries.
+                    const overflow = await page.evaluate(() => [...document.querySelectorAll('.ytab-content, .ytab-header, .ytab-row')]
+                        .filter(el => el.getClientRects().length).map(el => el.scrollWidth - el.clientWidth));
+                    assert(overflow.every(value => value <= 2), `Visible layout overflow: ${overflow}`);
+                    await page.screenshot({ path: path.join(previewDir, `${mode}-${size.name}-settings.png`) });
+                    await page.keyboard.press('Escape');
+                    await openControlCenter(page, mode);
+                    assert.equal(await page.locator('#ytab-section-overview').isVisible(), true);
+                    assert.equal(await visiblePages(), 1);
+                } finally { await context.close(); }
             });
         }
     }

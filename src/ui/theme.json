@@ -1,0 +1,40 @@
+{
+  "common": {
+    "accent": "#cb3727",
+    "accent-hover": "#ac2b1e",
+    "accent-text": "#ffffff",
+    "font": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+  },
+  "dark": {
+    "paper": "#20211f",
+    "rail": "#191a18",
+    "inset": "#282925",
+    "hover": "#30312c",
+    "line": "#40413a",
+    "ink": "#f2f0e9",
+    "muted": "#bcbdb3",
+    "faint": "#9b9e91",
+    "success": "#a8ca9b",
+    "warning": "#efc47e",
+    "danger": "#ffab9c",
+    "info": "#a4c5e8",
+    "focus": "#efb884",
+    "scheme": "dark"
+  },
+  "light": {
+    "paper": "#faf9f5",
+    "rail": "#eeede6",
+    "inset": "#f0efe8",
+    "hover": "#e8e7df",
+    "line": "#d4d4c8",
+    "ink": "#252720",
+    "muted": "#5f6257",
+    "faint": "#6e7164",
+    "success": "#416337",
+    "warning": "#895511",
+    "danger": "#ac2b1e",
+    "info": "#335f8d",
+    "focus": "#9c3c20",
+    "scheme": "light"
+  }
+}

@@ -302,17 +302,18 @@
         },
         ui: {
             controlCenter: 'Control Center',
-            headerDescription: 'Pause protection, refresh the rule library, and adjust modules without leaving YouTube.',
+            settingsTitle: 'Settings',
+            headerDescription: 'Zynubo settings for YouTube. Choose a section or search for a setting.',
             findSetting: 'Find a setting',
             findSettingPlaceholder: 'Find a setting…',
             closeControlCenter: 'Close the Zynubo Control Center',
             notifications: 'Control Center notifications',
             footerHint: 'Tab moves between controls. Press Esc to close.',
             settingsNavigation: 'Settings sections',
-            workspace: 'Workspace',
+            workspace: 'YouTube, on your terms.',
             productMark: 'Z',
-            localSettings: 'Changes stay on this device unless extension sync is available.',
-            savedStatus: 'Saved · Changes save automatically.',
+            localSettings: 'Saved automatically.',
+            savedStatus: 'Changes saved',
             savedWithRefreshProblem: 'Saved locally · Rule refresh needs attention.',
             syncingStatus: 'Refreshing the Rule Library while your current protection stays active.',
             footerSync: timestamp => `Last synced: ${formatTimestamp(timestamp)}`,
@@ -320,19 +321,22 @@
                 overview: 'Overview',
                 rules: 'Rule Library',
                 core: 'Core Blocking',
-                anti: 'Anti-Interference',
-                cleanup: 'Ad & Overlay Cleanup',
+                anti: 'Compatibility',
+                cleanup: 'Ad cleanup',
                 sponsor: 'SponsorBlock',
                 enhance: 'Enhancements',
-                clutter: 'Interface Cleanup',
-                blocklist: 'Focus & Filters',
+                clutter: 'Page layout',
+                blocklist: 'Focus filters',
                 diagnostics: 'Diagnostics'
             },
             quickActions: 'Quick actions',
             protectionOn: 'Protection On',
             protectionPaused: 'Protection Paused',
-            masterSwitch: 'Master Switch',
-            masterSwitchPause: 'Pause every blocking engine without uninstalling the script.',
+            masterSwitch: 'Page blocking',
+            moreCounters: 'More counters',
+            masterSwitchPause: IS_EXTENSION_BUILD
+                ? 'Pause the page engine. Extension network rules stay active.'
+                : 'Pause the page engine without changing your saved settings.',
             masterSwitchResume: 'Resume blocking instantly with your saved settings intact.',
             toggleProtection: 'Toggle Zynubo protection',
             ruleLibrary: 'Rule Library',
@@ -344,12 +348,12 @@
             lastSync: 'Last Sync',
             activeRulesDetail: count => `${formatNumber(count)} active rules.`,
             metrics: {
-                blocked: 'Ads Blocked',
-                pruned: 'Responses Pruned',
+                blocked: 'Requests blocked',
+                pruned: 'Responses cleaned',
                 ssapSkipped: 'SSAP Skips',
-                sponsorSkipped: 'Sponsor Skips',
+                sponsorSkipped: 'Sponsors skipped',
                 dearrowReplaced: 'DeArrow Replaced',
-                feedFiltered: 'Feed Filtered',
+                feedFiltered: 'Videos filtered',
                 ssaiDetected: 'SSAI Signals'
             },
             managerSetupWarning: 'Manager Setup Warning',
@@ -407,7 +411,9 @@
             rydAttributionLink: 'returnyoutubedislike.com',
             pause: {
                 heading: 'Temporary pause',
-                help: 'Suspend every engine for this tab without changing your saved settings. It restores itself automatically and never syncs to your other devices.',
+                help: IS_EXTENSION_BUILD
+                    ? 'Pause the page engine for this tab. Browser network rules stay active. Your settings are kept.'
+                    : 'Take a break from page blocking. Your settings are kept; protection resumes automatically.',
                 start5m: 'Pause 5 min',
                 start30m: 'Pause 30 min',
                 startSession: 'Pause for this tab',
@@ -6380,1360 +6386,30 @@
      * ===================================================================== */
 
     function injectSettingsCSS() {
-        const css = `
-            body:not(.${CSS_PREFIX}-ready) .${CSS_PREFIX}-overlay { display: none !important; }
-            .${CSS_PREFIX}-sr-only {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                padding: 0;
-                margin: -1px;
-                overflow: hidden;
-                clip: rect(0, 0, 0, 0);
-                white-space: nowrap;
-                border: 0;
-            }
-            .${CSS_PREFIX}-overlay {
-                position: fixed;
-                inset: 0;
-                z-index: 2147483646;
-                display: grid;
-                place-items: center;
-                padding:
-                    max(14px, env(safe-area-inset-top))
-                    max(14px, env(safe-area-inset-right))
-                    max(14px, env(safe-area-inset-bottom))
-                    max(14px, env(safe-area-inset-left));
-                background: rgba(7, 10, 18, 0.76);
-                backdrop-filter: blur(16px) saturate(120%);
-                -webkit-backdrop-filter: blur(16px) saturate(120%);
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.18s ease;
-                font-family: "Aptos", "Segoe UI Variable Text", "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
-            }
-            .${CSS_PREFIX}-overlay.${CSS_PREFIX}-active {
-                opacity: 1;
-                pointer-events: auto;
-            }
-            .${CSS_PREFIX}-panel {
-                --panel-border: rgba(255, 255, 255, 0.08);
-                --panel-border-strong: rgba(255, 255, 255, 0.14);
-                --accent: #ff6a4d;
-                --accent-strong: #ff8a5c;
-                --accent-focus: rgba(255, 106, 77, 0.16);
-                --accent-focus-border: rgba(255, 106, 77, 0.48);
-                --accent-tap: rgba(255, 106, 77, 0.14);
-                --accent-glow: rgba(255, 106, 77, 0.28);
-                --scrollbar-thumb: rgba(255, 255, 255, 0.14);
-                --scrollbar-thumb-webkit: rgba(255, 255, 255, 0.12);
-                --success: #66d995;
-                --info: #7abfff;
-                --warning: #ffc46b;
-                --danger: #ff8e97;
-                --text: #f7f8fb;
-                --text-2: #c3cbda;
-                --text-3: #8893a7;
-                width: min(760px, calc(100vw - 24px));
-                height: min(920px, calc(100vh - 24px));
-                max-height: min(920px, calc(100vh - 24px));
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                border-radius: 22px;
-                border: 1px solid var(--panel-border);
-                background: rgba(16, 20, 29, 0.98);
-                color: var(--text);
-                color-scheme: dark;
-                box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
-                transform: translateY(8px);
-                transition: transform 0.18s ease;
-                outline: none;
-            }
-            .${CSS_PREFIX}-overlay.${CSS_PREFIX}-active .${CSS_PREFIX}-panel {
-                transform: translateY(0);
-            }
-            .${CSS_PREFIX}-header,
-            .${CSS_PREFIX}-footer {
-                padding-left: 24px;
-                padding-right: 24px;
-            }
-            .${CSS_PREFIX}-header {
-                display: flex;
-                justify-content: space-between;
-                gap: 16px;
-                align-items: flex-start;
-                padding-top: 20px;
-                padding-bottom: 16px;
-                border-bottom: 1px solid var(--panel-border);
-                background: rgba(255, 255, 255, 0.015);
-            }
-            .${CSS_PREFIX}-header-left {
-                display: grid;
-                gap: 8px;
-                min-width: 0;
-            }
-            .${CSS_PREFIX}-logo {
-                width: 46px;
-                height: 46px;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-                color: #fff;
-                font-size: 14px;
-                font-weight: 800;
-                letter-spacing: 0.08em;
-                box-shadow: 0 14px 34px var(--accent-glow);
-                flex-shrink: 0;
-            }
-            .${CSS_PREFIX}-brand {
-                min-width: 0;
-            }
-            .${CSS_PREFIX}-eyebrow {
-                margin: 0;
-                font-size: 10px;
-                text-transform: uppercase;
-                letter-spacing: 0.12em;
-                font-weight: 700;
-                color: var(--text-3);
-            }
-            .${CSS_PREFIX}-title-row {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-                align-items: center;
-                margin-bottom: 4px;
-            }
-            .${CSS_PREFIX}-title {
-                margin: 0;
-                font-size: 21px;
-                line-height: 1.1;
-                font-weight: 760;
-                letter-spacing: -0.03em;
-                text-wrap: balance;
-            }
-            .${CSS_PREFIX}-version {
-                padding: 4px 8px;
-                border-radius: 999px;
-                border: 1px solid var(--panel-border);
-                background: rgba(255, 255, 255, 0.03);
-                font-size: 10px;
-                font-weight: 650;
-                color: var(--text-3);
-            }
-            .${CSS_PREFIX}-header-desc {
-                margin: 0;
-                max-width: 520px;
-                font-size: 13px;
-                line-height: 1.5;
-                color: var(--text-2);
-            }
-            .${CSS_PREFIX}-header-search {
-                margin-top: 10px;
-                max-width: 320px;
-            }
-            .${CSS_PREFIX}-search-input {
-                width: 100%;
-                min-height: 38px;
-                padding-block: 10px;
-                font-family: inherit;
-                font-size: 13px;
-            }
-            .${CSS_PREFIX}-header-right {
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                flex-shrink: 0;
-            }
-            .${CSS_PREFIX}-content {
-                flex: 1;
-                min-height: 0;
-                overflow: auto;
-                overflow-x: hidden;
-                padding: 0;
-                overscroll-behavior: contain;
-                scrollbar-gutter: stable both-edges;
-                scrollbar-width: thin;
-                scrollbar-color: var(--scrollbar-thumb) transparent;
-            }
-            .${CSS_PREFIX}-content::-webkit-scrollbar {
-                width: 8px;
-            }
-            .${CSS_PREFIX}-content::-webkit-scrollbar-thumb {
-                background: var(--scrollbar-thumb-webkit);
-                border-radius: 999px;
-            }
-            .${CSS_PREFIX}-layout {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr);
-                gap: 16px;
-                /* Trailing space so the last rail destination can scroll to
-                   the top of the content area instead of stopping with its
-                   controls behind the footer on short panels. */
-                padding: 16px 24px 96px;
-            }
-            .${CSS_PREFIX}-section {
-                min-width: 0;
-                scroll-margin-top: 18px;
-            }
-            .${CSS_PREFIX}-section-span {
-                grid-column: 1 / -1;
-            }
-            .${CSS_PREFIX}-section-head {
-                display: flex;
-                justify-content: space-between;
-                gap: 16px;
-                align-items: flex-start;
-                margin-bottom: 10px;
-            }
-            .${CSS_PREFIX}-section-head > div {
-                min-width: 0;
-            }
-            .${CSS_PREFIX}-section-disclosure {
-                display: grid;
-                gap: 10px;
-            }
-            .${CSS_PREFIX}-section-toggle {
-                margin-bottom: 0;
-                list-style: none;
-                cursor: pointer;
-            }
-            .${CSS_PREFIX}-section-toggle::-webkit-details-marker {
-                display: none;
-            }
-            .${CSS_PREFIX}-section-toggle::marker {
-                content: '';
-            }
-            .${CSS_PREFIX}-section-toggle-meta {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                flex-shrink: 0;
-            }
-            .${CSS_PREFIX}-section-toggle:hover .${CSS_PREFIX}-section-title {
-                color: var(--text);
-            }
-            .${CSS_PREFIX}-section-toggle:focus-visible {
-                outline: none;
-                border-radius: 12px;
-                box-shadow: 0 0 0 3px var(--accent-focus);
-            }
-            .${CSS_PREFIX}-section-chevron {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 18px;
-                height: 18px;
-                color: var(--text-3);
-                font-size: 15px;
-                line-height: 1;
-                transition: transform 0.16s ease, color 0.16s ease;
-            }
-            .${CSS_PREFIX}-section-disclosure[open] .${CSS_PREFIX}-section-chevron {
-                transform: rotate(90deg);
-                color: var(--text-2);
-            }
-            .${CSS_PREFIX}-section-title {
-                margin: 0 0 3px;
-                font-size: 14px;
-                line-height: 1.2;
-                font-weight: 720;
-                letter-spacing: -0.01em;
-                text-wrap: balance;
-            }
-            .${CSS_PREFIX}-section-desc,
-            .${CSS_PREFIX}-field-help,
-            .${CSS_PREFIX}-row-desc,
-            .${CSS_PREFIX}-summary-text,
-            .${CSS_PREFIX}-footer-status,
-            .${CSS_PREFIX}-detail-text,
-            .${CSS_PREFIX}-glance-detail,
-            .${CSS_PREFIX}-note-text,
-            .${CSS_PREFIX}-toast-message {
-                margin: 0;
-                font-size: 12px;
-                line-height: 1.55;
-                color: var(--text-2);
-            }
-            .${CSS_PREFIX}-surface {
-                display: grid;
-                gap: 14px;
-                height: 100%;
-                padding: 18px;
-                border-radius: 16px;
-                border: 1px solid var(--panel-border);
-                background: rgba(255, 255, 255, 0.025);
-            }
-            .${CSS_PREFIX}-summary {
-                gap: 16px;
-            }
-            .${CSS_PREFIX}-summary-hero {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) auto;
-                gap: 16px;
-                align-items: start;
-            }
-            .${CSS_PREFIX}-summary-copy {
-                display: grid;
-                gap: 12px;
-                min-width: 0;
-            }
-            .${CSS_PREFIX}-summary-title {
-                margin: 0;
-                font-size: 24px;
-                line-height: 1;
-                font-weight: 770;
-                letter-spacing: -0.04em;
-                text-wrap: balance;
-            }
-            .${CSS_PREFIX}-chip-row,
-            .${CSS_PREFIX}-btn-row,
-            .${CSS_PREFIX}-url-group,
-            .${CSS_PREFIX}-jump-nav,
-            .${CSS_PREFIX}-summary-actions {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .${CSS_PREFIX}-summary-facts {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 10px;
-            }
-            .${CSS_PREFIX}-summary-control {
-                display: flex;
-                gap: 12px;
-                align-items: center;
-                justify-content: space-between;
-                min-width: 220px;
-                padding: 14px 16px;
-                border-radius: 14px;
-                background: rgba(255, 255, 255, 0.02);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-            }
-            .${CSS_PREFIX}-summary-control-copy {
-                min-width: 0;
-            }
-            .${CSS_PREFIX}-summary-control-label {
-                margin: 0 0 4px;
-                font-size: 12px;
-                font-weight: 720;
-                color: var(--text);
-            }
-            .${CSS_PREFIX}-summary-control-text {
-                margin: 0;
-                font-size: 11px;
-                line-height: 1.5;
-                color: var(--text-2);
-            }
-            .${CSS_PREFIX}-glance-grid {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 10px;
-            }
-            .${CSS_PREFIX}-glance {
-                display: grid;
-                gap: 4px;
-                padding: 12px 14px;
-                border-radius: 14px;
-                border: 1px solid rgba(255, 255, 255, 0.06);
-                background: rgba(255, 255, 255, 0.015);
-            }
-            .${CSS_PREFIX}-glance[data-tone="success"] {
-                border-color: rgba(102, 217, 149, 0.24);
-            }
-            .${CSS_PREFIX}-glance[data-tone="info"] {
-                border-color: rgba(122, 191, 255, 0.22);
-            }
-            .${CSS_PREFIX}-glance[data-tone="warn"] {
-                border-color: rgba(255, 196, 107, 0.24);
-            }
-            .${CSS_PREFIX}-glance-label {
-                font-size: 10px;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
-                font-weight: 700;
-                color: var(--text-3);
-            }
-            .${CSS_PREFIX}-glance-value {
-                font-size: 14px;
-                line-height: 1.2;
-                font-weight: 720;
-                letter-spacing: -0.02em;
-                text-wrap: balance;
-            }
-            .${CSS_PREFIX}-action-groups {
-                display: grid;
-                gap: 14px;
-            }
-            .${CSS_PREFIX}-action-group {
-                display: grid;
-                gap: 12px;
-            }
-            .${CSS_PREFIX}-action-group + .${CSS_PREFIX}-action-group {
-                padding-top: 16px;
-                border-top: 1px solid rgba(255, 255, 255, 0.08);
-            }
-            .${CSS_PREFIX}-action-group-title {
-                margin: 0;
-                font-size: 13px;
-                font-weight: 720;
-                letter-spacing: -0.01em;
-            }
-            .${CSS_PREFIX}-summary-support {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 12px;
-            }
-            .${CSS_PREFIX}-detail-card {
-                display: grid;
-                gap: 12px;
-                min-width: 0;
-                padding: 16px;
-                border-radius: 16px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                background: rgba(255, 255, 255, 0.04);
-            }
-            .${CSS_PREFIX}-detail-title {
-                margin: 0;
-                font-size: 13px;
-                font-weight: 720;
-                letter-spacing: -0.01em;
-            }
-            .${CSS_PREFIX}-metric-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-                gap: 10px;
-            }
-            .${CSS_PREFIX}-metric {
-                padding: 15px 16px;
-                border-radius: 16px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                background: rgba(255, 255, 255, 0.04);
-            }
-            .${CSS_PREFIX}-metric-label {
-                display: block;
-                margin-bottom: 8px;
-                color: var(--text-3);
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 0.09em;
-                font-weight: 700;
-            }
-            .${CSS_PREFIX}-metric-value {
-                display: block;
-                font-size: 23px;
-                line-height: 1;
-                font-weight: 780;
-                letter-spacing: -0.05em;
-                font-variant-numeric: tabular-nums;
-            }
-            .${CSS_PREFIX}-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 0;
-                padding: 5px 9px;
-                border-radius: 999px;
-                border: 1px solid transparent;
-                font-size: 10px;
-                font-weight: 650;
-            }
-            .${CSS_PREFIX}-pill::before {
-                display: none;
-            }
-            .${CSS_PREFIX}-pill[data-tone="success"] {
-                color: var(--success);
-                background: rgba(102, 217, 149, 0.14);
-                border-color: rgba(102, 217, 149, 0.22);
-            }
-            .${CSS_PREFIX}-pill[data-tone="info"] {
-                color: var(--info);
-                background: rgba(122, 191, 255, 0.14);
-                border-color: rgba(122, 191, 255, 0.22);
-            }
-            .${CSS_PREFIX}-pill[data-tone="warn"] {
-                color: var(--warning);
-                background: rgba(255, 196, 107, 0.15);
-                border-color: rgba(255, 196, 107, 0.22);
-            }
-            .${CSS_PREFIX}-pill[data-tone="danger"] {
-                color: var(--danger);
-                background: rgba(255, 142, 151, 0.15);
-                border-color: rgba(255, 142, 151, 0.22);
-            }
-            .${CSS_PREFIX}-pill[data-tone="neutral"] {
-                color: var(--text-2);
-                background: rgba(255, 255, 255, 0.06);
-                border-color: var(--panel-border);
-            }
-            .${CSS_PREFIX}-field {
-                display: grid;
-                gap: 10px;
-            }
-            .${CSS_PREFIX}-field-label {
-                display: flex;
-                justify-content: space-between;
-                gap: 12px;
-                font-size: 12px;
-                font-weight: 720;
-            }
-            .${CSS_PREFIX}-input {
-                flex: 1 1 320px;
-                min-width: 0;
-                min-height: 44px;
-                padding: 12px 14px;
-                border-radius: 12px;
-                border: 1px solid var(--panel-border);
-                background: rgba(255, 255, 255, 0.025);
-                color: var(--text);
-                font-size: 12px;
-                line-height: 1.45;
-                font-family: "Cascadia Code", "SF Mono", Consolas, monospace;
-                touch-action: manipulation;
-                -webkit-tap-highlight-color: var(--accent-tap);
-                outline: none;
-                transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
-            }
-            .${CSS_PREFIX}-input:hover {
-                background: rgba(255, 255, 255, 0.04);
-            }
-            .${CSS_PREFIX}-input:focus-visible {
-                border-color: var(--accent-focus-border);
-                box-shadow: 0 0 0 3px var(--accent-tap);
-                background: rgba(255, 255, 255, 0.045);
-            }
-            .${CSS_PREFIX}-input[aria-invalid="true"] {
-                border-color: rgba(255, 142, 151, 0.58);
-                box-shadow: 0 0 0 3px rgba(255, 142, 151, 0.14);
-            }
-            .${CSS_PREFIX}-input::placeholder {
-                color: var(--text-3);
-            }
-            .${CSS_PREFIX}-btn,
-            .${CSS_PREFIX}-close {
-                transition:
-                    background 0.16s ease,
-                    border-color 0.16s ease,
-                    color 0.16s ease,
-                    transform 0.16s ease,
-                    box-shadow 0.16s ease;
-            }
-            /* Any author rule that sets display beats the user-agent
-               [hidden] rule, so buttons and cards toggled via the hidden
-               property would otherwise stay on screen. Restore the
-               attribute's meaning for everything this UI renders. */
-            .${CSS_PREFIX}-panel [hidden],
-            .${CSS_PREFIX}-overlay [hidden] {
-                display: none !important;
-            }
-            .${CSS_PREFIX}-btn {
-                min-height: 40px;
-                padding: 9px 14px;
-                border-radius: 12px;
-                border: 1px solid transparent;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                font-size: 12px;
-                font-weight: 700;
-                cursor: pointer;
-                white-space: nowrap;
-                text-decoration: none;
-                touch-action: manipulation;
-                -webkit-tap-highlight-color: var(--accent-tap);
-            }
-            .${CSS_PREFIX}-btn:disabled {
-                cursor: default;
-                opacity: 0.74;
-            }
-            .${CSS_PREFIX}-btn-primary {
-                background: var(--accent);
-                color: #fff;
-            }
-            .${CSS_PREFIX}-btn-primary:hover {
-                background: var(--accent-strong);
-            }
-            .${CSS_PREFIX}-btn-secondary {
-                background: rgba(255, 255, 255, 0.04);
-                color: var(--text);
-                border-color: var(--panel-border);
-            }
-            .${CSS_PREFIX}-btn-secondary:hover {
-                background: rgba(255, 255, 255, 0.06);
-                border-color: var(--panel-border-strong);
-            }
-            .${CSS_PREFIX}-btn-ghost {
-                background: transparent;
-                color: var(--text-2);
-                border-color: rgba(255, 255, 255, 0.08);
-            }
-            .${CSS_PREFIX}-btn-ghost:hover {
-                color: var(--text);
-                background: rgba(255, 255, 255, 0.03);
-                border-color: rgba(255, 255, 255, 0.14);
-            }
-            .${CSS_PREFIX}-btn-danger {
-                background: rgba(255, 142, 151, 0.12);
-                color: #ffd8dc;
-                border-color: rgba(255, 142, 151, 0.24);
-            }
-            .${CSS_PREFIX}-btn-danger:hover {
-                background: rgba(255, 142, 151, 0.16);
-            }
-            .${CSS_PREFIX}-btn[data-armed="true"] {
-                background: rgba(255, 196, 107, 0.16);
-                color: #ffe7b6;
-                border-color: rgba(255, 196, 107, 0.3);
-                box-shadow: 0 0 0 3px rgba(255, 196, 107, 0.08);
-            }
-            .${CSS_PREFIX}-btn-small {
-                min-height: 36px;
-                padding-inline: 12px;
-                border-radius: 10px;
-                font-size: 11px;
-            }
-            .${CSS_PREFIX}-close {
-                width: 36px;
-                height: 36px;
-                border-radius: 12px;
-                background: transparent;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                color: var(--text-2);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 18px;
-                cursor: pointer;
-                touch-action: manipulation;
-                -webkit-tap-highlight-color: var(--accent-tap);
-            }
-            .${CSS_PREFIX}-close:hover {
-                color: var(--text);
-                background: rgba(255, 255, 255, 0.05);
-                border-color: rgba(255, 255, 255, 0.14);
-            }
-            .${CSS_PREFIX}-toggle-list {
-                display: grid;
-                gap: 8px;
-            }
-            .${CSS_PREFIX}-row {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) auto;
-                gap: 16px;
-                align-items: center;
-                padding: 13px 14px;
-                border-radius: 14px;
-                border: 1px solid rgba(255, 255, 255, 0.07);
-                background: rgba(255, 255, 255, 0.015);
-                transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
-                cursor: pointer;
-                touch-action: manipulation;
-                -webkit-tap-highlight-color: var(--accent-tap);
-            }
-            .${CSS_PREFIX}-row:hover {
-                background: rgba(255, 255, 255, 0.028);
-                border-color: rgba(255, 255, 255, 0.1);
-            }
-            .${CSS_PREFIX}-row:focus-within {
-                border-color: var(--accent-focus-border);
-                box-shadow: 0 0 0 3px var(--accent-focus);
-            }
-            .${CSS_PREFIX}-row-label-line {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-                align-items: center;
-                margin-bottom: 5px;
-            }
-            .${CSS_PREFIX}-row-label {
-                font-size: 13px;
-                font-weight: 700;
-                letter-spacing: -0.01em;
-            }
-            .${CSS_PREFIX}-row[data-enabled="false"] {
-                background: rgba(255, 255, 255, 0.008);
-            }
-            .${CSS_PREFIX}-toggle {
-                position: relative;
-                width: 50px;
-                height: 30px;
-                display: inline-flex;
-                flex-shrink: 0;
-            }
-            .${CSS_PREFIX}-toggle input {
-                position: absolute;
-                opacity: 0;
-                inset: 0;
-                margin: 0;
-                cursor: pointer;
-                z-index: 1;
-            }
-            .${CSS_PREFIX}-toggle-track {
-                position: absolute;
-                inset: 0;
-                border-radius: 999px;
-                background: rgba(255, 255, 255, 0.17);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                pointer-events: none;
-                transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-            }
-            .${CSS_PREFIX}-toggle-track::after {
-                content: '';
-                position: absolute;
-                top: 3px;
-                left: 3px;
-                width: 22px;
-                height: 22px;
-                border-radius: 50%;
-                background: #fff;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
-                transition: transform 0.2s ease;
-            }
-            .${CSS_PREFIX}-toggle input:checked + .${CSS_PREFIX}-toggle-track {
-                background: var(--accent);
-                border-color: transparent;
-            }
-            .${CSS_PREFIX}-toggle input:checked + .${CSS_PREFIX}-toggle-track::after {
-                transform: translateX(20px);
-            }
-            .${CSS_PREFIX}-note {
-                display: grid;
-                gap: 4px;
-                padding: 12px 14px;
-                border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-left-width: 3px;
-                background: rgba(255, 255, 255, 0.02);
-            }
-            .${CSS_PREFIX}-note[data-tone="success"] {
-                border-color: rgba(102, 217, 149, 0.24);
-                background: rgba(102, 217, 149, 0.05);
-            }
-            .${CSS_PREFIX}-note[data-tone="info"] {
-                border-color: rgba(122, 191, 255, 0.22);
-                background: rgba(122, 191, 255, 0.05);
-            }
-            .${CSS_PREFIX}-note[data-tone="warn"] {
-                border-color: rgba(255, 196, 107, 0.24);
-                background: rgba(255, 196, 107, 0.05);
-            }
-            .${CSS_PREFIX}-note[data-tone="danger"] {
-                border-color: rgba(255, 142, 151, 0.24);
-                background: rgba(255, 142, 151, 0.05);
-            }
-            .${CSS_PREFIX}-note-title {
-                margin: 0;
-                font-size: 12px;
-                font-weight: 760;
-            }
-            .${CSS_PREFIX}-footer {
-                display: flex;
-                justify-content: space-between;
-                gap: 12px;
-                flex-wrap: wrap;
-                align-items: center;
-                padding-top: 14px;
-                padding-bottom: 16px;
-                border-top: 1px solid var(--panel-border);
-                background: rgba(255, 255, 255, 0.015);
-            }
-            .${CSS_PREFIX}-footer-meta {
-                display: grid;
-                gap: 5px;
-                min-width: 0;
-            }
-            .${CSS_PREFIX}-footer-hint {
-                font-size: 11px;
-                color: var(--text-3);
-                text-wrap: balance;
-            }
-            .${CSS_PREFIX}-toast-region {
-                position: fixed;
-                right: max(18px, env(safe-area-inset-right));
-                bottom: max(18px, env(safe-area-inset-bottom));
-                z-index: 2147483647;
-                display: grid;
-                gap: 10px;
-                width: min(360px, calc(100vw - 30px));
-                pointer-events: none;
-            }
-            .${CSS_PREFIX}-toast {
-                display: grid;
-                grid-template-columns: auto minmax(0, 1fr);
-                gap: 12px;
-                align-items: start;
-                padding: 12px 14px;
-                border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                background: rgba(15, 20, 31, 0.96);
-                box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
-                backdrop-filter: blur(18px);
-                -webkit-backdrop-filter: blur(18px);
-                opacity: 0;
-                transform: translateY(10px);
-                transition: opacity 0.2s ease, transform 0.2s ease;
-            }
-            .${CSS_PREFIX}-toast-visible {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            .${CSS_PREFIX}-toast-tone {
-                width: 8px;
-                height: 8px;
-                margin-top: 5px;
-                border-radius: 50%;
-                background: var(--info);
-            }
-            .${CSS_PREFIX}-toast-success .${CSS_PREFIX}-toast-tone {
-                background: var(--success);
-            }
-            .${CSS_PREFIX}-toast-error .${CSS_PREFIX}-toast-tone {
-                background: var(--danger);
-            }
-            .${CSS_PREFIX}-toast-warn .${CSS_PREFIX}-toast-tone {
-                background: var(--warning);
-            }
-            .${CSS_PREFIX}-toast-title {
-                margin-bottom: 4px;
-                font-size: 12px;
-                font-weight: 760;
-            }
-            .${CSS_PREFIX}-spinner {
-                width: 14px;
-                height: 14px;
-                border: 2px solid transparent;
-                border-top-color: currentColor;
-                border-radius: 50%;
-                animation: ${CSS_PREFIX}-spin 0.6s linear infinite;
-                display: inline-block;
-            }
-            @keyframes ${CSS_PREFIX}-spin {
-                to { transform: rotate(360deg); }
-            }
-            .${CSS_PREFIX}-btn:focus-visible,
-            .${CSS_PREFIX}-close:focus-visible,
-            .${CSS_PREFIX}-toggle input:focus-visible + .${CSS_PREFIX}-toggle-track,
-            .${CSS_PREFIX}-input:focus-visible {
-                outline: none;
-                box-shadow: 0 0 0 3px var(--accent-focus);
-            }
-            @media (max-width: 820px) {
-                .${CSS_PREFIX}-overlay {
-                    padding:
-                        max(10px, env(safe-area-inset-top))
-                        max(10px, env(safe-area-inset-right))
-                        max(10px, env(safe-area-inset-bottom))
-                        max(10px, env(safe-area-inset-left));
-                }
-                .${CSS_PREFIX}-panel {
-                    width: min(100%, calc(100vw - 8px));
-                    height: min(920px, calc(100vh - 8px));
-                    max-height: min(920px, calc(100vh - 8px));
-                    border-radius: 22px;
-                }
-                .${CSS_PREFIX}-header,
-                .${CSS_PREFIX}-footer {
-                    padding-left: 20px;
-                    padding-right: 20px;
-                }
-                .${CSS_PREFIX}-layout {
-                    padding: 12px 20px 22px;
-                }
-                .${CSS_PREFIX}-summary-hero {
-                    grid-template-columns: 1fr;
-                }
-                .${CSS_PREFIX}-summary-control {
-                    min-width: 0;
-                    width: 100%;
-                }
-                .${CSS_PREFIX}-summary-facts {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-            }
-            @media (max-width: 560px) {
-                .${CSS_PREFIX}-header {
-                    flex-direction: column;
-                }
-                .${CSS_PREFIX}-header-right {
-                    width: 100%;
-                    justify-content: space-between;
-                }
-                .${CSS_PREFIX}-header-search {
-                    max-width: none;
-                }
-                .${CSS_PREFIX}-layout {
-                    padding: 12px 16px 20px;
-                }
-                .${CSS_PREFIX}-summary-facts {
-                    grid-template-columns: 1fr;
-                }
-                .${CSS_PREFIX}-btn-row,
-                .${CSS_PREFIX}-url-group,
-                .${CSS_PREFIX}-jump-nav,
-                .${CSS_PREFIX}-summary-actions {
-                    display: grid;
-                }
-                .${CSS_PREFIX}-btn {
-                    width: 100%;
-                }
-                .${CSS_PREFIX}-footer {
-                    align-items: flex-start;
-                }
-                .${CSS_PREFIX}-row {
-                    grid-template-columns: 1fr;
-                }
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .${CSS_PREFIX}-overlay,
-                .${CSS_PREFIX}-panel,
-                .${CSS_PREFIX}-btn,
-                .${CSS_PREFIX}-row,
-                .${CSS_PREFIX}-toast,
-                .${CSS_PREFIX}-toggle-track,
-                .${CSS_PREFIX}-toggle-track::after,
-                .${CSS_PREFIX}-section-chevron {
-                    transition: none !important;
-                }
-                .${CSS_PREFIX}-spinner {
-                    animation-duration: 0.01ms;
-                    animation-iteration-count: 1;
-                }
-            }
-            .${CSS_PREFIX}-blocklist-textarea {
-                width: 100%;
-                min-height: 80px;
-                resize: vertical;
-                padding: 10px;
-                border-radius: 10px;
-                border: 1px solid var(--panel-border);
-                background: rgba(0, 0, 0, 0.35);
-                color: var(--text);
-                font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
-            }
-            .${CSS_PREFIX}-blocklist-textarea:focus {
-                outline: 2px solid var(--accent);
-                outline-offset: -2px;
-            }
-            .${CSS_PREFIX}-attribution {
-                margin-top: 8px;
-                font-size: 11px;
-                color: var(--text-3);
-            }
-            .${CSS_PREFIX}-attribution a {
-                color: var(--accent);
-                text-decoration: underline;
-            }
-            .${CSS_PREFIX}-consent-panel {
-                margin-top: 10px;
-                display: grid;
-                gap: 8px;
-            }
-            .${CSS_PREFIX}-consent-card {
-                display: grid;
-                gap: 6px;
-            }
-            .${CSS_PREFIX}-consent-head {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-            }
-            .${CSS_PREFIX}-consent-title {
-                font-size: 12px;
-                font-weight: 700;
-            }
-            .${CSS_PREFIX}-consent-hint {
-                color: var(--warning);
-            }
-            .${CSS_PREFIX}-consent-cache {
-                color: var(--text-3);
-            }
-            .${CSS_PREFIX}-blocklist-feedback {
-                color: var(--warning);
-            }
-            .${CSS_PREFIX}-consent-card .${CSS_PREFIX}-btn[disabled] {
-                opacity: 0.5;
-                cursor: default;
-            }
-
-            /* v0.5.21 desktop Control Center redesign. The existing component
-               rules remain as conservative fallbacks; these tokens and shell
-               rules provide the selected 1440x900 direction without
-               changing any setting keys or behavior. */
-            .${CSS_PREFIX}-panel {
-                --accent: #49c7ab;
-                --accent-strong: #65d8bf;
-                --accent-focus: rgba(73, 199, 171, 0.2);
-                --accent-focus-border: rgba(73, 199, 171, 0.62);
-                --accent-tap: rgba(73, 199, 171, 0.16);
-                --accent-glow: rgba(73, 199, 171, 0.2);
-                --panel-border: rgba(186, 204, 225, 0.13);
-                --panel-border-strong: rgba(197, 215, 235, 0.24);
-                --surface-0: #0c121a;
-                --surface-1: #111923;
-                --surface-2: #16212d;
-                --surface-3: #1b2734;
-                --surface-hover: #202d3b;
-                --nav-surface: #0a1119;
-                --success: #5dd6b2;
-                --info: #82bfff;
-                --warning: #f3bd68;
-                --danger: #ff8f9b;
-                --text: #f4f7fb;
-                --text-2: #c0cbda;
-                --text-3: #8f9daf;
-                width: min(1180px, calc(100vw - 48px));
-                height: min(852px, calc(100vh - 48px));
-                max-height: min(852px, calc(100vh - 48px));
-                display: block;
-                position: relative;
-                border-radius: 18px;
-                background: var(--surface-0);
-                box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.3);
-            }
-            .${CSS_PREFIX}-settings-shell {
-                display: grid;
-                grid-template-columns: 230px minmax(0, 1fr);
-                height: 100%;
-                min-height: 0;
-            }
-            .${CSS_PREFIX}-settings-nav {
-                min-width: 0;
-                min-height: 0;
-                display: grid;
-                grid-template-rows: auto minmax(0, 1fr) auto;
-                gap: 22px;
-                padding: 22px 14px 18px;
-                border-right: 1px solid var(--panel-border);
-                background: var(--nav-surface);
-            }
-            .${CSS_PREFIX}-nav-brand {
-                display: flex;
-                align-items: center;
-                gap: 11px;
-                padding: 0 8px;
-            }
-            .${CSS_PREFIX}-nav-mark {
-                width: 38px;
-                height: 38px;
-                display: grid;
-                place-items: center;
-                flex: 0 0 auto;
-                border: 1px solid rgba(73, 199, 171, 0.38);
-                border-radius: 12px;
-                background: rgba(73, 199, 171, 0.12);
-                color: var(--success);
-                font-size: 12px;
-                font-weight: 800;
-                letter-spacing: 0.04em;
-            }
-            .${CSS_PREFIX}-nav-eyebrow {
-                margin-bottom: 3px;
-                color: var(--text-3);
-                font-size: 9px;
-                font-weight: 760;
-                letter-spacing: 0.12em;
-                text-transform: uppercase;
-            }
-            .${CSS_PREFIX}-nav-product {
-                color: var(--text);
-                font-size: 13px;
-                font-weight: 740;
-                letter-spacing: -0.01em;
-            }
-            .${CSS_PREFIX}-nav-list {
-                display: grid;
-                align-content: start;
-                gap: 4px;
-                min-height: 0;
-                overflow: auto;
-                scrollbar-width: thin;
-            }
-            .${CSS_PREFIX}-nav-button {
-                min-height: 42px;
-                width: 100%;
-                display: grid;
-                grid-template-columns: 8px minmax(0, 1fr);
-                gap: 10px;
-                align-items: center;
-                padding: 9px 11px;
-                border: 1px solid transparent;
-                border-radius: 11px;
-                background: transparent;
-                color: var(--text-2);
-                font: 650 12px/1.3 inherit;
-                text-align: left;
-                cursor: pointer;
-                transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
-            }
-            .${CSS_PREFIX}-nav-button::before {
-                content: '';
-                width: 7px;
-                height: 7px;
-                border-radius: 999px;
-                border: 1px solid var(--text-3);
-            }
-            .${CSS_PREFIX}-nav-button:hover:not(:disabled) {
-                color: var(--text);
-                background: var(--surface-2);
-            }
-            .${CSS_PREFIX}-nav-button-active,
-            .${CSS_PREFIX}-nav-button[aria-current="page"] {
-                color: var(--success);
-                border-color: rgba(73, 199, 171, 0.2);
-                background: rgba(73, 199, 171, 0.13);
-            }
-            .${CSS_PREFIX}-nav-button-active::before,
-            .${CSS_PREFIX}-nav-button[aria-current="page"]::before {
-                border-color: var(--success);
-                background: var(--success);
-                box-shadow: 0 0 0 3px rgba(73, 199, 171, 0.12);
-            }
-            .${CSS_PREFIX}-nav-button:disabled {
-                opacity: 0.36;
-                cursor: default;
-            }
-            .${CSS_PREFIX}-nav-button:focus-visible {
-                outline: none;
-                box-shadow: 0 0 0 3px var(--accent-focus);
-                border-color: var(--accent-focus-border);
-            }
-            .${CSS_PREFIX}-nav-meta {
-                display: grid;
-                gap: 6px;
-                padding: 14px 9px 0;
-                border-top: 1px solid var(--panel-border);
-                color: var(--text-3);
-                font-size: 10px;
-                line-height: 1.5;
-            }
-            .${CSS_PREFIX}-nav-meta strong {
-                color: var(--text-2);
-                font-size: 11px;
-            }
-            .${CSS_PREFIX}-main-column {
-                min-width: 0;
-                min-height: 0;
-                display: grid;
-                grid-template-rows: auto auto minmax(0, 1fr) auto;
-                background: var(--surface-0);
-            }
-            .${CSS_PREFIX}-header {
-                align-items: flex-start;
-                padding: 22px 24px 18px;
-                background: var(--surface-1);
-            }
-            .${CSS_PREFIX}-header-left {
-                flex: 1 1 auto;
-            }
-            .${CSS_PREFIX}-header-search {
-                max-width: 440px;
-                margin-top: 12px;
-            }
-            .${CSS_PREFIX}-search-input {
-                min-height: 44px;
-                font-family: "Cascadia Code", "SF Mono", Consolas, monospace;
-            }
-            .${CSS_PREFIX}-content {
-                background: var(--surface-0);
-                scrollbar-gutter: stable;
-            }
-            .${CSS_PREFIX}-layout {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 18px;
-                padding: 20px 22px 28px;
-            }
-            #${SECTION_IDS.overview},
-            #${SECTION_IDS.rules},
-            #${SECTION_IDS.blocklist},
-            #${SECTION_IDS.diagnostics} {
-                grid-column: 1 / -1;
-            }
-            .${CSS_PREFIX}-surface,
-            .${CSS_PREFIX}-summary-control,
-            .${CSS_PREFIX}-glance,
-            .${CSS_PREFIX}-detail-card,
-            .${CSS_PREFIX}-metric,
-            .${CSS_PREFIX}-row,
-            .${CSS_PREFIX}-note,
-            .${CSS_PREFIX}-input,
-            .${CSS_PREFIX}-blocklist-textarea {
-                border-color: var(--panel-border);
-                background: var(--surface-1);
-            }
-            .${CSS_PREFIX}-surface {
-                gap: 16px;
-                padding: 20px;
-            }
-            .${CSS_PREFIX}-summary {
-                gap: 12px;
-                padding: 16px 18px;
-                background: linear-gradient(135deg, var(--surface-1), var(--surface-2));
-            }
-            .${CSS_PREFIX}-summary-hero {
-                grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
-                gap: 20px;
-                align-items: center;
-            }
-            .${CSS_PREFIX}-summary-control {
-                min-height: 84px;
-                padding: 12px 14px;
-                background: var(--surface-2);
-            }
-            .${CSS_PREFIX}-summary-facts {
-                gap: 10px;
-            }
-            .${CSS_PREFIX}-glance,
-            .${CSS_PREFIX}-metric {
-                background: var(--surface-2);
-            }
-            .${CSS_PREFIX}-metric-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 10px;
-            }
-            .${CSS_PREFIX}-metric {
-                padding: 12px 14px;
-                border-radius: 14px;
-            }
-            .${CSS_PREFIX}-metric-label {
-                margin-bottom: 6px;
-            }
-            .${CSS_PREFIX}-row:hover,
-            .${CSS_PREFIX}-input:hover {
-                background: var(--surface-hover);
-                border-color: var(--panel-border-strong);
-            }
-            .${CSS_PREFIX}-input:focus-visible {
-                background: var(--surface-2);
-            }
-            .${CSS_PREFIX}-btn-primary {
-                color: #071713;
-                background: var(--accent);
-                box-shadow: 0 8px 22px rgba(73, 199, 171, 0.15);
-            }
-            .${CSS_PREFIX}-btn-primary:hover {
-                background: var(--accent-strong);
-            }
-            .${CSS_PREFIX}-btn-secondary,
-            .${CSS_PREFIX}-btn-ghost,
-            .${CSS_PREFIX}-close {
-                color: var(--text-2);
-                border-color: var(--panel-border);
-                background: var(--surface-1);
-            }
-            .${CSS_PREFIX}-btn-secondary:hover,
-            .${CSS_PREFIX}-btn-ghost:hover,
-            .${CSS_PREFIX}-close:hover {
-                color: var(--text);
-                border-color: var(--panel-border-strong);
-                background: var(--surface-hover);
-            }
-            .${CSS_PREFIX}-btn-danger,
-            .${CSS_PREFIX}-btn[data-armed="true"] {
-                color: var(--danger);
-            }
-            .${CSS_PREFIX}-toggle-track {
-                border-color: var(--panel-border);
-                background: var(--surface-3);
-            }
-            .${CSS_PREFIX}-footer {
-                min-height: 64px;
-                flex-wrap: nowrap;
-                padding: 12px 24px 14px;
-                background: var(--surface-1);
-            }
-            .${CSS_PREFIX}-footer-status {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                color: var(--text-2);
-                font-weight: 650;
-            }
-            .${CSS_PREFIX}-footer-status::before {
-                content: '';
-                width: 8px;
-                height: 8px;
-                flex: 0 0 auto;
-                border-radius: 999px;
-                background: var(--success);
-                box-shadow: 0 0 0 3px rgba(93, 214, 178, 0.12);
-            }
-            .${CSS_PREFIX}-footer-status[data-tone="info"]::before {
-                background: var(--info);
-                box-shadow: 0 0 0 3px rgba(130, 191, 255, 0.12);
-            }
-            .${CSS_PREFIX}-footer-status[data-tone="warn"]::before {
-                background: var(--warning);
-                box-shadow: 0 0 0 3px rgba(243, 189, 104, 0.12);
-            }
-            .${CSS_PREFIX}-footer-sync {
-                flex: 0 0 auto;
-                padding: 6px 10px;
-                border: 1px solid rgba(73, 199, 171, 0.2);
-                border-radius: 999px;
-                background: rgba(73, 199, 171, 0.08);
-                color: var(--success);
-                font-size: 10px;
-                font-weight: 650;
-            }
-            .${CSS_PREFIX}-toast-lane {
-                min-height: 0;
-                background: var(--surface-1);
-            }
-            .${CSS_PREFIX}-toast-lane .${CSS_PREFIX}-toast-region:empty {
-                display: none;
-            }
-            .${CSS_PREFIX}-panel .${CSS_PREFIX}-toast-region {
-                position: static;
-                width: auto;
-                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-                padding: 0 24px 12px;
-            }
-            .${CSS_PREFIX}-panel .${CSS_PREFIX}-toast {
-                border-color: var(--panel-border);
-                background: var(--surface-2);
-                box-shadow: none;
-                backdrop-filter: none;
-                -webkit-backdrop-filter: none;
-            }
-            html:not([dark]) .${CSS_PREFIX}-overlay {
-                background: rgba(21, 30, 41, 0.44);
-            }
-            html:not([dark]) .${CSS_PREFIX}-panel {
-                --panel-border: rgba(24, 43, 63, 0.13);
-                --panel-border-strong: rgba(24, 43, 63, 0.24);
-                --surface-0: #f2f5f8;
-                --surface-1: #ffffff;
-                --surface-2: #f7f9fb;
-                --surface-3: #e3e9ef;
-                --surface-hover: #edf3f6;
-                --nav-surface: #f7f9fb;
-                --text: #17212b;
-                --text-2: #435365;
-                --text-3: #68798c;
-                --success: #087b65;
-                --info: #1768aa;
-                --warning: #8a5a08;
-                --danger: #b62f43;
-                color-scheme: light;
-                box-shadow: 0 28px 70px rgba(18, 32, 48, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.8);
-            }
-            html:not([dark]) .${CSS_PREFIX}-summary {
-                background: linear-gradient(135deg, #ffffff, #f5faf8);
-            }
-            html:not([dark]) .${CSS_PREFIX}-toggle-track::after {
-                box-shadow: 0 3px 10px rgba(31, 48, 65, 0.2);
-            }
-        `;
+        // Compiled from src/ui/ at build time; no remote styles or runtime HTML parsing.
+        const css = __PANEL_CSS__;
         ensureStyleElement(`${CSS_PREFIX}-ui`).textContent = css;
     }
 
     function setActiveSettingsSection(sectionId) {
         if (!sectionId) return;
+        const changed = state.activeSettingsSection !== sectionId;
         state.activeSettingsSection = sectionId;
+        const searching = !!normalizeSettingsQuery(state.settingsQuery);
+        const content = document.getElementById(`${CSS_PREFIX}-content`);
+        if (content) {
+            for (const section of content.querySelectorAll(`.${CSS_PREFIX}-layout > .${CSS_PREFIX}-section`)) {
+                section.hidden = !searching && !!section.id && section.id !== sectionId;
+                if (!section.hidden && !searching) {
+                    const disclosure = section.querySelector(`.${CSS_PREFIX}-section-disclosure`);
+                    if (disclosure) disclosure.open = true;
+                }
+            }
+            if (changed && !searching) content.scrollTop = 0;
+        }
+        const heading = document.getElementById(`${CSS_PREFIX}-dialog-title`);
+        if (heading) heading.textContent = searching ? STRINGS.ui.findSetting
+            : sectionId === SECTION_IDS.overview ? STRINGS.ui.navigation.overview : STRINGS.ui.settingsTitle;
         const nav = state.settingsNavEl;
         if (!nav) return;
         for (const button of nav.querySelectorAll(`.${CSS_PREFIX}-nav-button`)) {
@@ -7763,6 +6439,7 @@
 
     function updateSettingsNavigationFromScroll() {
         state.settingsScrollFrame = 0;
+        if (!normalizeSettingsQuery(state.settingsQuery)) return;
         const content = document.getElementById(`${CSS_PREFIX}-content`);
         if (!content) return;
         if (state.settingsNavIntentSection && Date.now() < state.settingsNavIntentUntil) {
@@ -7801,15 +6478,12 @@
         const mark = document.createElement('span');
         mark.className = `${CSS_PREFIX}-nav-mark`;
         mark.setAttribute('aria-hidden', 'true');
-        mark.textContent = STRINGS.ui.productMark;
+        // The mark's image comes from the canonical SVG compiled into the stylesheet.
         const brandCopy = document.createElement('div');
-        const workspace = document.createElement('div');
-        workspace.className = `${CSS_PREFIX}-nav-eyebrow`;
-        workspace.textContent = STRINGS.ui.workspace;
         const product = document.createElement('div');
         product.className = `${CSS_PREFIX}-nav-product`;
         product.textContent = SCRIPT_NAME;
-        brandCopy.append(workspace, product);
+        brandCopy.append(product);
         brand.append(mark, brandCopy);
 
         const list = document.createElement('div');
@@ -7831,9 +6505,7 @@
         meta.className = `${CSS_PREFIX}-nav-meta`;
         const version = document.createElement('strong');
         version.textContent = `${SCRIPT_NAME} v${SCRIPT_VERSION}`;
-        const detail = document.createElement('span');
-        detail.textContent = STRINGS.ui.localSettings;
-        meta.append(version, detail);
+        meta.append(version);
 
         nav.append(brand, list, meta);
         state.settingsNavEl = nav;
@@ -7869,10 +6541,6 @@
         const brand = document.createElement('div');
         brand.className = `${CSS_PREFIX}-brand`;
 
-        const eyebrow = document.createElement('div');
-        eyebrow.className = `${CSS_PREFIX}-eyebrow`;
-        eyebrow.textContent = STRINGS.ui.controlCenter;
-
         const titleRow = document.createElement('div');
         titleRow.className = `${CSS_PREFIX}-title-row`;
 
@@ -7881,14 +6549,10 @@
         title.id = `${CSS_PREFIX}-dialog-title`;
         title.textContent = SCRIPT_NAME;
 
-        const version = document.createElement('span');
-        version.className = `${CSS_PREFIX}-version`;
-        version.textContent = `v${SCRIPT_VERSION}`;
-
-        titleRow.append(title, version);
+        titleRow.append(title);
 
         const description = document.createElement('p');
-        description.className = `${CSS_PREFIX}-header-desc`;
+        description.className = `${CSS_PREFIX}-header-desc ${CSS_PREFIX}-sr-only`;
         description.id = `${CSS_PREFIX}-dialog-desc`;
         description.textContent = STRINGS.ui.headerDescription;
 
@@ -7946,14 +6610,11 @@
         });
         searchWrap.append(searchLabel, searchInput);
 
-        brand.append(eyebrow, titleRow, description, searchWrap);
+        brand.append(titleRow, description, searchWrap);
         headerLeft.append(brand);
 
         const headerRight = document.createElement('div');
         headerRight.className = `${CSS_PREFIX}-header-right`;
-
-        const statusPill = createPill(STRINGS.protectionSummary.protected, 'success');
-        statusPill.id = `${CSS_PREFIX}-header-pill`;
 
         const closeBtn = document.createElement('button');
         closeBtn.className = `${CSS_PREFIX}-close`;
@@ -7962,7 +6623,7 @@
         closeBtn.setAttribute('aria-label', STRINGS.ui.closeControlCenter);
         closeBtn.textContent = '\u00D7';
 
-        headerRight.append(statusPill, closeBtn);
+        headerRight.append(closeBtn);
         header.append(headerLeft, headerRight);
 
         const contentEl = document.createElement('div');
@@ -8081,6 +6742,7 @@
         controlText.textContent = isEnabled()
             ? STRINGS.ui.masterSwitchPause
             : STRINGS.ui.masterSwitchResume;
+        controlCopy.classList.add(`${CSS_PREFIX}-sr-only`);
         controlCopy.append(controlLabel, controlText);
         const { toggle, input } = createToggleControl(`${CSS_PREFIX}-master-toggle`, isEnabled(), checked => setScriptEnabled(checked), STRINGS.ui.toggleProtection);
         input.setAttribute('aria-describedby', controlText.id);
@@ -8117,12 +6779,22 @@
         metrics.append(
             createMetricTile(STRINGS.ui.metrics.blocked, 'blocked'),
             createMetricTile(STRINGS.ui.metrics.pruned, 'pruned'),
-            createMetricTile(STRINGS.ui.metrics.ssapSkipped, 'ssapSkipped'),
             createMetricTile(STRINGS.ui.metrics.sponsorSkipped, 'sponsorSkipped'),
+            createMetricTile(STRINGS.ui.metrics.feedFiltered, 'feedFiltered')
+        );
+
+        const moreStats = document.createElement('details');
+        moreStats.className = `${CSS_PREFIX}-more-stats`;
+        const moreLabel = document.createElement('summary');
+        moreLabel.textContent = STRINGS.ui.moreCounters;
+        const extraMetrics = document.createElement('div');
+        extraMetrics.className = `${CSS_PREFIX}-metric-grid`;
+        extraMetrics.append(
+            createMetricTile(STRINGS.ui.metrics.ssapSkipped, 'ssapSkipped'),
             createMetricTile(STRINGS.ui.metrics.dearrowReplaced, 'dearrowReplaced'),
-            createMetricTile(STRINGS.ui.metrics.feedFiltered, 'feedFiltered'),
             createMetricTile(STRINGS.ui.metrics.ssaiDetected, 'ssaiDetected')
         );
+        moreStats.append(moreLabel, extraMetrics);
 
         const injectionStatus = getInjectionTimingStatus();
         const injectionNote = injectionStatus.likelyLate
@@ -8179,8 +6851,8 @@
         const pauseCard = createRecoveryPauseCard();
 
         const notes = [injectionNote, healthNote, ssaiNote].filter(Boolean);
-        if (notes.length) surface.append(hero, facts, ...notes, metrics, actions, pauseCard);
-        else surface.append(hero, facts, metrics, actions, pauseCard);
+        if (notes.length) surface.append(hero, facts, ...notes, metrics, actions, moreStats, pauseCard);
+        else surface.append(hero, facts, metrics, actions, moreStats, pauseCard);
         section.appendChild(surface);
         return section;
     }
@@ -9730,12 +8402,6 @@
     }
 
     function updatePanelStatus() {
-        const summary = getProtectionSummary();
-        const pill = document.getElementById(`${CSS_PREFIX}-header-pill`);
-        if (pill) {
-            pill.textContent = summary.label;
-            pill.dataset.tone = summary.tone;
-        }
         const footerStatus = document.getElementById(`${CSS_PREFIX}-footer-status`);
         if (footerStatus) {
             footerStatus.textContent = state.filterSyncing
@@ -9773,7 +8439,7 @@
 
     function getFocusableElements(root) {
         return [...root.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
-            .filter(el => !(el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true'));
+            .filter(el => !(el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') && el.getClientRects().length > 0);
     }
 
     function handleDialogKeydown(event) {

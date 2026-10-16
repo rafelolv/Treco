@@ -1,8 +1,8 @@
 # Architecture
 
 `package.json` owns the public version. `src/core.user.js` is the only editable
-engine source; `build/build.mjs` substitutes its version and generates the root
-userscript. The engine intercepts player JSON, fetch/XHR and property assignments,
+engine source; `build/build.mjs` substitutes its version, compiles local UI assets
+through `build/compile-ui.mjs`, and generates the root userscript. The engine intercepts player JSON, fetch/XHR and property assignments,
 installs bounded DOM/playback fallbacks, and renders the existing Control Center.
 It preserves consent, compliance-dialog exceptions and data-integrity checks.
 
@@ -11,7 +11,18 @@ GM adapters and command hooks from `src/extension/`. Both packages receive an
 identical generated `main.js`; packaging never maintains a second engine.
 `src/extension/network-rules.json` drives packaged DNR output and is checked
 against core intercept patterns. The canonical Z logo is `images/icon.svg`;
-Sharp creates all runtime PNGs. Source files remain readable and unminified.
+Sharp creates all runtime PNGs; the same SVG is embedded in the panel stylesheet.
+`src/ui/theme.json` is the shared panel/popup palette and `src/ui/panel.css` is the
+canonical scoped panel stylesheet. CSS is embedded as a string during the build;
+there is no runtime stylesheet download or HTML parsing. Source files remain
+readable and unminified.
+
+The Control Center displays one selected section at a time; search deliberately
+shows all matching sections. Hidden sections retain their controls and state for
+updates but are excluded from the keyboard focus trap. Option rebuilds preserve
+the current section, focused control and scroll position. Technical counters are
+collapsed under More counters. Existing storage keys, consent gates, feature
+defaults and blocking engines are unchanged by the redesign.
 
 | Surface | Userscript | Chromium | Firefox |
 |---|---|---|---|

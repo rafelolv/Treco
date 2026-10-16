@@ -13,7 +13,7 @@ document.getElementById('version').textContent = `v${version}`;
             typeof response.enabled !== 'boolean' || typeof response.degraded !== 'boolean') {
             throw Error('No verified engine response');
         }
-        status.textContent = `${response.distribution === 'userscript' ? 'Userscript owns this page' : 'Extension engine responded'} · ${response.enabled ? 'Enabled' : 'Paused'}${response.degraded ? ' · Degraded: check engine health' : ''}`;
+        status.textContent = `${response.distribution === 'userscript' ? 'Userscript controls this tab' : 'Page engine responded'} · ${response.enabled ? 'Enabled' : 'Paused'}${response.degraded ? ' · Needs attention' : ''}`;
         // Only the extension owner installs extension panel commands.
         open.disabled = response.distribution !== 'extension';
         open.addEventListener('click', async () => {

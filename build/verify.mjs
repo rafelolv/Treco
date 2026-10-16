@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { compileCore, compileStyles } from './compile-ui.mjs';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import vm from 'node:vm';
@@ -6,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const pkg = JSON.parse(await fs.readFile('package.json'));
 const script = await fs.readFile('Zynubo.user.js', 'utf8');
-assert.equal(script, (await fs.readFile('src/core.user.js', 'utf8')).replaceAll('__VERSION__', pkg.version));
+assert.equal(script, await compileCore(await fs.readFile('src/core.user.js', 'utf8'), pkg.version));
 assert(script.includes(`// @version      ${pkg.version}`));
 assert(script.includes('Copyright (c) 2025 Matthew Parker'));
 const manifests = [];
@@ -21,6 +22,7 @@ for (const browser of ['chromium', 'firefox']) {
     assert.deepEqual(manifest.permissions, ['storage', 'contextMenus', 'declarativeNetRequest']);
     assert(!manifest.host_permissions.some(host => /<all_urls>|githubusercontent|\*:\/\/\*\//.test(host)));
     assert.equal(await fs.readFile(`${dir}/main.js`, 'utf8'), main);
+    assert.equal(await fs.readFile(`${dir}/popup.css`, 'utf8'), await compileStyles('popup'));
     const info = JSON.parse(await fs.readFile(`${dir}/build-info.json`));
     assert.equal(info.version, pkg.version);
     assert.equal(info.coreSha256, hash(script));
