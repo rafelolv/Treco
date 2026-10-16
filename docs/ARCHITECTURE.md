@@ -17,6 +17,13 @@ canonical scoped panel stylesheet. CSS is embedded as a string during the build;
 there is no runtime stylesheet download or HTML parsing. Source files remain
 readable and unminified.
 
+The page launcher opens the same Control Center as the manager menu and extension
+commands. It mounts inside the YouTube/YouTube Music header when present and uses
+a fixed bottom-right fallback elsewhere, except embedded players. A tracked
+1.5-second reconciliation timer and YouTube navigation events recover lazy or
+replaced headers without observing the entire DOM. Shared theme tokens and the
+canonical logo style the launcher; floating notifications leave room above it.
+
 The Control Center displays one selected section at a time; search deliberately
 shows all matching sections. Hidden sections retain their controls and state for
 updates but are excluded from the keyboard focus trap. Option rebuilds preserve

@@ -9,8 +9,8 @@ export async function compileStyles(surface) {
         return `:root { ${base} }\n@media (prefers-color-scheme: light) { :root { ${light} } }\n` + await read('src/extension/popup.css');
     }
     const logo = `url("data:image/svg+xml,${encodeURIComponent((await read('images/icon.svg')).trim())}")`;
-    return `.ytab-panel, .ytab-toast-region { ${base} --z-logo: ${logo}; }\n` +
-        `html:not([dark]) .ytab-panel, html:not([dark]) .ytab-toast-region { ${light} }\n` + await read('src/ui/panel.css');
+    return `.ytab-panel, .ytab-toast-region, .ytab-launcher { ${base} --z-logo: ${logo}; }\n` +
+        `html:not([dark]) .ytab-panel, html:not([dark]) .ytab-toast-region, html:not([dark]) .ytab-launcher { ${light} }\n` + await read('src/ui/panel.css');
 }
 export async function compileCore(source, version) {
     if (source.split('__PANEL_CSS__').length !== 2) throw Error('Expected one canonical panel stylesheet anchor');

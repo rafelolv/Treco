@@ -39,7 +39,7 @@ Zynubo has no browser-store listing or signed XPI yet. Follow the guide to extra
 
 ## Quick start
 
-1. Open your userscript manager's menu and choose **Zynubo: Open Control Center**. With the extension, click the Zynubo toolbar icon, then **Open Control Center**.
+1. Click **Zynubo** at the top right of YouTube to open the Control Center. If the page has no supported header, the button appears at the bottom right. The userscript menu and extension toolbar also work.
 2. Use **Overview** to check the page engine and counters. Choose a settings section or search with **Find a setting**.
 3. Turn on the options you want. Changes save automatically.
 

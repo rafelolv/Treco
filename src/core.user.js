@@ -198,8 +198,8 @@
         access: {
             toolbarButton: 'Toolbar Button',
             userscriptMenu: 'Userscript Menu',
-            extensionHint: 'Click the toolbar button from any YouTube tab. Optional shortcuts can be bound in browser extension settings.',
-            userscriptHint: 'Open the Control Center from your userscript manager menu any time.'
+            extensionHint: 'Click Zynubo on the YouTube page or use the browser toolbar button.',
+            userscriptHint: 'Click Zynubo on the YouTube page to open the Control Center any time.'
         },
         filters: {
             sourceLabels: {
@@ -6386,6 +6386,32 @@
      * UI: Settings Panel
      * ===================================================================== */
 
+    function ensurePageLauncher() {
+        // Embedded players should not gain controls outside the player UI.
+        if (!document.body || location.pathname.startsWith('/embed/')) return;
+        let button = document.getElementById(`${CSS_PREFIX}-launcher`);
+        if (!button) {
+            button = document.createElement('button');
+            button.id = `${CSS_PREFIX}-launcher`;
+            button.className = `${CSS_PREFIX}-launcher`;
+            button.type = 'button';
+            button.title = 'Open Zynubo Control Center';
+            button.setAttribute('aria-label', button.title);
+            button.setAttribute('aria-haspopup', 'dialog');
+            const mark = document.createElement('span');
+            mark.className = `${CSS_PREFIX}-launcher-mark`;
+            mark.setAttribute('aria-hidden', 'true');
+            const label = document.createElement('span');
+            label.textContent = SCRIPT_NAME;
+            button.append(mark, label);
+            button.addEventListener('click', () => toggleSettings(true));
+        }
+        const header = document.querySelector('ytd-masthead #end #buttons, ytmusic-nav-bar #right-content');
+        const host = header || document.body;
+        button.classList.toggle(`${CSS_PREFIX}-launcher-floating`, !header);
+        if (button.parentElement !== host) host.prepend(button);
+    }
+
     function injectSettingsCSS() {
         // Compiled from src/ui/ at build time; no remote styles or runtime HTML parsing.
         const css = __PANEL_CSS__;
@@ -9151,6 +9177,10 @@
     // Phase 3: DOM-dependent setup
     function onDOMReady() {
         buildSettingsPanel();
+        ensurePageLauncher();
+        // The masthead is lazy-rendered and may be replaced during navigation.
+        // Reuse one button without observing every mutation of the YouTube DOM.
+        registerInterval(ensurePageLauncher, 1500);
 
         const previouslyWelcomed = getSetting('welcomed', false);
         if (!previouslyWelcomed) {
@@ -9186,6 +9216,7 @@
 
         // SPA navigation handling
         document.addEventListener('yt-navigate-finish', () => {
+            ensurePageLauncher();
             updateCosmeticCSS();
             updateClutterCSS();
         });

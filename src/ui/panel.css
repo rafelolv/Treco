@@ -208,3 +208,17 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
     .ytab-overlay, .ytab-toast, .ytab-section-chevron, .ytab-toggle-track::after { transition: none; }
     .ytab-spinner { animation: none; }
 }
+
+/* Visible page entry point; shared tokens and canonical logo are embedded locally. */
+.ytab-launcher {
+    appearance: none; display: inline-flex; align-items: center; justify-content: center;
+    gap: 7px; flex: 0 0 auto; height: 36px; margin: 0 8px 0 0; padding: 0 12px;
+    border: 1px solid var(--z-line); border-radius: 18px; background: var(--z-paper);
+    color: var(--z-ink); font: 600 12px/1 var(--z-font); letter-spacing: normal;
+    text-transform: none; cursor: pointer; box-sizing: border-box;
+}
+.ytab-launcher:hover { background: var(--z-hover); }
+.ytab-launcher:focus-visible { outline: 2px solid var(--z-focus); outline-offset: 3px; }
+.ytab-launcher-mark { width: 22px; height: 22px; flex: 0 0 22px; background: var(--z-logo) center / contain no-repeat; }
+.ytab-launcher-floating { position: fixed; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 2147483644; margin: 0; box-shadow: 0 2px 8px rgb(0 0 0 / 18%); }
+body:has(> .ytab-launcher-floating) > .ytab-toast-region { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 48px); }

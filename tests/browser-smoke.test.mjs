@@ -756,3 +756,70 @@ test('native dialogs stay actionable without stranding a backdrop or blocking pl
         });
     }
 });
+
+test('page launcher opens settings and survives delayed mastheads and navigation', { skip: !browserPath }, async t => {
+    const browser = await chromium.launch({ executablePath: browserPath, headless: true });
+    t.after(() => browser.close());
+    for (const mode of ['userscript', 'extension']) {
+        await t.test(mode, async () => {
+            const context = await browser.newContext({ viewport: { width: 320, height: 568 } });
+            try {
+                await installRoutes(context);
+                const page = await context.newPage();
+                if (mode === 'userscript') await installUserscriptMode(page);
+                else await installExtensionMode(page);
+                await page.goto('https://www.youtube.com/watch?v=launcher');
+                const button = page.getByRole('button', { name: 'Open Zynubo Control Center', exact: true });
+                await button.waitFor();
+                assert.equal(await button.count(), 1);
+                assert.equal(await button.evaluate(el => el.classList.contains('ytab-launcher-floating')), true);
+                const bounds = await button.boundingBox();
+                assert(bounds.x >= 0 && bounds.x + bounds.width <= 320);
+                assert(bounds.y >= 0 && bounds.y + bounds.height <= 568);
+                await button.click();
+                await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
+                await page.keyboard.press('Escape');
+                assert.equal(await button.evaluate(el => el === document.activeElement), true);
+                await button.press('Enter');
+                await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
+                await page.keyboard.press('Escape');
+                await fs.promises.mkdir(path.join(repoRoot, 'dist/ui-preview'), { recursive: true });
+                const toast = page.locator('body > .ytab-toast-region');
+                if (await toast.isVisible()) {
+                    const toastBounds = await toast.boundingBox();
+                    const buttonBounds = await button.boundingBox();
+                    assert(toastBounds.y + toastBounds.height <= buttonBounds.y, 'Notifications must not cover the launcher');
+                }
+                await page.screenshot({ path: path.join(repoRoot, `dist/ui-preview/launcher-${mode}-mobile.png`) });
+                // Hydration creates the masthead after DOMContentLoaded.
+                await page.evaluate(() => {
+                    const header = document.createElement('ytd-masthead');
+                    const end = document.createElement('div'); end.id = 'end';
+                    const buttons = document.createElement('div'); buttons.id = 'buttons';
+                    buttons.style.cssText = 'display:flex;justify-content:flex-end;padding:8px';
+                    end.append(buttons); header.append(end); document.body.prepend(header);
+                });
+                await page.waitForFunction(() => document.querySelector('ytd-masthead #buttons > #ytab-launcher'));
+                assert.equal(await button.evaluate(el => el.classList.contains('ytab-launcher-floating')), false);
+                await page.setViewportSize({ width: 1440, height: 900 });
+                await page.screenshot({ path: path.join(repoRoot, `dist/ui-preview/launcher-${mode}-header.png`) });
+                // The old masthead and button are removed by an SPA replacement.
+                await page.evaluate(() => {
+                    document.querySelector('ytd-masthead').remove();
+                    document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                await button.waitFor();
+                assert.equal(await button.count(), 1);
+                assert.equal(await button.evaluate(el => el.classList.contains('ytab-launcher-floating')), true);
+                await button.click();
+                await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
+                await page.keyboard.press('Escape');
+                // Repeated navigation never duplicates the launcher.
+                await page.evaluate(() => {
+                    for (let i = 0; i < 3; i++) document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                assert.equal(await button.count(), 1);
+            } finally { await context.close(); }
+        });
+    }
+});

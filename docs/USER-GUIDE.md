@@ -15,7 +15,9 @@ If the install link opens plain text:
 
 ## Open settings
 
-- **Userscript:** open the manager menu and choose **Zynubo: Open Control Center**.
+Click **Zynubo** in the top-right YouTube header. On pages without a supported header, look for it at the bottom right. The button opens the same Control Center in both installations.
+
+- **Userscript alternative:** open the manager menu and choose **Zynubo: Open Control Center**.
 - **Extension:** click Zynubo in the browser toolbar, then **Open Control Center**.
 
 Choose a section from the sidebar. On narrow windows, scroll the section list

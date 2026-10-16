@@ -40,7 +40,11 @@ ${mode === 'userscript' ? '<script src="/core.js"></script>' : ''}
         panelBuilt: !!document.querySelector('.ytab-panel'),
         closedPanelHidden: !document.querySelector('.ytab-overlay').getClientRects().length,
         nativeActionVisible: !!document.getElementById('native-action').getClientRects().length,
-        ordinaryAdHidden: !document.getElementById('ordinary-ad').getClientRects().length };
+        ordinaryAdHidden: !document.getElementById('ordinary-ad').getClientRects().length,
+        launcherVisible: !!document.getElementById('ytab-launcher')?.getClientRects().length };
+    document.getElementById('ytab-launcher').click();
+    payload.launcherOpensPanel = document.querySelector('.ytab-overlay').classList.contains('ytab-active');
+    document.getElementById('ytab-close-btn').click();
     // DOM fixture reports are deliberately unsigned test evidence, not product status.
     window.fixtureResult = payload;
 })();
@@ -139,6 +143,8 @@ function check(report, expected) {
     assert.equal(report.closedPanelHidden, true);
     assert.equal(report.nativeActionVisible, true);
     assert.equal(report.ordinaryAdHidden, true);
+    assert.equal(report.launcherVisible, true);
+    assert.equal(report.launcherOpensPanel, true);
     if (expected === 'extension') {
         assert.equal(report.runtimeStatus?.initialized, true, 'Isolated runtime status bridge');
         assert.equal(report.panelOpened, true);

@@ -140,3 +140,26 @@ cached after a force push; their refresh is separate from verifying branch ances
   validated, so resolution in the user's Brave profile remains unconfirmed.
 - Signed filter files, verification keys, storage and consent defaults remain
   unchanged. The existing published v1.1.0 tag/assets are unchanged.
+
+## 1.2.0 page launcher — 2026-10-16
+
+- Added a visible Zynubo button to the YouTube/YouTube Music header with a
+  bottom-right fallback on other layouts. Embedded players are excluded. The
+  existing manager menu and browser toolbar remain available.
+- The launcher regression passed in userscript and extension modes on Brave
+  Origin Nightly 154.1.98.28. Checks cover click/Enter opening, Escape closing,
+  returning keyboard focus, 320px viewport bounds, notification clearance,
+  delayed masthead rendering, replacement during navigation and duplicate
+  prevention. Synthetic header/mobile captures were visually reviewed.
+- Temporary installation tests passed on Chromium for Testing 149.0.7827.55 and
+  Firefox 157.0, including page-button visibility and opening the same panel
+  from both the simulated userscript integration and each installed extension.
+- npm run package passed all 220 unit/contract cases, license preflight,
+  synchronized 1.2.0 metadata, shared-engine parity and reproducible build
+  verification. Firefox lint passed with zero errors, notices or warnings.
+- The full Chromium UI suite passed all 26 scenarios (30 including parent
+  groups), covering existing surfaces, responsive settings, modal recovery
+  and the new launcher.
+- All browser evidence uses local/synthetic routes and temporary profiles.
+  Actual Violentmonkey installation, live YouTube header layouts and playback
+  were not validated. No existing release tag or published asset was changed.

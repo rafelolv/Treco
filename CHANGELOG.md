@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 — Unreleased
+
+- Open the Control Center from a visible Zynubo button in the YouTube header, with a bottom-right fallback on other page layouts.
+- Restore the page button after YouTube navigation or delayed header rendering.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.1.1 — Unreleased
 
 - Preserve native YouTube dialogs and their controls so cosmetic filters cannot leave an invisible modal blocking the page.
