@@ -40,7 +40,7 @@ separate authorization. Record the assigned IDs and preserve them for updates.
 Brave accepts compatible Chromium installations; no independent Brave store
 publication is configured. Before the first listing, obtain actual YouTube
 playback evidence and review required store screenshots and privacy disclosures.
-The canonical Z logo generates packaged icons; create store-specific marketing
+The canonical T logo generates packaged icons; create store-specific marketing
 screenshots from the actual tested product, not the old upstream screenshots.
 
 Firefox ZIP: validate with web-ext lint. Supply the source ZIP with Node 24,

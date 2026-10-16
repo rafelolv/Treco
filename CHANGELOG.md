@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.10.0 — Unreleased
+## 1.10.0 — 2026-10-16
 
 - Rename the application to Treco with a new T logo and the Complete YouTube Toolkit identity.
 - Show rafelolv as the userscript author and embed the current icon in manager metadata.

@@ -486,3 +486,13 @@ and verifies downloaded assets; no store submission is authorized.
   live YouTube blocking and native playback were not validated. No new release
   tag or store submission was created. Existing public ZIPs retain Zynubo 1.9.0;
   new local outputs are Treco 1.10.0 and README explains that distinction.
+
+
+## Treco 1.10.0 release preparation — 2026-10-16
+
+The maintainer authorized the Treco GitHub release. README and extension-guide
+buttons target the new Treco 1.10.0 packages. Preparation repeats npm run package,
+Firefox lint and temporary browser integration, compares repeated SHA256SUMS and
+checks the exact release payload. The existing 1.10.0 UI/stability evidence and
+manager/live-YouTube limitations above still apply. Publication uses the new-tag
+workflow and verifies all five downloaded assets. No store submission is included.

@@ -4,8 +4,8 @@
   <p><strong>The Complete YouTube Toolkit</strong><br>All the tricks you need for a better YouTube.</p>
   <p>
     <a href="https://raw.githubusercontent.com/rafelolv/Zynubo/main/Treco.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install Treco userscript"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-chromium-v1.9.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Treco extension for Chrome, Brave and Edge"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-firefox-v1.9.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Treco temporary Firefox extension"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Treco extension for Chrome, Brave and Edge"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Treco temporary Firefox extension"></a>
   </p>
   <p><a href="#install">Installation</a> · <a href="#use-treco">How to use</a> · <a href="#need-help">Get help</a></p>
 </div>
@@ -39,8 +39,6 @@ Treco was previously named Zynubo. The repository address remains the same so ex
 If the link opens plain text, follow the [manual installation steps](docs/USER-GUIDE.md#manual-installation). If Treco does not start on Chrome, check **Allow User Scripts** in your manager's extension details.
 
 ### Browser extension
-
-The download buttons currently provide the last published **Zynubo 1.9.0** packages. Treco packages can be built from this branch using the extension guide; the next release will update these buttons.
 
 Use the **Chrome / Brave / Edge** or **Firefox** download button above, then follow the **[extension installation guide](docs/EXTENSIONS.md)** to extract and load the ZIP. No Tampermonkey or Violentmonkey is needed.
 

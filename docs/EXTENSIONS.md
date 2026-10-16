@@ -4,11 +4,11 @@ Treco extensions run without Tampermonkey or another userscript manager. They
 share the userscript's engine and Control Center. Keep only one Treco method
 enabled in each browser profile.
 
-The last published release is **Zynubo 1.9.0**. These downloads retain its previous branding; build the current Treco packages below for the new name and icon:
+Download **Treco 1.10.0**:
 
-- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-chromium-v1.9.0.zip)
-- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/Zynubo-firefox-v1.9.0.zip)
-- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.9.0/SHA256SUMS)
+- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip)
+- [Firefox temporary ZIP](https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip)
+- [Checksums](https://github.com/rafelolv/Zynubo/releases/download/v1.10.0/SHA256SUMS)
 
 No build commands are needed to install these downloads. Extract the ZIP and
 follow the browser instructions below. These are unsigned local packages; no
