@@ -1,4 +1,4 @@
-/* Zynubo's UI is scoped to the dialog and notifications; never reset the host page. */
+/* Scope styles to Zynubo's dialog, notifications, launcher and player controls. */
 body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !important; }
 .ytab-overlay, .ytab-panel *, .ytab-panel *::before, .ytab-panel *::after,
 .ytab-toast-region, .ytab-toast-region * { box-sizing: border-box; }
@@ -259,3 +259,15 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 
 .ytab-playback-speed { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--z-line); }
 .ytab-playback-speed .ytab-input { max-width: 160px; }
+
+/* Player additions stay inside the main video and its native control bar. */
+.ytab-player-speed-button.ytp-button { flex: 0 0 44px; width: 44px; min-height: 36px; padding: 0; border: 0; background: transparent; color: #fff; font: 600 13px/1 system-ui, sans-serif; text-align: center; cursor: pointer; }
+.ytab-player-speed-popup { position: absolute; right: 12px; bottom: 64px; z-index: 70; width: 240px; max-width: calc(100% - 24px); max-height: calc(100% - 76px); overflow-y: auto; box-sizing: border-box; padding: 16px; border: 1px solid var(--z-faint); border-radius: 4px; background: var(--z-paper); color: var(--z-ink); font: 13px/1.5 var(--z-font); text-align: left; text-shadow: none; }
+.ytab-player-speed-popup[hidden] { display: none !important; }
+.ytab-player-speed-popup label { display: block; font-weight: 600; }
+.ytab-player-speed-popup input { display: block; width: 100%; margin: 12px 0; accent-color: var(--z-accent); }
+.ytab-player-speed-popup p { margin: 8px 0; color: var(--z-muted); font: inherit; }
+.ytab-player-speed-popup p:empty { display: none; }
+.ytab-player-speed-popup > div { display: flex; gap: 8px; }
+.ytab-player-speed-popup button { min-height: 36px; padding: 6px 10px; border: 1px solid var(--z-faint); border-radius: 4px; background: var(--z-inset); color: var(--z-ink); cursor: pointer; font: inherit; }
+.ytab-player-speed-popup :focus-visible, .ytab-player-speed-button:focus-visible { outline: 2px solid var(--z-focus, #fff); outline-offset: 2px; }

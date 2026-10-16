@@ -86,7 +86,14 @@ export/import tools. Zynubo accepts the original project's settings format.
 
 ## Playback speed
 
-Open **Video tools → Playback speed**, choose a value from **0.25× to 10×** in
+Click the **1×** button next to YouTube's player settings to open a speed slider.
+Drag it or use the arrow keys to apply a speed immediately. **Reset to 1×** returns
+to normal speed. Click outside, press Escape or choose **Close** to dismiss it.
+The button shows the actual speed and also works in fullscreen. It appears on
+recorded videos with a desktop player control bar, outside ads and live streams.
+It does not float over live chat. Other layouts still have the panel control.
+
+You can also open **Video tools → Playback speed**, choose a value from **0.25× to 10×** in
 steps of 0.25, then click **Apply speed** or press Enter. **Reset to 1×** returns
 the current video to normal speed. Editing the number alone does not apply it.
 

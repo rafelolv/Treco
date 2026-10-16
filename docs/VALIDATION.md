@@ -385,3 +385,38 @@ Release preparation repeats local packaging, Firefox lint and temporary extensio
 integration. The existing 1.7.0 UI/stability evidence and live-check limitations
 above still apply. The tag-triggered workflow repeats validation before publishing
 and verifies downloaded assets; no store submission is authorized.
+
+
+## 1.8.0 in-player speed controls — 2026-10-16
+
+- Added a compact speed button beside native player settings, with an immediate
+  0.25×–10× range input, reset and close actions. Its popover stays inside the
+  player in fullscreen and is constrained to narrow/short player bounds. Native
+  speed changes update its label. Main-panel controls remain available.
+- Reuses the existing header reconciliation timer and navigation event. Replaced
+  videos/control bars remove old DOM/media/outside-click listeners; cloned bars
+  do not retain duplicate buttons. Ads, live streams, child frames and disabled
+  protection have no player speed control. No new setting, dependency, permission
+  or automatic playback/speed override was added.
+- Pointer actions and slider keys stay outside player playback shortcuts. Escape
+  closes the popover and returns focus; a subsequent Escape reaches the player.
+  Outside click, leaving focus and opening the main panel dismiss the popover.
+- npm run package passed all unit/contract suites, synchronized 1.8.0 metadata,
+  source/engine parity, license checks and reproducible builds. Both extensions
+  receive the same engine and embedded player styles.
+- Chromium for Testing 149.0.7827.55 passed 34 UI scenarios (42 including parent
+  groups), zero skips. New userscript/extension scenarios cover direct player
+  changes, reset, keyboard isolation, focus, outside click, native speed changes,
+  fullscreen, replacement media, ads/live guards and disabling protection. The
+  affected scenarios were repeated for cloned/nested toolbar layouts, a 180px
+  player and the final Escape behavior. Narrow captures were visually reviewed.
+- Temporary extension integration passed on Chromium 149.0.7827.55 and Firefox
+  157.0. Installed packages and userscript fixtures exercised the new player
+  slider at 10× and its reset. Firefox lint had zero errors, notices or warnings.
+  The short synthetic video/comment/chat/navigation gate passed both modes.
+- Repeated archive generation produced identical checksums, and the reviewer
+  source includes the canonical sources and documentation. Existing release
+  downloads remain v1.7.0 until a new release is authorized.
+- All browser evidence is synthetic, with temporary profiles and simulated
+  manager APIs. Actual Violentmonkey installation and real YouTube/native-toolbar
+  layouts, fullscreen playback and high-speed audio quality were not verified.

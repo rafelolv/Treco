@@ -1061,3 +1061,94 @@ test('playback speed changes only the current recorded video after explicit inpu
         });
     }
 });
+
+
+test('player speed button stays in native controls and follows video lifecycle', {skip:!browserPath}, async t => {
+    const browser = await chromium.launch({executablePath:browserPath, headless:true});
+    t.after(() => browser.close());
+    for (const mode of ['userscript', 'extension']) {
+        await t.test(mode, async () => {
+            const context = await browser.newContext({viewport:{width:360,height:740}});
+            try {
+                await installRoutes(context);
+                const page = await context.newPage();
+                if (mode === 'userscript') await installUserscriptMode(page); else await installExtensionMode(page);
+                await page.goto('https://www.youtube.com/watch?v=player-speed');
+                await page.evaluate(() => {
+                    const player = document.getElementById('movie_player');
+                    player.style.cssText = 'position:relative;width:100%;height:180px;background:#000;color:#fff;';
+                    const controls = document.createElement('div');
+                    controls.className = 'ytp-right-controls';
+                    controls.style.cssText = 'position:absolute;bottom:0;right:0;display:flex;';
+                    const settings = document.createElement('button');
+                    settings.className = 'ytp-settings-button'; settings.textContent = 'Settings';
+                    controls.append(settings); player.append(controls);
+                    window.playerShortcutEvents = 0;
+                    document.addEventListener('keydown', () => window.playerShortcutEvents++);
+                    document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                const button = page.locator('#ytab-player-speed-button');
+                const popup = page.locator('#ytab-player-speed-popup');
+                await button.waitFor({state:'visible'});
+                assert.equal(await button.textContent(), '1×');
+                assert.equal(await button.evaluate(el => el.parentElement.className), 'ytp-right-controls');
+                assert.equal(await popup.isVisible(), false);
+                await button.click();
+                const slider = page.getByRole('slider', {name:'Playback speed', exact:true});
+                await slider.press('ArrowRight');
+                assert.equal(await page.evaluate(() => document.querySelector('video').playbackRate), 1.25);
+                assert.equal(await page.evaluate(() => window.playerShortcutEvents), 0);
+                await slider.evaluate(el => { el.value='10'; el.dispatchEvent(new Event('input',{bubbles:true})); });
+                assert.equal(await button.textContent(), '10×');
+                assert.equal(await page.evaluate(() => document.querySelector('video').paused), true);
+                await popup.getByRole('button',{name:'Reset to 1×'}).click();
+                assert.equal(await button.textContent(), '1×');
+                const [box, playerBox] = await Promise.all([popup.boundingBox(), page.locator('#movie_player').boundingBox()]);
+                assert(box.x >= playerBox.x && box.x + box.width <= playerBox.x + playerBox.width, 'Popup must fit a narrow player');
+                assert(box.y >= playerBox.y && box.y + box.height <= playerBox.y + playerBox.height, 'Popup must fit a short player');
+                await page.screenshot({path:path.join(repoRoot,'dist/browser-smoke',`${mode}-player-speed-mobile.png`)});
+                await slider.press('Escape');
+                assert.equal(await popup.isVisible(), false);
+                assert.equal(await button.evaluate(el => el === document.activeElement), true);
+                await button.press('Escape');
+                assert.equal(await page.evaluate(() => window.playerShortcutEvents), 1, 'Escape must reach the player once the popover is closed');
+                await button.click();
+                await page.locator('.ytp-settings-button').click();
+                assert.equal(await popup.isVisible(), false, 'Clicking another player control closes speed settings');
+                await page.evaluate(() => { document.querySelector('video').playbackRate = 2; });
+                await page.waitForFunction(() => document.getElementById('ytab-player-speed-button').textContent === '2×');
+                await page.setViewportSize({width:1280,height:800});
+                await page.locator('#movie_player').evaluate(player => player.requestFullscreen());
+                await button.click();
+                assert.equal(await popup.evaluate(el => document.fullscreenElement.contains(el)), true);
+                await popup.getByRole('button',{name:'Close',exact:true}).click();
+                await page.evaluate(() => document.exitFullscreen());
+                await page.evaluate(() => {
+                    const controls = document.querySelector('.ytp-right-controls');
+                    const cloned = controls.cloneNode(true);
+                    const wrapper = document.createElement('div');
+                    wrapper.append(cloned.querySelector('.ytp-settings-button')); cloned.append(wrapper);
+                    controls.replaceWith(cloned);
+                    const old = document.querySelector('video'); old.replaceWith(old.cloneNode());
+                    document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                await page.waitForFunction(() => document.getElementById('ytab-player-speed-button')?.textContent === '1×');
+                assert.equal(await button.count(), 1);
+                assert.equal(await popup.count(), 1);
+                await page.evaluate(() => { document.getElementById('movie_player').classList.add('ad-showing'); document.dispatchEvent(new Event('yt-navigate-finish')); });
+                assert.equal(await button.count(), 0);
+                assert.equal(await popup.count(), 0);
+                await page.evaluate(() => {
+                    const player=document.getElementById('movie_player'); player.classList.remove('ad-showing'); player.classList.add('ytp-live');
+                    document.dispatchEvent(new Event('yt-navigate-finish'));
+                });
+                assert.equal(await button.count(), 0);
+                await page.evaluate(() => { document.getElementById('movie_player').classList.remove('ytp-live'); document.dispatchEvent(new Event('yt-navigate-finish')); });
+                await button.waitFor({state:'visible'});
+                await page.locator('#ytab-launcher').click();
+                await page.locator('#ytab-master-toggle').uncheck();
+                assert.equal(await button.count(), 0, 'Disabling protection removes the player UI');
+            } finally { await context.close(); }
+        });
+    }
+});

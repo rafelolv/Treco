@@ -9,7 +9,7 @@ export async function compileStyles(surface) {
         return `:root { ${base} }\n@media (prefers-color-scheme: light) { :root { ${light} } }\n` + await read('src/extension/popup.css');
     }
     const logo = `url("data:image/svg+xml,${encodeURIComponent((await read('images/icon.svg')).trim())}")`;
-    return `.ytab-panel, .ytab-toast-region, .ytab-launcher { ${base} --z-logo: ${logo}; }\n` +
+    return `.ytab-panel, .ytab-toast-region, .ytab-launcher, .ytab-player-speed-popup { ${base} --z-logo: ${logo}; }\n` +
         `html:not([dark]) .ytab-panel, html:not([dark]) .ytab-toast-region, html:not([dark]) .ytab-launcher { ${light} }\n` + await read('src/ui/panel.css');
 }
 export async function compileCore(source, version) {

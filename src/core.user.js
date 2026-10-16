@@ -7283,6 +7283,120 @@
         return section;
     }
 
+    let playerSpeedUI = null;
+
+    function ensurePlayerSpeedControl() {
+        const target = getPlaybackSpeedTarget();
+        const player = target.video?.closest('#movie_player, .html5-video-player');
+        const controls = player?.querySelector('.ytp-right-controls');
+        const remove = () => { playerSpeedUI?.destroy(); playerSpeedUI = null; };
+        if (window.top !== window.self || !controls || !target.video ||
+            /^\/(?:embed|shorts|live_chat|live_chat_replay)(?:\/|$)/.test(location.pathname)) {
+            remove(); return;
+        }
+        if (playerSpeedUI?.video === target.video && playerSpeedUI.controls === controls &&
+            playerSpeedUI.button.isConnected && playerSpeedUI.popup.isConnected) {
+            playerSpeedUI.sync(); return;
+        }
+        remove();
+        // YouTube may clone a toolbar/player, including our old DOM nodes.
+        for (const node of player.querySelectorAll(`#${CSS_PREFIX}-player-speed-button, #${CSS_PREFIX}-player-speed-popup`)) node.remove();
+        const video = target.video;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = `${CSS_PREFIX}-player-speed-button`;
+        button.className = `ytp-button ${CSS_PREFIX}-player-speed-button`;
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-controls', `${CSS_PREFIX}-player-speed-popup`);
+        const popup = document.createElement('div');
+        popup.id = `${CSS_PREFIX}-player-speed-popup`;
+        popup.className = `${CSS_PREFIX}-player-speed-popup`;
+        popup.hidden = true;
+        popup.setAttribute('role', 'group');
+        popup.setAttribute('aria-label', 'Playback speed');
+        const heading = document.createElement('label');
+        heading.htmlFor = `${CSS_PREFIX}-player-speed-slider`;
+        heading.textContent = 'Playback speed';
+        const slider = document.createElement('input');
+        slider.id = heading.htmlFor;
+        slider.type = 'range'; slider.min = '0.25'; slider.max = '10'; slider.step = '0.25';
+        const help = document.createElement('p');
+        help.id = `${CSS_PREFIX}-player-speed-help`;
+        help.textContent = '0.25×–10×. Above 4×, some browsers may mute audio.';
+        slider.setAttribute('aria-describedby', help.id);
+        const feedback = document.createElement('p');
+        feedback.setAttribute('role', 'status');
+        const reset = document.createElement('button');
+        reset.type = 'button'; reset.textContent = 'Reset to 1×';
+        const close = document.createElement('button');
+        close.type = 'button'; close.textContent = 'Close';
+        const actions = document.createElement('div');
+        actions.append(reset, close);
+        popup.append(heading, slider, help, feedback, actions);
+        const setOpen = (open, returnFocus = false) => {
+            popup.hidden = !open;
+            button.setAttribute('aria-expanded', String(open));
+            if (open) {
+                document.addEventListener('pointerdown', outside, true);
+                slider.focus({preventScroll:true});
+            } else {
+                document.removeEventListener('pointerdown', outside, true);
+                if (returnFocus && button.isConnected) button.focus({preventScroll:true});
+            }
+        };
+        const outside = event => {
+            if (!popup.contains(event.target) && !button.contains(event.target)) setOpen(false);
+        };
+        const sync = () => {
+            const rate = Number(video.playbackRate.toFixed(2));
+            button.textContent = `${rate}×`;
+            button.title = `Playback speed: ${rate}×`;
+            button.setAttribute('aria-label', `Playback speed: ${rate}×`);
+            slider.value = String(Math.min(10, Math.max(0.25, rate)));
+            slider.setAttribute('aria-valuetext', `${rate}×`);
+        };
+        const apply = rate => {
+            // Re-check the target: a detached control must not change a new video.
+            if (getPlaybackSpeedTarget().video !== video) { ensurePlayerSpeedControl(); return; }
+            const result = applyPlaybackSpeed(rate);
+            feedback.textContent = result.ok ? `${rate}×` : result.message;
+            sync(); updatePlaybackSpeedControls();
+        };
+        const mediaChanged = () => ensurePlayerSpeedControl();
+        button.addEventListener('click', event => { event.stopPropagation(); sync(); setOpen(popup.hidden); });
+        slider.addEventListener('input', () => apply(Number(slider.value)));
+        reset.addEventListener('click', () => apply(1));
+        close.addEventListener('click', () => setOpen(false, true));
+        for (const event of ['click', 'dblclick', 'pointerdown', 'pointerup', 'mousedown', 'mouseup']) {
+            popup.addEventListener(event, event => event.stopPropagation());
+        }
+        for (const control of [button, popup]) {
+            control.addEventListener('keyup', event => event.stopPropagation());
+            control.addEventListener('keydown', event => {
+                // Keep range arrows and Space out of YouTube's playback shortcuts.
+                if (event.key === 'Escape' && popup.hidden) return;
+                event.stopPropagation();
+                if (event.key === 'Escape') { event.preventDefault(); setOpen(false, true); }
+            });
+        }
+        const focusLeft = event => {
+            if (!popup.contains(event.relatedTarget) && event.relatedTarget !== button) setOpen(false);
+        };
+        popup.addEventListener('focusout', focusLeft);
+        button.addEventListener('focusout', focusLeft);
+        const settings = controls.querySelector('.ytp-settings-button');
+        if (settings?.parentElement === controls) controls.insertBefore(button, settings);
+        else controls.prepend(button);
+        player.appendChild(popup);
+        for (const event of ['ratechange', 'loadedmetadata', 'emptied']) video.addEventListener(event, mediaChanged);
+        playerSpeedUI = {video, controls, button, popup, sync, close:() => setOpen(false), destroy() {
+            document.removeEventListener('pointerdown', outside, true);
+            for (const event of ['ratechange', 'loadedmetadata', 'emptied']) video.removeEventListener(event, mediaChanged);
+            button.remove(); popup.remove();
+        }};
+        sync();
+    }
+
     function getPlaybackSpeedTarget() {
         if (!isEnabled() || isPaused()) return {message:'Resume Zynubo to change playback speed.'};
         const video = document.querySelector('#movie_player video.html5-main-video') || document.querySelector('video.html5-main-video');
@@ -8766,6 +8880,10 @@
 
     function updatePanelStatus() {
         updatePageLauncherStatus();
+        ensurePlayerSpeedControl();
+        if (state.settingsOpen && playerSpeedUI) {
+            playerSpeedUI.close();
+        }
         const footerStatus = document.getElementById(`${CSS_PREFIX}-footer-status`);
         if (footerStatus) {
             footerStatus.textContent = state.filterSyncing
@@ -9574,10 +9692,11 @@
     function onDOMReady() {
         buildSettingsPanel();
         ensurePageLauncher();
+        ensurePlayerSpeedControl();
         document.addEventListener('keydown', handlePageShortcut);
         // The masthead is lazy-rendered and may be replaced during navigation.
         // Reuse one button without observing every mutation of the YouTube DOM.
-        registerInterval(ensurePageLauncher, 1500);
+        registerInterval(() => { ensurePageLauncher(); ensurePlayerSpeedControl(); }, 1500);
 
         const previouslyWelcomed = getSetting('welcomed', false);
         if (!previouslyWelcomed) {
@@ -9614,6 +9733,7 @@
         // SPA navigation handling
         document.addEventListener('yt-navigate-finish', () => {
             ensurePageLauncher();
+            ensurePlayerSpeedControl();
             updateCosmeticCSS();
             updateClutterCSS();
         });

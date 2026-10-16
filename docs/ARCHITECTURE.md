@@ -106,3 +106,15 @@ change mute/pitch, add a storage key, or enforce speed during navigation/ratecha
 Ads, live player state and paused/disabled page protection block the action. The
 existing panel statistics timer refreshes the read-only speed/availability display
 while the panel is open; no additional interval or observer is installed.
+
+
+The desktop player has a compact native-toolbar speed button. Its scoped slider
+popover is a direct child of the same video player so fullscreen retains it.
+Reconciliation reuses the header's 1.5-second timer and navigation hook. Native
+rate/metadata events update the read-only button/slider state; they never reapply
+a preferred speed. Replaced videos/toolbars dispose their old media listeners,
+button, popover and outside-click listener before mounting a new control. The
+popover closes on outside click, focus leaving, Escape or opening the main panel;
+its keys and pointer actions do not bubble into the player's playback shortcuts.
+It is absent in child frames, embedded/Shorts/chat pages, ads, live streams or
+paused/disabled protection. No setting, permission or runtime dependency is added.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0 — Unreleased
+
+- Adjust playback speed from a compact button and slider in the video player without opening settings.
+- Keep the player speed control synchronized with native speed changes, fullscreen and replaced videos.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.7.0 — 2026-10-16
 
 - Set the current video to 0.25×–10× from Video tools, with a one-click reset to normal speed.

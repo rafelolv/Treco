@@ -17,7 +17,7 @@ const fixture = mode => `<!doctype html><html><head><meta charset="utf-8"><title
 <ytd-masthead><div id="end"><div id="buttons"></div></div></ytd-masthead>
 <div class="ad-div"><tp-yt-paper-dialog role="dialog" class="ad-div"><button id="native-action" class="ad-div">Continue</button></tp-yt-paper-dialog></div>
 <div class="ad-div" id="ordinary-ad">Advertisement</div>
-<div id="movie_player"><video class="html5-main-video"></video></div>
+<div id="movie_player" style="position:relative"><video class="html5-main-video"></video><div class="ytp-right-controls"><button class="ytp-settings-button">Settings</button></div></div>
 <script>
 const fixtureStore = Object.create(null);
 window.GM_getValue = (key, fallback) => Object.hasOwn(fixtureStore, key) ? fixtureStore[key] : fallback;
@@ -59,6 +59,13 @@ ${mode === 'userscript' ? '<script src="/core.js"></script>' : ''}
     document.getElementById('ytab-speed-reset').click();
     payload.speedReset = document.querySelector('video').playbackRate === 1;
     document.getElementById('ytab-close-btn').click();
+    const speedButton = document.getElementById('ytab-player-speed-button');
+    speedButton.click();
+    const playerSlider = document.getElementById('ytab-player-speed-slider');
+    playerSlider.value = '10'; playerSlider.dispatchEvent(new Event('input',{bubbles:true}));
+    payload.playerSpeedMaximum = document.querySelector('video').playbackRate === 10 && speedButton.textContent === '10×';
+    document.querySelector('#ytab-player-speed-popup button').click();
+    payload.playerSpeedReset = document.querySelector('video').playbackRate === 1;
     // DOM fixture reports are deliberately unsigned test evidence, not product status.
     window.fixtureResult = payload;
 })();
@@ -182,6 +189,8 @@ function check(report, expected) {
     assert.equal(report.launcherOpensPanel, true);
     assert.equal(report.shortcutOpensPanel, true);
     assert.equal(report.launcherStatus, 'attention', 'Fixture refresh failure must remain visible');
+    assert.equal(report.playerSpeedMaximum, true);
+    assert.equal(report.playerSpeedReset, true);
     assert.equal(report.speedMaximum, true);
     assert.equal(report.speedReset, true);
     assert.equal(report.favoriteAvailable, true);
