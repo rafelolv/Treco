@@ -1128,7 +1128,7 @@ test('extension DNR diagnostics sanitize, merge, and format match counts without
 test('extension block-channel handler adds current channel and enables blocker', () => {
     const h = createTestHarness({
         storage: { ytab_channel_blocklist: 'Existing Channel' },
-        querySelector: selector => selector.includes('ytd-masthead') ? null : ({ textContent: '  New Channel  ' })
+        querySelector: selector => selector.includes('channel-name') ? ({ textContent: '  New Channel  ' }) : null
     });
 
     h.state.features.channelBlocker = false;
@@ -1143,7 +1143,7 @@ test('extension block-channel handler adds current channel and enables blocker',
 test('extension block-channel handler avoids duplicate channel names', () => {
     const h = createTestHarness({
         storage: { ytab_channel_blocklist: 'Existing Channel' },
-        querySelector: selector => selector.includes('ytd-masthead') ? null : ({ textContent: 'existing channel' })
+        querySelector: selector => selector.includes('channel-name') ? ({ textContent: 'existing channel' }) : null
     });
 
     h.state.features.channelBlocker = true;

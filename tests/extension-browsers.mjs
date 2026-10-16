@@ -182,7 +182,7 @@ function check(report, expected) {
         assert.equal(report.panelOpened, true);
         assert.equal(report.panelFits, true);
         assert.equal(report.visibleSections, 1);
-        assert.equal(report.background, 'rgb(250, 249, 245)');
+        assert.equal(report.background, 'rgb(255, 255, 255)');
     }
 }
 try {

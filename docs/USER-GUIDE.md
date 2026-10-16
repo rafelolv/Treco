@@ -21,7 +21,7 @@ in the main page header; chat messages use their own native page APIs.
 Click **Zynubo** in the top-right YouTube header. The button stays in the main page header; it does not float over videos or appear inside live chat. If the header is unavailable, use Alt+Shift+Z or the menu below. The button opens the same Control Center in both installations.
 
 - **Userscript alternative:** open the manager menu and choose **Zynubo: Open Control Center**.
-- **Extension:** click Zynubo in the browser toolbar, then **Open Control Center**.
+- **Extension:** click Zynubo in the browser toolbar, then **Open settings**.
 
 Press **Alt+Shift+Z** to open or close settings. The shortcut stays inactive in
 text fields and comment editors. The page button's dot shows whether the engine
@@ -33,10 +33,15 @@ Click it again to remove it. Favorites do not change the setting's state and are
 saved locally in the current installation; they are not included in settings
 export or cross-device sync.
 
+Overview has direct links to **Ad blocking**, **Video tools** and **Page layout**.
+Expand **Pause on this tab** for temporary pause options, or **Activity & rule
+status** for counters and rule-source details. Settings sections open directly;
+there is no additional section toggle to expand.
+
 Choose a section from the sidebar. On narrow windows, scroll the section list
 horizontally. **Find a setting** searches across sections. Press Escape to clear
 a nonempty search; press it again to close the panel. Changes save automatically.
-Closing and reopening starts at Overview. **More counters** expands technical totals.
+Closing and reopening starts at Overview. **Activity & rule status** expands counters and rule-source details.
 
 The popup reports whether the page engine responded, whether it is enabled or
 paused, and whether initialization needs attention. That response is not proof

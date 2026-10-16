@@ -61,7 +61,7 @@ separate steps, and neither has been completed for Zynubo.
 
 ## Use and update
 
-Click the toolbar icon and choose **Open Control Center**. If no engine responds,
+Click the toolbar icon and choose **Open settings**. If no engine responds,
 open or reload a supported YouTube page. The popup reports startup state, not
 proof of ad blocking.
 

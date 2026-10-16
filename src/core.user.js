@@ -331,19 +331,19 @@
             footerSync: timestamp => `Last synced: ${formatTimestamp(timestamp)}`,
             navigation: {
                 overview: 'Overview',
-                rules: 'Rule Library',
-                core: 'Core Blocking',
+                rules: 'Rules',
+                core: 'Ad blocking',
                 anti: 'Compatibility',
                 cleanup: 'Ad cleanup',
                 sponsor: 'SponsorBlock',
-                enhance: 'Enhancements',
+                enhance: 'Video tools',
                 clutter: 'Page layout',
                 blocklist: 'Focus filters',
                 diagnostics: 'Diagnostics'
             },
             quickActions: 'Quick actions',
-            protectionOn: 'Protection On',
-            protectionPaused: 'Protection Paused',
+            protectionOn: 'Page filters are on',
+            protectionPaused: 'Page filters are paused',
             masterSwitch: 'Page blocking',
             moreCounters: 'More counters',
             masterSwitchPause: IS_EXTENSION_BUILD
@@ -6500,7 +6500,7 @@
         }
         const heading = document.getElementById(`${CSS_PREFIX}-dialog-title`);
         if (heading) heading.textContent = searching ? STRINGS.ui.findSetting
-            : sectionId === SECTION_IDS.overview ? STRINGS.ui.navigation.overview : STRINGS.ui.settingsTitle;
+            : SETTINGS_NAV_ITEMS.find(item => item.sectionId === sectionId)?.label || STRINGS.ui.settingsTitle;
         const nav = state.settingsNavEl;
         if (!nav) return;
         for (const button of nav.querySelectorAll(`.${CSS_PREFIX}-nav-button`)) {
@@ -6564,19 +6564,6 @@
         nav.className = `${CSS_PREFIX}-settings-nav`;
         nav.setAttribute('aria-label', STRINGS.ui.settingsNavigation);
 
-        const brand = document.createElement('div');
-        brand.className = `${CSS_PREFIX}-nav-brand`;
-        const mark = document.createElement('span');
-        mark.className = `${CSS_PREFIX}-nav-mark`;
-        mark.setAttribute('aria-hidden', 'true');
-        // The mark's image comes from the canonical SVG compiled into the stylesheet.
-        const brandCopy = document.createElement('div');
-        const product = document.createElement('div');
-        product.className = `${CSS_PREFIX}-nav-product`;
-        product.textContent = SCRIPT_NAME;
-        brandCopy.append(product);
-        brand.append(mark, brandCopy);
-
         const list = document.createElement('div');
         list.className = `${CSS_PREFIX}-nav-list`;
         for (const item of SETTINGS_NAV_ITEMS) {
@@ -6598,7 +6585,7 @@
         version.textContent = `${SCRIPT_NAME} v${SCRIPT_VERSION}`;
         meta.append(version);
 
-        nav.append(brand, list, meta);
+        nav.append(list, meta);
         state.settingsNavEl = nav;
         setActiveSettingsSection(state.activeSettingsSection);
         return nav;
@@ -6641,6 +6628,7 @@
         const title = document.createElement('h1');
         title.className = `${CSS_PREFIX}-title`;
         title.id = `${CSS_PREFIX}-dialog-title`;
+        title.tabIndex = -1;
         title.textContent = SCRIPT_NAME;
 
         titleRow.append(title);
@@ -6707,9 +6695,6 @@
         brand.append(titleRow, description, searchWrap);
         headerLeft.append(brand);
 
-        const headerRight = document.createElement('div');
-        headerRight.className = `${CSS_PREFIX}-header-right`;
-
         const closeBtn = document.createElement('button');
         closeBtn.className = `${CSS_PREFIX}-close`;
         closeBtn.id = `${CSS_PREFIX}-close-btn`;
@@ -6717,8 +6702,7 @@
         closeBtn.setAttribute('aria-label', STRINGS.ui.closeControlCenter);
         closeBtn.textContent = '\u00D7';
 
-        headerRight.append(closeBtn);
-        header.append(headerLeft, headerRight);
+        header.append(headerLeft);
 
         const contentEl = document.createElement('div');
         contentEl.className = `${CSS_PREFIX}-content`;
@@ -6762,7 +6746,22 @@
         shell.className = `${CSS_PREFIX}-settings-shell`;
         shell.append(createSettingsNavigation(), mainColumn);
 
-        panel.append(shell);
+        const topbar = document.createElement('div');
+        topbar.className = `${CSS_PREFIX}-topbar`;
+        const identity = document.createElement('div');
+        identity.className = `${CSS_PREFIX}-nav-brand`;
+        const mark = document.createElement('span');
+        mark.className = `${CSS_PREFIX}-nav-mark`;
+        mark.setAttribute('aria-hidden', 'true');
+        const wordmark = document.createElement('span');
+        wordmark.className = `${CSS_PREFIX}-nav-product`;
+        wordmark.textContent = SCRIPT_NAME;
+        identity.append(mark, wordmark);
+        const shortcut = document.createElement('span');
+        shortcut.className = `${CSS_PREFIX}-shortcut-hint`;
+        shortcut.textContent = 'Alt + Shift + Z';
+        topbar.append(identity, shortcut, closeBtn);
+        panel.append(topbar, shell);
 
         overlay.appendChild(panel);
         document.body.appendChild(overlay);
@@ -6782,6 +6781,8 @@
         if (!content) return;
         content.textContent = '';
         const query = normalizeSettingsQuery(state.settingsQuery);
+        const panel = state.panelEl || document.querySelector(`.${CSS_PREFIX}-panel`);
+        if (panel) panel.dataset.searching = String(!!query);
         const layout = document.createElement('div');
         layout.className = `${CSS_PREFIX}-layout`;
         const sections = [
@@ -6811,12 +6812,12 @@
         container.className = `${CSS_PREFIX}-favorites`;
         const heading = document.createElement('h3');
         heading.textContent = 'Favorites';
-        container.appendChild(heading);
+        if (favorites.length) container.appendChild(heading);
         const matches = favorites.filter(feature => !query || matchesSettingsQuery(query, 'favorites', feature.label, feature.desc, feature.key));
         if (!favorites.length) {
             const hint = document.createElement('p');
             hint.className = `${CSS_PREFIX}-row-desc`;
-            hint.textContent = 'Star a setting in any section to keep it here.';
+            hint.textContent = 'Use the star beside any setting to keep it here.';
             container.appendChild(hint);
         }
         for (const feature of matches) container.appendChild(createToggleRow(feature, true));
@@ -6836,7 +6837,6 @@
         section.className = `${CSS_PREFIX}-section ${CSS_PREFIX}-section-span`;
         section.id = SECTION_IDS.overview;
         const surface = createSurface(`${CSS_PREFIX}-summary`);
-        const summary = getProtectionSummary();
         const hero = document.createElement('div');
         hero.className = `${CSS_PREFIX}-summary-hero`;
         const copy = document.createElement('div');
@@ -6846,7 +6846,7 @@
         title.textContent = isEnabled() ? STRINGS.ui.protectionOn : STRINGS.ui.protectionPaused;
         const body = document.createElement('p');
         body.className = `${CSS_PREFIX}-summary-text`;
-        body.textContent = summary.description;
+        body.textContent = isEnabled() ? 'Ad blocking and your page preferences.' : 'Your settings are kept. Turn it back on whenever you like.';
         copy.append(title, body);
 
         const control = document.createElement('div');
@@ -6887,12 +6887,7 @@
             )
         );
 
-        // Live metric tiles. The CSS and the `updateStatsDisplay` updater
-        // both expect these IDs; without the tiles they had no visible
-        // landing spot and the counters silently ran without ever
-        // surfacing in the UI. Keeping the tiles co-located with the
-        // overview hero makes the product feel responsive while the
-        // engines work.
+        // Keep live counter IDs stable inside the collapsed activity details.
         const metrics = document.createElement('div');
         metrics.className = `${CSS_PREFIX}-metric-grid`;
         metrics.id = `${CSS_PREFIX}-stats`;
@@ -6906,7 +6901,7 @@
         const moreStats = document.createElement('details');
         moreStats.className = `${CSS_PREFIX}-more-stats`;
         const moreLabel = document.createElement('summary');
-        moreLabel.textContent = STRINGS.ui.moreCounters;
+        moreLabel.textContent = 'Activity & rule status';
         const extraMetrics = document.createElement('div');
         extraMetrics.className = `${CSS_PREFIX}-metric-grid`;
         extraMetrics.append(
@@ -6914,7 +6909,7 @@
             createMetricTile(STRINGS.ui.metrics.dearrowReplaced, 'dearrowReplaced'),
             createMetricTile(STRINGS.ui.metrics.ssaiDetected, 'ssaiDetected')
         );
-        moreStats.append(moreLabel, extraMetrics);
+        moreStats.append(moreLabel, metrics, extraMetrics, facts);
 
         const injectionStatus = getInjectionTimingStatus();
         const injectionNote = injectionStatus.likelyLate
@@ -6960,18 +6955,40 @@
             await fetchFilters(true);
             setButtonBusy(quickRefresh, false, STRINGS.ui.refreshing, STRINGS.ui.refreshRules);
         });
-        const libraryJump = createJumpButton(STRINGS.ui.ruleLibrary, SECTION_IDS.rules);
-        const diagnosticsJump = createJumpButton(STRINGS.ui.diagnostics, SECTION_IDS.diagnostics);
-        actions.append(
-            quickRefresh,
-            libraryJump,
-            diagnosticsJump
-        );
-
-        const pauseCard = createRecoveryPauseCard();
-
+        const toolActions = document.createElement('div');
+        toolActions.className = `${CSS_PREFIX}-home-tools`;
+        quickRefresh.className = `${CSS_PREFIX}-text-action`;
+        const diagnosticsJump = createJumpButton('Something not working?', SECTION_IDS.diagnostics);
+        diagnosticsJump.className = `${CSS_PREFIX}-text-action`;
+        toolActions.append(quickRefresh, diagnosticsJump);
+        for (const [label, description, sectionId] of [
+            ['Ad blocking', 'Ads, playback and cleanup', SECTION_IDS.core],
+            ['Video tools', 'Dislikes, titles and original audio', SECTION_IDS.enhance],
+            ['Page layout', 'Choose what stays on YouTube', SECTION_IDS.clutter]
+        ]) {
+            const link = document.createElement('button');
+            link.type = 'button';
+            link.className = `${CSS_PREFIX}-home-link`;
+            const text = document.createElement('span');
+            const name = document.createElement('strong'); name.textContent = label;
+            const detail = document.createElement('span'); detail.textContent = description;
+            text.append(name, detail);
+            const arrow = document.createElement('span'); arrow.textContent = '↗'; arrow.setAttribute('aria-hidden', 'true');
+            link.append(text, arrow);
+            link.addEventListener('click', () => {
+                scrollSectionIntoView(sectionId);
+                document.getElementById(`${CSS_PREFIX}-dialog-title`)?.focus();
+            });
+            actions.appendChild(link);
+        }
+        const pauseDetails = document.createElement('details');
+        pauseDetails.className = `${CSS_PREFIX}-home-details`;
+        pauseDetails.open = isPaused();
+        const pauseLabel = document.createElement('summary');
+        pauseLabel.textContent = isPaused() ? 'Paused on this tab' : 'Pause on this tab';
+        pauseDetails.append(pauseLabel, createRecoveryPauseCard());
         const notes = [injectionNote, healthNote, ssaiNote].filter(Boolean);
-        surface.append(hero, facts, ...notes, createFavoriteSettings(query), metrics, actions, moreStats, pauseCard);
+        surface.append(hero, ...notes, createFavoriteSettings(query), actions, toolActions, pauseDetails, moreStats);
         section.appendChild(surface);
         return section;
     }
@@ -7312,7 +7329,8 @@
             surface.appendChild(createDurationFilterEditor());
             surface.appendChild(createBlocklistPortabilityTools());
         }
-        return createCollapsibleSection(section, surface, group.sectionId);
+        section.appendChild(surface);
+        return section;
     }
 
     const PORTABLE_TEXT_SETTINGS = new Set([
@@ -8585,7 +8603,7 @@
     }
 
     function getFocusableElements(root) {
-        return [...root.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+        return [...root.querySelectorAll('button, [href], input, textarea, select, summary, [tabindex]:not([tabindex="-1"])')]
             .filter(el => !(el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') && el.getClientRects().length > 0);
     }
 

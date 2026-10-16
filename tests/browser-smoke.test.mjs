@@ -306,11 +306,11 @@ async function waitForPanelScrollSettled(page, sectionId) {
         // readable: a preceding card can paint over the destination
         // heading. Hit-test the heading and its first control so an
         // obscured destination fails instead of passing on bounds alone.
-        function coverage(el) {
+        function coverage(el, viewport = contentRect) {
             if (!el) return null;
             const rect = el.getBoundingClientRect();
             if (rect.width <= 0 || rect.height <= 0) return { visible: false, reason: 'zero-size' };
-            const insideViewport = rect.top >= contentRect.top - 1 && rect.bottom <= contentRect.bottom + 1;
+            const insideViewport = rect.top >= viewport.top - 1 && rect.bottom <= viewport.bottom + 1;
             const probes = [
                 [rect.left + Math.min(8, rect.width / 4), rect.top + rect.height / 2],
                 [rect.left + rect.width / 2, rect.top + rect.height / 2],
@@ -326,14 +326,15 @@ async function waitForPanelScrollSettled(page, sectionId) {
             return { visible: insideViewport, covered, top: rect.top, bottom: rect.bottom };
         }
 
-        const heading = section.querySelector('.ytab-section-title, h2, h3, summary');
+        const localHeading = section.querySelector('.ytab-section-title, h2, h3, summary');
+        const heading = localHeading?.getClientRects().length ? localHeading : document.getElementById('ytab-dialog-title');
         const firstControl = section.querySelector('input, button, select, textarea, a[href]');
         return {
             contentTop: contentRect.top,
             contentBottom: contentRect.bottom,
             sectionTop: sectionRect.top,
             sectionBottom: sectionRect.bottom,
-            heading: coverage(heading),
+            heading: coverage(heading, heading?.id === 'ytab-dialog-title' ? document.querySelector('.ytab-panel').getBoundingClientRect() : contentRect),
             firstControl: coverage(firstControl),
         };
     }, sectionId);
@@ -344,7 +345,7 @@ async function waitForPanelScrollSettled(page, sectionId) {
     );
     if (bounds.heading) {
         assert.ok(bounds.heading.visible,
-            `destination heading is not fully inside the content viewport: ${sectionId} (top=${bounds.heading.top}, contentTop=${bounds.contentTop})`);
+            `destination heading is not fully inside its viewport: ${sectionId} (top=${bounds.heading.top}, contentTop=${bounds.contentTop})`);
         assert.equal(bounds.heading.covered, null,
             `destination heading is painted over by "${bounds.heading.covered}": ${sectionId}`);
     }
@@ -389,6 +390,20 @@ async function assertAdExclusiveRequestsShortCircuit(page, requestLog) {
 async function exercisePanel(page, mode, surface) {
     await assert.equal(await page.locator('#ytab-dialog-title').textContent(), 'Overview');
     await assert.equal(await page.locator('.ytab-nav-button').count(), 10);
+    assert.equal(await page.locator('.ytab-topbar .ytab-nav-product').textContent(), 'Zynubo');
+    assert.equal(await page.locator('.ytab-more-stats').evaluate(el => el.open), false);
+    assert.equal(await page.locator('.ytab-metric:visible').count(), 0, 'Technical counters stay out of the initial view');
+    assert.equal(await page.locator('.ytab-home-link').count(), 3);
+    await page.locator('#ytab-close-btn').focus();
+    await page.keyboard.press('Shift+Tab');
+    assert.equal(await page.locator('.ytab-more-stats > summary').evaluate(el => el === document.activeElement), true, 'Closed detail controls must not become focus-trap endpoints');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.locator('#ytab-close-btn').evaluate(el => el === document.activeElement), true);
+    await page.locator('.ytab-home-link').first().click();
+    assert.equal(await page.locator('#ytab-section-core .ytab-toggle-list').isVisible(), true);
+    assert.equal(await page.locator('#ytab-dialog-title').textContent(), 'Ad blocking');
+    assert.equal(await page.locator('#ytab-dialog-title').evaluate(el => el === document.activeElement), true);
+    await page.locator('[data-section-id="ytab-section-overview"]').click();
     await assert.equal(await page.locator('.ytab-nav-button[aria-current="page"]').textContent(), 'Overview');
     await assert.equal(await page.locator('.ytab-panel').evaluate(el => getComputedStyle(el).colorScheme), surface.theme);
     if (surface.width >= 1440 && surface.height >= 900) {
@@ -397,9 +412,9 @@ async function exercisePanel(page, mode, surface) {
     await page.keyboard.press('Tab');
     assert.equal(await page.evaluate(() => !!document.activeElement?.closest('.ytab-panel')), true);
     await page.click('#ytab-master-toggle');
-    await page.waitForFunction(() => document.body.textContent.includes('Protection Paused'));
+    await page.waitForFunction(() => document.body.textContent.includes('Page filters are paused'));
     await page.click('#ytab-master-toggle');
-    await page.waitForFunction(() => document.body.textContent.includes('Protection On'));
+    await page.waitForFunction(() => document.body.textContent.includes('Page filters are on'));
     await page.click('#ytab-quick-refresh');
     await page.waitForFunction(() => document.body.textContent.includes('Rule refresh complete'));
     await page.waitForFunction(() => document.querySelector('.ytab-toast-region')?.parentElement?.classList.contains('ytab-toast-lane'));
@@ -414,7 +429,7 @@ async function exercisePanel(page, mode, surface) {
 
     if (surface.name === 'music-watch-dark') {
         await page.click('.ytab-nav-button[data-section-id="ytab-section-enhance"]');
-        await page.waitForFunction(() => document.querySelector('#ytab-section-enhance details')?.open === true);
+        await page.waitForSelector('#ytab-section-enhance .ytab-toggle-list', {state:'visible'});
         await page.click('#ytab-toggle-volumeBoost');
         await page.waitForSelector('ytmusic-player-bar #right-controls > #ytab-vol-boost', { timeout: 5000 });
         await assert.equal(await page.locator('#ytab-vol-boost input[type="range"]').getAttribute('aria-label'), 'Zynubo volume boost');
@@ -422,7 +437,7 @@ async function exercisePanel(page, mode, surface) {
 
     if (mode === 'userscript' && surface.name === 'www-watch-dark') {
         await page.click('.ytab-nav-button[data-section-id="ytab-section-enhance"]');
-        await page.waitForFunction(() => document.querySelector('#ytab-section-enhance details')?.open === true);
+        await page.waitForSelector('#ytab-section-enhance .ytab-toggle-list', {state:'visible'});
         // RYD is consent-gated: no request may fire until the user allows
         // the service, so the fixture must grant consent through the real
         // consent card before enabling the feature toggle.
@@ -448,7 +463,7 @@ async function exercisePanel(page, mode, surface) {
 
     if (mode === 'userscript' && surface.name === 'www-watch-dark') {
         await page.click('.ytab-nav-button[data-section-id="ytab-section-blocklist"]');
-        await page.waitForFunction(() => document.querySelector('#ytab-section-blocklist details')?.open === true);
+        await page.waitForSelector('#ytab-section-blocklist .ytab-toggle-list', {state:'visible'});
         assert.equal(await page.locator('#ytab-toggle-whitelistMode').isChecked(), false);
         assert.equal(await page.locator('#ytab-toggle-durationFilter').isChecked(), false);
         assert.equal(await page.locator('#ytab-toggle-adAllowlist').isChecked(), false);
@@ -637,7 +652,7 @@ test('responsive settings pages preserve search, focus and aligned controls', { 
                     await page.screenshot({ path: path.join(previewDir, `${mode}-${size.name}.png`) });
                     const visiblePages = () => page.locator('.ytab-layout > .ytab-section:visible').count();
                     assert.equal(await visiblePages(), 1);
-                    const navigation = page.locator('.ytab-nav-button');
+                    const firstFocusable = page.locator('#ytab-close-btn');
                     for (const sectionId of ['core', 'enhance', 'blocklist', 'diagnostics']) {
                         await page.locator(`[data-section-id="ytab-section-${sectionId}"]`).click();
                         assert.equal(await visiblePages(), 1);
@@ -645,11 +660,11 @@ test('responsive settings pages preserve search, focus and aligned controls', { 
                         await assertPanelLayout(page, size.width, size.height);
                     }
                     // An invisible page must never become the end of the focus trap.
-                    await navigation.first().focus();
+                    await firstFocusable.focus();
                     await page.keyboard.press('Shift+Tab');
                     assert.equal(await page.evaluate(() => !!document.activeElement?.closest('#ytab-section-diagnostics')), true);
                     await page.keyboard.press('Tab');
-                    assert.equal(await navigation.first().evaluate(el => el === document.activeElement), true);
+                    assert.equal(await firstFocusable.evaluate(el => el === document.activeElement), true);
                     const search = page.locator('#ytab-settings-search');
                     await search.fill('block');
                     await page.waitForFunction(() => [...document.querySelectorAll('.ytab-layout > .ytab-section')].filter(el => !el.hidden).length > 1);

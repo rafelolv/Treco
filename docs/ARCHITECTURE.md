@@ -51,7 +51,11 @@ The Control Center displays one selected section at a time; search deliberately
 shows all matching sections. Hidden sections retain their controls and state for
 updates but are excluded from the keyboard focus trap. Option rebuilds preserve
 the current section, focused control and scroll position. Technical counters are
-collapsed under More counters. Existing storage keys, consent gates, feature
+collapsed under Activity & rule status. Temporary pause controls use a separate
+details element. The full-width brand bar owns the close button; the main header
+owns the single visible section title. Feature pages render their controls
+directly, while search retains per-result titles. Local serif display text and
+system sans-serif controls share the same tokens with the extension popup. Existing storage keys, consent gates, feature
 defaults and blocking engines are unchanged by the redesign.
 
 | Surface | Userscript | Chromium | Firefox |

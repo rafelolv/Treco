@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0 — Unreleased
+
+- Redesign settings with a single brand bar, serif headings and a neutral black/white palette with red accents.
+- Replace the dashboard-style Overview with direct links, favorites and a compact page-filter switch.
+- Keep activity counters, rule status and temporary pause controls in expandable details.
+- Open settings pages directly and show one clear section title.
+- Match the extension popup to the page interface and improve narrow layouts and keyboard navigation.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.4.0 — Unreleased
 
 - Restrict structural filtering to reviewed ad fields and preserve generic page, player and comment data, including cached rules.

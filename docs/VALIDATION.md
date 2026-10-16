@@ -268,3 +268,36 @@ cached after a force push; their refresh is separate from verifying branch ances
 - Evidence is synthetic, including the video stream and incoming chat messages.
   Actual Violentmonkey installation and live YouTube playback/comments/chat
   were not validated. No new release tag or store submission was authorized.
+
+## 1.5.0 settings redesign — 2026-10-16
+
+- Replaced the dashboard-style Overview with a compact page-filter switch,
+  favorites and three plain navigation rows. Counters and rule metadata live
+  in Activity & rule status; temporary pause controls have a separate disclosure.
+  Page warnings remain visible. Feature pages open their controls directly.
+- Added a full-width brand/close bar, one visible section title, local serif
+  headings and neutral black/white surfaces with the canonical red Z mark.
+  The extension popup uses the same palette and typography. Narrow headers
+  place search on its own full-width line.
+- npm run package passed all 228 unit/contract cases, attribution, synchronized
+  versions, generated source parity and reproducible builds. Public metadata
+  is 1.5.0 in the root userscript and both extension manifests/build-info files.
+  Userscript download/update/icon URLs still point to the generated main files.
+- The complete Chromium for Testing 149.0.7827.55 UI matrix passed 28 scenarios
+  (33 including parent groups). Assertions cover collapsed technical counters,
+  direct home links, heading focus, summaries in keyboard focus wrapping,
+  search, settings rebuilds, both themes, narrow layouts and existing recovery.
+  The 10 responsive cases were repeated after the final mobile search alignment.
+- A userscript desktop fixture passed on Brave Origin Nightly 154.1.98.28.
+  Native dark/light, settings, mobile and popup captures were visually reviewed.
+  Current screenshots have versioned filenames so earlier evidence is retained.
+- Temporary extension installation/integration checks passed on Chromium
+  149.0.7827.55 and Firefox 157.0; both open the shared redesigned panel and
+  preserve the existing status, storage, shortcut and chat-exclusion behavior.
+  Firefox lint reported zero errors, notices or warnings.
+- The short video/comment/chat/navigation gate passed in both generated modes.
+  Filter engines, signed data, consent defaults and storage namespaces are
+  unchanged by this UI work. No new host or API permissions were added.
+- All browser evidence uses synthetic data, simulated manager APIs and temporary
+  profiles. No actual Violentmonkey profile, live YouTube playback or store
+  signing/submission was validated. No new release tag was created.

@@ -1,41 +1,48 @@
 # Interface
 
-Zynubo 1.1.0 uses graphite and warm paper surfaces, a red Z mark, restrained
-borders and a single accent for primary actions. The panel and extension popup
-share the palette in src/ui/theme.json; all logo paths originate in images/icon.svg.
-Fonts are local system fonts. No remote fonts, images or CSS are required to
-render the interface.
+Zynubo 1.5.0 uses a neutral black/white palette, the red Z mark and local serif
+headings. One full-width brand bar and a compact section list frame plain setting
+rows. The main header shows the current section title without a repeated heading
+below it. Search retains titles for each matching section.
 
-Choose one section from the navigation. Search shows all matching sections;
-Escape clears a nonempty search before closing the dialog. Settings are saved
-automatically. Technical counters remain available under More counters. The
-interface distinguishes page-engine state from browser network rules and does
-not use counters or startup responses as proof of live ad blocking.
+Overview has a compact page-filter switch, favorites and three direct links.
+Counters and rule metadata are behind **Activity & rule status**. Temporary
+pause controls are behind **Pause on this tab** and expand automatically during
+a recovery pause. Warnings remain visible when they need attention.
 
-The sidebar becomes a horizontally scrollable section list on narrow screens.
-Switches keep their label alignment, focus targets exclude hidden sections, and
-rebuilding a selected page preserves its focus and scroll. Closing and reopening
-starts from Overview.
+Settings pages open directly. The sidebar becomes a horizontally scrollable
+section list on narrow screens, with search on a separate line. Keyboard focus
+includes disclosure summaries, excludes hidden pages, and returns to a sensible
+control after rebuilding settings. Home links announce their destination by
+focusing the section heading. Reopening starts at Overview.
 
-These are actual browser fixture captures using the generated 1.1.0 engine,
-not design mockups or live YouTube evidence. See VALIDATION.md for test scope.
+The userscript and both extension packages embed the same compiled panel CSS.
+The extension popup shares tokens and typography. Fonts are local; the canonical
+logo is images/icon.svg. No remote font, image or stylesheet is required to render
+the interface. Engine state and counters do not certify live ad blocking.
+
+These native browser captures use the generated 1.5.0 engine with synthetic data.
+They are not design mockups or evidence of live YouTube compatibility.
 
 ## Dark
 
-![Dark Control Center](images/control-center-dark.png)
+![Dark settings overview](images/control-center-v1.5.0-dark.png)
 
 ## Light
 
-![Light Control Center](images/control-center-light.png)
+![Light settings overview](images/control-center-v1.5.0-light.png)
 
 ## Narrow viewport
 
-![Narrow Control Center](images/control-center-mobile.png)
+![Narrow settings overview](images/control-center-v1.5.0-mobile.png)
+
+## Settings rows
+
+![Ad blocking settings](images/settings-v1.5.0.png)
 
 ## Extension popup
 
-![Unavailable popup state](images/popup.png)
+![Unavailable extension popup](images/popup-v1.5.0.png)
 
-Edit panel styles in src/ui/panel.css and popup styles in src/extension/popup.css.
-The build compiles scoped tokens and embeds the panel CSS into the shared engine;
-never hand-edit generated CSS or add another override layer inside the core.
+Edit src/ui/panel.css, src/ui/theme.json and src/extension/popup.css, then rebuild.
+See VALIDATION.md for browser versions, tests and limitations.

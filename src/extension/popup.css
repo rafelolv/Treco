@@ -1,18 +1,19 @@
-/* Theme variables are shared with the in-page panel and compiled by the build. */
+/* Shared theme tokens and the canonical Z mark keep all entry points consistent. */
 * { box-sizing: border-box; }
-:root { color-scheme: var(--z-scheme); font: 13px/1.55 var(--z-font); background: var(--z-paper); color: var(--z-ink); }
-body { width: 328px; margin: 0; }
-header { display: flex; align-items: center; gap: 10px; padding: 22px; border-bottom: 1px solid var(--z-line); }
-h1 { margin: 0; font-size: 25px; font-weight: 750; letter-spacing: -.9px; }
+:root { color-scheme: var(--z-scheme); font: 13px/1.5 var(--z-font); background: var(--z-paper); color: var(--z-ink); }
+body { width: 320px; margin: 0; border-top: 3px solid var(--z-accent); }
+header { display: flex; align-items: center; gap: 9px; padding: 20px 24px; border-bottom: 1px solid var(--z-line); }
+header img { width: 26px; height: 26px; }
+h1 { margin: 0; font: 700 28px/1 var(--z-display-font); letter-spacing: -1px; }
 #version { margin-left: auto; color: var(--z-faint); font-size: 11px; }
-main { padding: 22px; }
-.eyebrow { margin: 0 0 8px; color: var(--z-faint); font-size: 10px; letter-spacing: 1px; }
-#status { margin: 0; font-size: 18px; line-height: 1.4; font-weight: 600; letter-spacing: -.3px; }
-.note { margin: 14px 0 24px; color: var(--z-muted); font-size: 12px; }
-button { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--z-accent); border-radius: 4px; background: var(--z-accent); color: var(--z-accent-text); font: 600 12px/1.4 var(--z-font); cursor: pointer; }
+main { padding: 24px; }
+.eyebrow { margin: 0 0 12px; color: var(--z-muted); font-size: 12px; }
+#status { margin: 0; font-size: 16px; line-height: 1.5; font-weight: 600; letter-spacing: -.2px; }
+.note { margin: 12px 0 24px; color: var(--z-muted); font-size: 12px; }
+button { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 42px; padding: 10px 13px; border: 1px solid var(--z-accent); border-radius: 5px; background: var(--z-accent); color: var(--z-accent-text); font: 600 12px/1.4 var(--z-font); cursor: pointer; }
 button:hover:enabled { background: var(--z-accent-hover); }
 button:disabled { background: var(--z-inset); color: var(--z-faint); border-color: var(--z-line); cursor: default; }
-footer { display: flex; justify-content: space-between; padding: 14px 22px; border-top: 1px solid var(--z-line); font-size: 11px; }
+footer { display: flex; justify-content: space-between; padding: 14px 24px; border-top: 1px solid var(--z-line); font-size: 11px; }
 a { color: var(--z-muted); text-underline-offset: 3px; }
 a:hover { color: var(--z-ink); }
 :focus-visible { outline: 2px solid var(--z-focus); outline-offset: 3px; }
