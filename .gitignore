@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.crx
+*.pem
+*.key
+.env
+.env.*
+*.log
+playwright-report/
+test-results/
+.agents/
+.codex/
+.aws/

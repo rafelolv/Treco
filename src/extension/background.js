@@ -1,0 +1,889 @@
+/*
+ * Zynubo - MV3 service worker.
+ *
+ * Owns: action button clicks, right-click context menu,
+ * message routing between the popup/menu UI and the active tab's content
+ * scripts, plus privacy-bounded diagnostics for packaged DNR rules. The
+ * actual page-world ad-blocking engine lives in main.js.
+ */
+
+'use strict';
+
+const YT_ORIGIN_MATCH = /^https?:\/\/([^/]*\.)?(youtube\.com|youtube-nocookie\.com|youtubekids\.com)\//i;
+const DNR_RULESET_ID = 'ytab-network-blocks';
+
+/* =========================================================================
+ * SETTINGS BROKER (trusted context)
+ * =========================================================================
+ * The service worker is the only component that touches chrome.storage for
+ * settings. The isolated bridge relays a two-verb message protocol on
+ * behalf of the page world and cannot write storage itself, so a hostile
+ * page script cannot reach persistence even if it defeats the bridge's own
+ * validation. Every request is re-validated here against the sender: it
+ * must come from this extension, from a real tab, on a YouTube URL.
+ * ===================================================================== */
+
+const SETTINGS_KEY = '__ytab_ext_settings__';
+const LOCAL_META_KEY = '__ytab_ext_settings_meta__';
+const SYNC_META_KEY = '__ytab_ext_settings_sync_meta__';
+const SYNC_CHUNK_PREFIX = '__ytab_ext_settings_sync_chunk_';
+// Generous relative to real settings (single-digit KB) but far below the
+// chrome.storage.local per-item ceiling.
+const MAX_SETTINGS_BYTES = 512 * 1024;
+// chrome.storage.sync allows 8 KB per item and 100 KB total; keep chunks
+// under the item ceiling with headroom for keys and metadata.
+const SYNC_CHUNK_BYTES = 7 * 1024;
+const SYNC_TOTAL_BYTES = 95 * 1024;
+const SYNC_MAX_CHUNKS = 64;
+
+/* -------------------------------------------------------------------------
+ * Preference / runtime split
+ * -------------------------------------------------------------------------
+ * Only user-authored preferences are eligible for chrome.storage.sync.
+ * Device-local runtime state (hot counters, rule and signature caches,
+ * integrity results, replay floors, onboarding flags) stays on the device:
+ *   - stats persist every couple of seconds; mirroring them would blow
+ *     through Chrome's 1,800 writes/hour sync quota on its own,
+ *   - caches and integrity state describe *this* device's last refresh,
+ *   - signed-update revision floors are anti-rollback state and must never
+ *     be lowered by another device,
+ *   - consent is deliberately per-install: allowing a third-party service
+ *     on one machine must not silently allow it everywhere.
+ * A remote snapshot therefore merges over local preferences and can never
+ * erase a local-only key.
+ * ---------------------------------------------------------------------- */
+
+const PREFERENCE_SCHEMA_VERSION = 2;
+const SYNCABLE_PREFERENCE_KEYS = Object.freeze([
+    'ytab_enabled',
+    'ytab_feature_overrides',
+    'ytab_channel_blocklist',
+    'ytab_keyword_blocklist',
+    'ytab_ad_allowlist',
+    'ytab_duration_min',
+    'ytab_duration_max',
+    'ytab_filter_url',
+    'ytab_volume_boost'
+]);
+const SYNCABLE_PREFERENCE_SET = new Set(SYNCABLE_PREFERENCE_KEYS);
+
+function projectSyncablePreferences(settings) {
+    const out = {};
+    if (!settings || typeof settings !== 'object') return out;
+    for (const key of SYNCABLE_PREFERENCE_KEYS) {
+        if (Object.prototype.hasOwnProperty.call(settings, key)) out[key] = settings[key];
+    }
+    return out;
+}
+
+// Remote preferences win over local preferences; every key the allowlist
+// does not cover is local-only and is preserved untouched.
+function mergeRemotePreferences(localSettings, remoteSnapshot) {
+    const merged = (localSettings && typeof localSettings === 'object') ? { ...localSettings } : {};
+    const remote = (remoteSnapshot && typeof remoteSnapshot === 'object') ? remoteSnapshot : {};
+    // A version-1 snapshot carried the whole settings object; take only its
+    // preference keys so legacy payloads cannot reintroduce foreign runtime
+    // state. Applying it twice yields the same result.
+    for (const key of SYNCABLE_PREFERENCE_KEYS) {
+        if (Object.prototype.hasOwnProperty.call(remote, key)) merged[key] = remote[key];
+    }
+    return merged;
+}
+
+/* -------------------------------------------------------------------------
+ * Settings schema
+ * -------------------------------------------------------------------------
+ * The settings object arrives from the MAIN world, which on youtube.com is
+ * the same realm as YouTube's own scripts. The bridge can prove a message
+ * came from our content script in a real YouTube tab; it cannot prove our
+ * engine — rather than page code — produced the value. So the worker
+ * validates the object itself rather than trusting its origin.
+ *
+ * Two kinds of rule live here:
+ *   - Shape rules (key allowlist, type, size, enum) drop malformed or
+ *     invented state. These stop type confusion, prototype pollution and
+ *     unbounded growth.
+ *   - Relation rules compare the incoming value against what is already
+ *     stored. These are the only checks that still mean something when the
+ *     sender cannot be authenticated: a signed-update revision floor may
+ *     rise but never fall, and cannot be dropped by omitting the key.
+ * ---------------------------------------------------------------------- */
+
+const SIGNED_REVISION_PREFIX = 'ytab_signed_revision_';
+const MAX_TEXT_SETTING = 64 * 1024;
+const MAX_CACHE_SETTING = 256 * 1024;
+const MAX_SETTING_OBJECT_KEYS = 200;
+const MAX_FILTER_URL_LENGTH = 2048;
+// Keys that would walk the prototype chain if ever assigned onto a plain
+// object downstream.
+const FORBIDDEN_SETTING_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const CONSENT_STATES = new Set(['unset', 'granted', 'denied']);
+
+function isPlainObject(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function boundedText(value, max) {
+    return typeof value === 'string' && value.length <= max ? value : undefined;
+}
+
+function finiteNumber(value, min, max) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+    if (value < min || value > max) return undefined;
+    return value;
+}
+
+function boundedObject(value, maxKeys, checkValue) {
+    if (!isPlainObject(value)) return undefined;
+    const keys = Object.keys(value);
+    if (keys.length > maxKeys) return undefined;
+    const out = {};
+    for (const key of keys) {
+        if (FORBIDDEN_SETTING_KEYS.has(key)) continue;
+        const checked = checkValue(value[key]);
+        if (checked === undefined) continue;
+        out[key] = checked;
+    }
+    return out;
+}
+
+function booleanValue(value) {
+    return typeof value === 'boolean' ? value : undefined;
+}
+
+// Durations are typed into number inputs and have been persisted as both
+// strings and numbers across versions; accept either, bounded.
+function durationValue(value) {
+    if (value === '' || value === null || value === undefined) return '';
+    if (typeof value === 'number') return finiteNumber(value, 0, 1e7);
+    return boundedText(value, 16);
+}
+
+// The rule library fetches this URL on every refresh. A page-authored value
+// reaching it is the difference between a signed list and an attacker's, so
+// keep the accepted shape as narrow as the feature allows.
+function filterUrlValue(value) {
+    const text = boundedText(value, MAX_FILTER_URL_LENGTH);
+    if (text === undefined) return undefined;
+    if (text === '') return '';
+    let parsed;
+    try {
+        parsed = new URL(text);
+    } catch (e) {
+        return undefined;
+    }
+    if (parsed.protocol !== 'https:') return undefined;
+    if (parsed.username || parsed.password) return undefined;
+    return text;
+}
+
+function consentValue(value) {
+    if (!isPlainObject(value)) return undefined;
+    const version = finiteNumber(value.version, 0, 1e6);
+    if (version === undefined) return undefined;
+    const services = boundedObject(value.services, 32, (state) =>
+        (typeof state === 'string' && CONSENT_STATES.has(state)) ? state : undefined);
+    if (services === undefined) return undefined;
+    return { version, services };
+}
+
+const SETTINGS_VALIDATORS = Object.freeze({
+    ytab_enabled: booleanValue,
+    ytab_welcomed: booleanValue,
+    ytab_community_consent_notified: booleanValue,
+    ytab_feature_overrides: (v) => boundedObject(v, MAX_SETTING_OBJECT_KEYS, booleanValue),
+    ytab_stats: (v) => boundedObject(v, MAX_SETTING_OBJECT_KEYS,
+        (n) => finiteNumber(n, 0, Number.MAX_SAFE_INTEGER)),
+    ytab_community_consent: consentValue,
+    ytab_channel_blocklist: (v) => boundedText(v, MAX_TEXT_SETTING),
+    ytab_keyword_blocklist: (v) => boundedText(v, MAX_TEXT_SETTING),
+    ytab_ad_allowlist: (v) => boundedText(v, MAX_TEXT_SETTING),
+    ytab_duration_min: durationValue,
+    ytab_duration_max: durationValue,
+    ytab_volume_boost: (v) => finiteNumber(v, 0, 100),
+    ytab_filter_url: filterUrlValue,
+    ytab_filters_cache: (v) => boundedText(v, MAX_CACHE_SETTING),
+    ytab_filters_cache_url: (v) => boundedText(v, MAX_FILTER_URL_LENGTH),
+    ytab_filters_cache_time: (v) => finiteNumber(v, 0, Number.MAX_SAFE_INTEGER),
+    ytab_filters_integrity: (v) => boundedText(v, 32),
+    ytab_filters_integrity_message: (v) => boundedText(v, 4096),
+    ytab_webpack_signature_cache: (v) => boundedText(v, MAX_CACHE_SETTING),
+    ytab_webpack_signature_cache_time: (v) => finiteNumber(v, 0, Number.MAX_SAFE_INTEGER)
+});
+
+function isSignedRevisionKey(key) {
+    return key.startsWith(SIGNED_REVISION_PREFIX) && key.length > SIGNED_REVISION_PREFIX.length;
+}
+
+/**
+ * Validates a page-originated settings object against the schema, using the
+ * stored object to enforce the relation rules. Returns the object to persist
+ * plus the keys that were refused, so the caller can report rather than fail
+ * silently.
+ */
+function sanitizeSettingsObject(candidate, previous) {
+    const stored = isPlainObject(previous) ? previous : {};
+    const out = {};
+    const rejected = [];
+
+    for (const key of Object.keys(candidate)) {
+        if (FORBIDDEN_SETTING_KEYS.has(key)) {
+            rejected.push(key);
+            continue;
+        }
+        const value = candidate[key];
+
+        if (isSignedRevisionKey(key)) {
+            // Anti-rollback floor: monotonic, and never removable.
+            const next = finiteNumber(value, 0, Number.MAX_SAFE_INTEGER);
+            const floor = finiteNumber(stored[key], 0, Number.MAX_SAFE_INTEGER) || 0;
+            if (next === undefined || next < floor) {
+                rejected.push(key);
+                if (floor) out[key] = floor;
+            } else {
+                out[key] = next;
+            }
+            continue;
+        }
+
+        const validator = SETTINGS_VALIDATORS[key];
+        if (!validator) {
+            // An unknown key is either a rename we have not shipped or
+            // something the page invented. Neither belongs in storage.
+            rejected.push(key);
+            continue;
+        }
+        const checked = validator(value);
+        if (checked === undefined) {
+            rejected.push(key);
+            // Keep whatever was already valid rather than dropping the
+            // user's real setting because one write was malformed.
+            if (Object.prototype.hasOwnProperty.call(stored, key)) out[key] = stored[key];
+            continue;
+        }
+        out[key] = checked;
+    }
+
+    // Omitting a floor must not erase it, so carry forward every stored one
+    // the candidate left out.
+    for (const key of Object.keys(stored)) {
+        if (!isSignedRevisionKey(key)) continue;
+        if (Object.prototype.hasOwnProperty.call(out, key)) continue;
+        const floor = finiteNumber(stored[key], 0, Number.MAX_SAFE_INTEGER);
+        if (floor !== undefined) {
+            out[key] = floor;
+            rejected.push(key);
+        }
+    }
+
+    return { value: out, rejected };
+}
+
+// chrome.storage quotas are counted in UTF-8 bytes, not UTF-16 code units,
+// so a blocklist full of non-ASCII channel names must not be undercounted.
+function utf8ByteLength(text) {
+    if (typeof TextEncoder === 'function') {
+        try { return new TextEncoder().encode(text).length; } catch (e) { /* fall through */ }
+    }
+    let bytes = 0;
+    for (let i = 0; i < text.length; i++) {
+        const code = text.codePointAt(i);
+        if (code <= 0x7f) bytes += 1;
+        else if (code <= 0x7ff) bytes += 2;
+        else if (code <= 0xffff) bytes += 3;
+        else { bytes += 4; i++; }
+    }
+    return bytes;
+}
+
+// Cheap, stable checksum so a reader can reject a snapshot whose chunks do
+// not reassemble into what the writer committed.
+function checksumText(text) {
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193) >>> 0;
+    }
+    return hash.toString(16);
+}
+
+let lastWriteStamp = 0;
+let lastMirroredPreferences = null;
+
+function nextWriteStamp() {
+    const now = Date.now();
+    lastWriteStamp = Math.max(now, lastWriteStamp + 1);
+    return lastWriteStamp;
+}
+
+function storageArea(name) {
+    try {
+        return chrome && chrome.storage && chrome.storage[name];
+    } catch (e) {
+        return null;
+    }
+}
+
+function lastErrorText() {
+    try {
+        const err = chrome.runtime && chrome.runtime.lastError;
+        return err ? String(err.message || err) : '';
+    } catch (e) {
+        return '';
+    }
+}
+
+function normalizeSettingsMeta(meta) {
+    if (!meta || typeof meta !== 'object') return { updatedAt: 0, chunkCount: 0, byteLength: 0, oversized: false };
+    const updatedAt = Number(meta.updatedAt);
+    return {
+        updatedAt: Number.isFinite(updatedAt) && updatedAt > 0 ? updatedAt : 0,
+        chunkCount: Number(meta.chunkCount) || 0,
+        byteLength: Number(meta.byteLength) || 0,
+        checksum: typeof meta.checksum === 'string' ? meta.checksum : '',
+        version: Number(meta.version) || 1,
+        oversized: Boolean(meta.oversized)
+    };
+}
+
+function syncChunkKeys(count, startAt = 0) {
+    const keys = [];
+    const safeCount = Math.max(0, Math.min(Number(count) || 0, SYNC_MAX_CHUNKS));
+    for (let i = startAt; i < safeCount; i++) keys.push(`${SYNC_CHUNK_PREFIX}${i}`);
+    return keys;
+}
+
+// chrome.storage.sync counts an item's quota in UTF-8 bytes, so the split
+// has to count bytes too. Slicing by UTF-16 length silently produces items
+// up to 3x over the per-item ceiling for CJK or emoji blocklists, and the
+// write then fails with nothing surfaced. Iterating the string yields whole
+// code points, so a surrogate pair is never cut in half.
+function splitSyncPayload(text) {
+    const chunks = [];
+    let current = '';
+    let bytes = 0;
+    for (const character of text) {
+        const code = character.codePointAt(0);
+        const size = code <= 0x7f ? 1 : code <= 0x7ff ? 2 : code <= 0xffff ? 3 : 4;
+        if (bytes + size > SYNC_CHUNK_BYTES && current) {
+            chunks.push(current);
+            current = '';
+            bytes = 0;
+        }
+        current += character;
+        bytes += size;
+    }
+    if (current) chunks.push(current);
+    return chunks;
+}
+
+function areaGet(area, keys) {
+    return new Promise((resolve) => {
+        try {
+            area.get(keys, (items) => resolve(lastErrorText() ? null : (items || {})));
+        } catch (e) {
+            resolve(null);
+        }
+    });
+}
+
+function areaSet(area, items) {
+    return new Promise((resolve) => {
+        try {
+            area.set(items, () => resolve(lastErrorText()));
+        } catch (e) {
+            resolve(String(e && e.message || e));
+        }
+    });
+}
+
+async function removeStaleSyncChunks(previousMeta, keepCount) {
+    const sync = storageArea('sync');
+    if (!sync || !previousMeta) return;
+    const meta = normalizeSettingsMeta(previousMeta);
+    if (!meta.chunkCount || meta.chunkCount <= keepCount) return;
+    const staleKeys = syncChunkKeys(meta.chunkCount, keepCount);
+    if (!staleKeys.length) return;
+    try { sync.remove(staleKeys); } catch (e) { /* sync unavailable */ }
+}
+
+async function mirrorToSync(value, updatedAt) {
+    const sync = storageArea('sync');
+    if (!sync || !value || typeof value !== 'object') return;
+    // Only user-authored preferences leave the device.
+    const preferences = projectSyncablePreferences(value);
+    let serialized = '';
+    try { serialized = JSON.stringify(preferences); } catch (e) { return; }
+    // Runtime-only churn (stats ticking every couple of seconds) must not
+    // consume the sync write quota when no preference actually changed.
+    if (lastMirroredPreferences === serialized) return;
+    // Only a completed publish may be remembered. Marking it up front means
+    // a single quota error, offline moment or interrupted write latches sync
+    // off for the life of the service worker, with nothing surfaced.
+    lastMirroredPreferences = null;
+    const byteLength = utf8ByteLength(serialized);
+
+    const metaItems = await areaGet(sync, [SYNC_META_KEY]);
+    if (!metaItems) return;
+    const previousMeta = metaItems[SYNC_META_KEY];
+
+    // Oversized payloads stay local-only and leave a tombstone so a stale
+    // cloud snapshot can never overwrite the larger local one.
+    if (byteLength > SYNC_TOTAL_BYTES) {
+        if (await areaSet(sync, {
+            [SYNC_META_KEY]: {
+                version: PREFERENCE_SCHEMA_VERSION,
+                updatedAt,
+                chunkCount: 0,
+                byteLength,
+                checksum: checksumText(serialized),
+                oversized: true
+            }
+        })) return;
+        await removeStaleSyncChunks(previousMeta, 0);
+        lastMirroredPreferences = serialized;
+        return;
+    }
+
+    const chunks = splitSyncPayload(serialized);
+    // The reader only ever looks for SYNC_MAX_CHUNKS keys, so publishing
+    // more would leave a snapshot that can never reassemble.
+    if (chunks.length > SYNC_MAX_CHUNKS) return;
+    const chunkItems = {};
+    chunks.forEach((chunk, index) => { chunkItems[`${SYNC_CHUNK_PREFIX}${index}`] = chunk; });
+    // Chunks first, metadata last: the metadata write is the commit marker,
+    // so an interrupted write never publishes a half-written snapshot.
+    if (await areaSet(sync, chunkItems)) return;
+    if (await areaSet(sync, {
+        [SYNC_META_KEY]: {
+            version: PREFERENCE_SCHEMA_VERSION,
+            updatedAt,
+            chunkCount: chunks.length,
+            byteLength,
+            checksum: checksumText(serialized),
+            oversized: false
+        }
+    })) return;
+    await removeStaleSyncChunks(previousMeta, chunks.length);
+    lastMirroredPreferences = serialized;
+}
+
+async function readSyncSnapshot() {
+    const sync = storageArea('sync');
+    if (!sync) return null;
+    const metaItems = await areaGet(sync, [SYNC_META_KEY]);
+    if (!metaItems) return null;
+    const meta = normalizeSettingsMeta(metaItems[SYNC_META_KEY]);
+    if (!meta.updatedAt) return null;
+    if (meta.oversized) return { meta, value: undefined, oversized: true };
+    if (!Number.isInteger(meta.chunkCount) || meta.chunkCount < 1 || meta.chunkCount > SYNC_MAX_CHUNKS) return null;
+
+    const keys = syncChunkKeys(meta.chunkCount);
+    const chunkItems = await areaGet(sync, keys);
+    if (!chunkItems) return null;
+    let serialized = '';
+    for (const key of keys) {
+        const chunk = chunkItems[key];
+        if (typeof chunk !== 'string') return null;
+        serialized += chunk;
+    }
+    // A version-1 writer counted UTF-16 code units; accept either accounting
+    // so an older device's snapshot still validates.
+    if (meta.byteLength &&
+        utf8ByteLength(serialized) !== meta.byteLength &&
+        serialized.length !== meta.byteLength) return null;
+    if (meta.checksum && checksumText(serialized) !== meta.checksum) return null;
+    try {
+        const value = JSON.parse(serialized);
+        return value && typeof value === 'object' ? { meta, value, oversized: false } : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function settingsByteLength(value) {
+    try { return JSON.stringify(value).length; } catch (e) { return Infinity; }
+}
+
+async function readSettings() {
+    const local = storageArea('local');
+    if (!local) return { ok: false, error: 'storage unavailable' };
+    const items = await areaGet(local, [SETTINGS_KEY, LOCAL_META_KEY]);
+    if (!items) return { ok: false, error: 'storage read failed' };
+    const localMeta = normalizeSettingsMeta(items[LOCAL_META_KEY]);
+    let value = items[SETTINGS_KEY];
+
+    // A newer snapshot from another signed-in device wins, and is written
+    // back locally so the page world sees one consistent source.
+    const remote = await readSyncSnapshot();
+    if (remote && !remote.oversized && remote.value && remote.meta.updatedAt > localMeta.updatedAt) {
+        // Merge, never replace: a remote snapshot carries preferences only,
+        // so device-local runtime state must survive the update.
+        const merged = mergeRemotePreferences(value, remote.value);
+        const error = await areaSet(local, {
+            [SETTINGS_KEY]: merged,
+            [LOCAL_META_KEY]: { updatedAt: remote.meta.updatedAt }
+        });
+        if (!error) value = merged;
+    } else if (value && typeof value === 'object' && !localMeta.updatedAt) {
+        // First run after an upgrade from a pre-metadata build: stamp it so
+        // conflict resolution has something to compare.
+        const updatedAt = nextWriteStamp();
+        if (!await areaSet(local, { [LOCAL_META_KEY]: { updatedAt } })) {
+            await mirrorToSync(value, updatedAt);
+        }
+    }
+    return { ok: true, value };
+}
+
+async function writeSettings(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        return { ok: false, error: 'invalid settings payload' };
+    }
+    if (settingsByteLength(value) > MAX_SETTINGS_BYTES) {
+        return { ok: false, error: 'payload too large' };
+    }
+    const local = storageArea('local');
+    if (!local) return { ok: false, error: 'storage unavailable' };
+
+    // The stored object is the reference for every relation rule, so it is
+    // read here rather than taken from the sender.
+    const current = await areaGet(local, [SETTINGS_KEY]);
+    if (!current) return { ok: false, error: 'storage unavailable' };
+    const { value: sanitized, rejected } = sanitizeSettingsObject(value, current[SETTINGS_KEY]);
+
+    const updatedAt = nextWriteStamp();
+    const error = await areaSet(local, {
+        [SETTINGS_KEY]: sanitized,
+        [LOCAL_META_KEY]: { updatedAt }
+    });
+    if (error) return { ok: false, error };
+    await mirrorToSync(sanitized, updatedAt);
+    return rejected.length ? { ok: true, rejected } : { ok: true };
+}
+
+// A settings message is only honored when it comes from this extension's
+// own content script running in a real YouTube tab.
+function isTrustedSettingsSender(sender) {
+    if (!sender || typeof sender !== 'object') return false;
+    try {
+        if (sender.id && chrome.runtime && chrome.runtime.id && sender.id !== chrome.runtime.id) return false;
+    } catch (e) {
+        return false;
+    }
+    const tabId = Number(sender.tab && sender.tab.id);
+    if (!Number.isSafeInteger(tabId) || tabId < 0) return false;
+    return isYouTubeUrl(sender.url || (sender.tab && sender.tab.url));
+}
+const DNR_DIAGNOSTICS_WINDOW_MS = 5 * 60 * 1000;
+const DNR_DIAGNOSTICS_CACHE_MS = 30 * 1000;
+const DNR_DIAGNOSTICS_MAX_CACHE_TABS = 32;
+const dnrDiagnosticsCache = new Map();
+let dnrLastQueryAt = 0;
+
+function isYouTubeUrl(url) {
+    return typeof url === 'string' && YT_ORIGIN_MATCH.test(url);
+}
+
+function unavailableDnrDiagnostics(reason) {
+    return {
+        status: 'unavailable',
+        reason,
+        windowMinutes: DNR_DIAGNOSTICS_WINDOW_MS / 60000,
+        total: 0,
+        matches: [],
+        lastMatchedAt: 0
+    };
+}
+
+function classifyDnrDiagnosticsError(error) {
+    const message = String(error && error.message || error || '').toLowerCase();
+    if (/quota|too many|max(?:imum)? number/.test(message)) return 'quota-exceeded';
+    if (/permission|declarativenetrequestfeedback|active.?tab/.test(message)) return 'permission-required';
+    return 'query-failed';
+}
+
+function cacheDnrDiagnostics(tabId, value, capturedAt) {
+    if (dnrDiagnosticsCache.size >= DNR_DIAGNOSTICS_MAX_CACHE_TABS && !dnrDiagnosticsCache.has(tabId)) {
+        const oldestTabId = dnrDiagnosticsCache.keys().next().value;
+        dnrDiagnosticsCache.delete(oldestTabId);
+    }
+    dnrDiagnosticsCache.delete(tabId);
+    dnrDiagnosticsCache.set(tabId, { capturedAt, value });
+}
+
+async function getDnrDiagnostics(tabId) {
+    const now = Date.now();
+    const cached = dnrDiagnosticsCache.get(tabId);
+    if (cached && now - cached.capturedAt < DNR_DIAGNOSTICS_CACHE_MS) {
+        return cached.value;
+    }
+
+    if (!chrome.declarativeNetRequest || typeof chrome.declarativeNetRequest.getMatchedRules !== 'function') {
+        return unavailableDnrDiagnostics('api-unavailable');
+    }
+
+    // Chrome limits non-user-gesture getMatchedRules calls. A short global
+    // cooldown plus the per-tab cache keeps the extension comfortably inside
+    // that quota even if page code repeatedly dispatches the bridge event.
+    if (dnrLastQueryAt && now - dnrLastQueryAt < DNR_DIAGNOSTICS_CACHE_MS) {
+        return unavailableDnrDiagnostics('cooldown');
+    }
+    dnrLastQueryAt = now;
+
+    try {
+        const minTimeStamp = now - DNR_DIAGNOSTICS_WINDOW_MS;
+        const result = await chrome.declarativeNetRequest.getMatchedRules({ tabId, minTimeStamp });
+        const counts = new Map();
+        let lastMatchedAt = 0;
+        const entries = Array.isArray(result && result.rulesMatchedInfo)
+            ? result.rulesMatchedInfo
+            : [];
+
+        for (const entry of entries) {
+            if (!entry || entry.tabId !== tabId || entry.rule?.rulesetId !== DNR_RULESET_ID) continue;
+            const ruleId = Number(entry.rule.ruleId);
+            const timeStamp = Number(entry.timeStamp);
+            if (!Number.isSafeInteger(ruleId) || ruleId <= 0) continue;
+            if (!Number.isFinite(timeStamp) || timeStamp < minTimeStamp || timeStamp > now + 60000) continue;
+            counts.set(ruleId, (counts.get(ruleId) || 0) + 1);
+            lastMatchedAt = Math.max(lastMatchedAt, timeStamp);
+        }
+
+        const matches = [...counts.entries()]
+            .sort(([left], [right]) => left - right)
+            .map(([ruleId, count]) => ({ ruleId, count }));
+        const value = {
+            status: 'available',
+            reason: '',
+            windowMinutes: DNR_DIAGNOSTICS_WINDOW_MS / 60000,
+            total: matches.reduce((sum, match) => sum + match.count, 0),
+            matches,
+            lastMatchedAt
+        };
+        cacheDnrDiagnostics(tabId, value, now);
+        return value;
+    } catch (error) {
+        const value = unavailableDnrDiagnostics(classifyDnrDiagnosticsError(error));
+        cacheDnrDiagnostics(tabId, value, now);
+        return value;
+    }
+}
+
+// Returns a Promise that resolves when the tab finishes loading (or
+// immediately if it is already complete). Rejects after the timeout.
+function waitForTabComplete(tabId, timeoutMs = 30000) {
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            chrome.tabs.onUpdated.removeListener(onUpdated);
+            reject(new Error('tab load timed out'));
+        }, timeoutMs);
+
+        function onUpdated(updatedId, info) {
+            if (updatedId !== tabId || info.status !== 'complete') return;
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            chrome.tabs.onUpdated.removeListener(onUpdated);
+            resolve();
+        }
+        chrome.tabs.onUpdated.addListener(onUpdated);
+
+        // Check current state in case the tab already finished loading
+        // between tab creation and this listener attaching.
+        chrome.tabs.get(tabId, (tab) => {
+            if (chrome.runtime.lastError || !tab) return;
+            if (tab.status === 'complete' && !settled) {
+                settled = true;
+                clearTimeout(timer);
+                chrome.tabs.onUpdated.removeListener(onUpdated);
+                resolve();
+            }
+        });
+    });
+}
+
+async function dispatchToTab(tabId, payload, { allowReload = false } = {}) {
+    try {
+        await chrome.tabs.sendMessage(tabId, payload);
+        return true;
+    } catch (e) { /* content script may not be ready yet */ }
+
+    try {
+        await waitForTabComplete(tabId, 15000);
+        await chrome.tabs.sendMessage(tabId, payload);
+        return true;
+    } catch (e) { /* still not ready */ }
+
+    if (!allowReload) return false;
+
+    try {
+        await chrome.tabs.reload(tabId);
+        await waitForTabComplete(tabId, 30000);
+        await chrome.tabs.sendMessage(tabId, payload);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function sendToActiveTab(payload) {
+    let tab;
+    try {
+        [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    } catch (e) {
+        return;
+    }
+
+    if (tab && tab.id && isYouTubeUrl(tab.url)) {
+        // Try the current tab first. If the content script is not ready,
+        // wait for load completion and, as a last resort, reload once so
+        // the requested action is actually delivered instead of being
+        // silently dropped.
+        await dispatchToTab(tab.id, payload, { allowReload: true });
+        return;
+    }
+
+    // Not on a YouTube tab. Open a new one and deliver the message once
+    // it's ready. We cap waits so a never-completing load doesn't leak a
+    // listener.
+    let created;
+    try {
+        created = await chrome.tabs.create({ url: 'https://www.youtube.com/' });
+    } catch (e) {
+        return;
+    }
+    if (!created || !created.id) return;
+    // A brand-new YouTube tab only needs load-aware retries, not a reload.
+    await dispatchToTab(created.id, payload);
+}
+
+chrome.action.onClicked.addListener(() => {
+    sendToActiveTab({ type: 'ytab:open-panel' });
+});
+
+const COMMUNITY_API_ORIGINS = [
+    'https://sponsor.ajay.app/*',
+    'https://returnyoutubedislikeapi.com/*'
+];
+
+const CONTEXT_MENU_ROOT = 'ytab-root';
+
+function rebuildContextMenu() {
+    try {
+        chrome.contextMenus.removeAll(() => {
+            // chrome.runtime.lastError is already swallowed inside the
+            // callback; we keep going regardless so a single failure
+            // doesn't leave the user with a half-built menu.
+            chrome.contextMenus.create({
+                id: CONTEXT_MENU_ROOT,
+                title: 'Zynubo',
+                contexts: ['action', 'page'],
+                documentUrlPatterns: [
+                    '*://*.youtube.com/*',
+                    '*://www.youtube-nocookie.com/*',
+                    '*://youtubekids.com/*',
+                    '*://www.youtubekids.com/*'
+                ]
+            });
+            chrome.contextMenus.create({
+                id: 'ytab-open-panel',
+                parentId: CONTEXT_MENU_ROOT,
+                title: 'Open Control Center',
+                contexts: ['action', 'page']
+            });
+            chrome.contextMenus.create({
+                id: 'ytab-toggle-protection',
+                parentId: CONTEXT_MENU_ROOT,
+                title: 'Pause or Resume Protection',
+                contexts: ['action', 'page']
+            });
+            chrome.contextMenus.create({
+                id: 'ytab-refresh-rules',
+                parentId: CONTEXT_MENU_ROOT,
+                title: 'Refresh Rules',
+                contexts: ['action', 'page']
+            });
+            chrome.contextMenus.create({
+                id: 'ytab-block-channel',
+                parentId: CONTEXT_MENU_ROOT,
+                title: 'Block This Channel',
+                contexts: ['page', 'link']
+            });
+            chrome.contextMenus.create({
+                id: 'ytab-grant-api-permissions',
+                parentId: CONTEXT_MENU_ROOT,
+                title: 'Grant Community API Access',
+                contexts: ['action', 'page']
+            });
+        });
+    } catch (e) { /* API may not be available on all channels */ }
+}
+
+// The context menu lives in persistent storage (chrome.contextMenus
+// entries survive SW restarts), so `rebuildContextMenu` only needs to
+// run when install/update/startup actually happens. Listening on both
+// events covers the common lifecycle: fresh install, manual update,
+// and browser launch.
+chrome.runtime.onInstalled.addListener(rebuildContextMenu);
+chrome.runtime.onStartup.addListener(rebuildContextMenu);
+
+chrome.contextMenus.onClicked.addListener((info) => {
+    switch (info.menuItemId) {
+        case 'ytab-open-panel':
+            sendToActiveTab({ type: 'ytab:open-panel' });
+            break;
+        case 'ytab-toggle-protection':
+            sendToActiveTab({ type: 'ytab:toggle-protection' });
+            break;
+        case 'ytab-refresh-rules':
+            sendToActiveTab({ type: 'ytab:refresh-rules' });
+            break;
+        case 'ytab-block-channel':
+            sendToActiveTab({ type: 'ytab:block-channel' });
+            break;
+        case 'ytab-grant-api-permissions':
+            chrome.permissions.request({ origins: COMMUNITY_API_ORIGINS }, (granted) => {
+                sendToActiveTab({ type: 'ytab:api-permissions-changed', granted: !!granted });
+            });
+            break;
+    }
+});
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'ytab:check-api-permissions') {
+        chrome.permissions.contains({ origins: COMMUNITY_API_ORIGINS }, (result) => {
+            sendResponse({ granted: !!result });
+        });
+        return true;
+    }
+    if (msg.type === 'ytab:settings-read' || msg.type === 'ytab:settings-write') {
+        if (!isTrustedSettingsSender(sender)) {
+            sendResponse({ ok: false, error: 'untrusted context' });
+            return;
+        }
+        const work = msg.type === 'ytab:settings-read'
+            ? readSettings()
+            : writeSettings(msg.value);
+        work.then(sendResponse, (e) => {
+            sendResponse({ ok: false, error: String(e && e.message || e) });
+        });
+        return true;
+    }
+    if (msg.type === 'ytab:get-dnr-diagnostics') {
+        const tabId = Number(sender?.tab?.id);
+        const senderUrl = sender?.url || sender?.tab?.url;
+        if (!Number.isSafeInteger(tabId) || tabId < 0 || !isYouTubeUrl(senderUrl)) {
+            sendResponse(unavailableDnrDiagnostics('invalid-context'));
+            return;
+        }
+        getDnrDiagnostics(tabId).then(sendResponse, () => {
+            sendResponse(unavailableDnrDiagnostics('query-failed'));
+        });
+        return true;
+    }
+});

@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible Zynubo problem.
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Browser, Zynubo version and distribution
+      placeholder: Firefox 157, Zynubo 1.0.0, temporary extension
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected behavior and actual behavior
+      description: Include the YouTube surface. Remove private video IDs and account details.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Redacted diagnostics and other blockers
+      description: Never include cookies, authorization headers or tokens.

@@ -1,0 +1,34 @@
+name: Validate
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run package
+      - run: npm run lint:firefox
+      - run: git diff --exit-code -- Zynubo.user.js icon.png
+      - run: npx playwright-core install --with-deps chromium
+      - uses: browser-actions/setup-firefox@v1
+        id: firefox
+      - run: npm run test:extensions:browser
+        env:
+          ZYNUBO_CHROMIUM: playwright
+          ZYNUBO_FIREFOX: ${{ steps.firefox.outputs.firefox-path }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zynubo-unsigned
+          path: |
+            dist/*.zip
+            dist/Zynubo.user.js
+            dist/SHA256SUMS

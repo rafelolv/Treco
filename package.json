@@ -1,0 +1,28 @@
+{
+  "name": "zynubo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build/build.mjs",
+    "test": "node --test tests/engine-core.test.mjs tests/background-contract.test.mjs tests/bridge-security.test.mjs tests/sign-filter-manifest.test.mjs tests/distribution.test.mjs",
+    "check": "npm run build && npm test && node tools/verify-license-attribution.mjs && node build/verify.mjs",
+    "test:browser:upstream": "node --test tests/browser-smoke.test.mjs",
+    "test:extensions:browser": "node tests/extension-browsers.mjs",
+    "lint:firefox": "web-ext lint --source-dir dist/firefox --warnings-as-errors",
+    "package": "npm run check && python3 build/package.py"
+  },
+  "devDependencies": {
+    "playwright-core": "1.61.1",
+    "sharp": "0.35.5",
+    "web-ext": "10.8.0"
+  },
+  "description": "Block ads, skip sponsors with consent, and customize YouTube with a shared in-page Control Center.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rafelolv/Zynubo.git"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
