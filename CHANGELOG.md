@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 — Unreleased
+
+- Preserve native YouTube dialogs and their controls so cosmetic filters cannot leave an invisible modal blocking the page.
+- Keep the Control Center hidden during startup and restore page interaction when rebuilding a detached panel.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.1.0 — 2026-10-16
 
 - Redesign the Control Center with a graphite-and-paper palette, a red Z mark and quieter typography.

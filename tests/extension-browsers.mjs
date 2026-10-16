@@ -14,6 +14,8 @@ let origin;
 const core = await fs.readFile('Zynubo.user.js', 'utf8');
 const version = JSON.parse(await fs.readFile('package.json')).version;
 const fixture = mode => `<!doctype html><html><head><meta charset="utf-8"><title>Zynubo fixture</title></head><body>
+<div class="ad-div"><tp-yt-paper-dialog role="dialog" class="ad-div"><button id="native-action" class="ad-div">Continue</button></tp-yt-paper-dialog></div>
+<div class="ad-div" id="ordinary-ad">Advertisement</div>
 <div id="movie_player"><video class="html5-main-video"></video></div>
 <script>
 window.GM_getValue = (key, fallback) => fallback;
@@ -35,7 +37,10 @@ ${mode === 'userscript' ? '<script src="/core.js"></script>' : ''}
     await new Promise((resolve, reject) => { second.onload = resolve; second.onerror = reject; document.head.append(second); });
     const payload = { mode: ${JSON.stringify(mode)}, status, pruned: !('adPlacements' in result),
         title: result.videoDetails.title, duplicatePrevented: window.fetch === before,
-        panelBuilt: !!document.querySelector('.ytab-panel') };
+        panelBuilt: !!document.querySelector('.ytab-panel'),
+        closedPanelHidden: !document.querySelector('.ytab-overlay').getClientRects().length,
+        nativeActionVisible: !!document.getElementById('native-action').getClientRects().length,
+        ordinaryAdHidden: !document.getElementById('ordinary-ad').getClientRects().length };
     // DOM fixture reports are deliberately unsigned test evidence, not product status.
     window.fixtureResult = payload;
 })();
@@ -131,6 +136,9 @@ function check(report, expected) {
     assert.equal(report.title, 'Keep this title');
     assert.equal(report.duplicatePrevented, true);
     assert.equal(report.panelBuilt, true);
+    assert.equal(report.closedPanelHidden, true);
+    assert.equal(report.nativeActionVisible, true);
+    assert.equal(report.ordinaryAdHidden, true);
     if (expected === 'extension') {
         assert.equal(report.runtimeStatus?.initialized, true, 'Isolated runtime status bridge');
         assert.equal(report.panelOpened, true);

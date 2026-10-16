@@ -683,3 +683,76 @@ test('responsive settings pages preserve search, focus and aligned controls', { 
         }
     }
 });
+
+test('native dialogs stay actionable without stranding a backdrop or blocking playback', { skip: !browserPath }, async t => {
+    const browser = await chromium.launch({ executablePath: browserPath, headless: true });
+    t.after(() => browser.close());
+    for (const mode of ['userscript', 'extension']) {
+        await t.test(mode, async () => {
+            const context = await browser.newContext();
+            try {
+                await installRoutes(context);
+                const page = await context.newPage();
+                if (mode === 'userscript') await installUserscriptMode(page);
+                else await installExtensionMode(page);
+                await page.route('https://www.youtube.com/watch?v=modal-test', route => route.fulfill({
+                    contentType: 'text/html',
+                    body: `<!doctype html><html dark><head><style>
+                        body { margin:0; background:white; }
+                        tp-yt-iron-overlay-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:100; }
+                        tp-yt-paper-dialog { display:block; position:fixed; z-index:101; left:25%; top:25%; background:white; padding:24px; }
+                        ytd-enforcement-message-view-model { display:block; }
+                    </style></head><body>
+                    <div id="page"><div id="movie_player"><video id="fixture-video" muted playsinline></video></div><button id="page-control">Page control</button></div>
+                    <tp-yt-iron-overlay-backdrop opened></tp-yt-iron-overlay-backdrop>
+                    <div class="ad-div"><tp-yt-paper-dialog class="ad-div" role="dialog" aria-label="YouTube playback message">
+                      <ytd-enforcement-message-view-model>This playback message needs your attention.<button class="ad-div" id="dismiss-native">Continue</button></ytd-enforcement-message-view-model>
+                    </tp-yt-paper-dialog></div><div class="ad-div" id="ordinary-ad">Advertisement</div>
+                    <script>
+                        document.getElementById('page').inert = true;
+                        const canvas = document.createElement('canvas'); canvas.width=64; canvas.height=64;
+                        const ctx = canvas.getContext('2d'); ctx.fillRect(0,0,64,64);
+                        const video = document.getElementById('fixture-video');
+                        video.srcObject = canvas.captureStream(10);
+                        setInterval(() => { ctx.fillRect(0,0,64,64); }, 100);
+                        document.getElementById('dismiss-native').addEventListener('click', async () => {
+                            document.querySelector('tp-yt-paper-dialog').remove();
+                            document.querySelector('tp-yt-iron-overlay-backdrop').remove();
+                            document.getElementById('page').inert=false;
+                            await video.play();
+                        });
+                        document.getElementById('page-control').addEventListener('click', () => { document.body.dataset.clicked='true'; });
+                    </script></body></html>`
+                }));
+                await page.goto('https://www.youtube.com/watch?v=modal-test');
+                await page.waitForSelector('.ytab-panel', { state: 'attached' });
+                assert.equal(await page.locator('.ytab-overlay').isVisible(), false, 'Closed Zynubo UI must stay hidden: ' + JSON.stringify(await page.evaluate(() => ({
+                    hasStyle: !!document.getElementById('ytab-ui'),
+                    styleLength: document.getElementById('ytab-ui')?.textContent.length,
+                    overlayVisibility: getComputedStyle(document.querySelector('.ytab-overlay')).visibility,
+                    nativeVisible: getComputedStyle(document.querySelector('tp-yt-paper-dialog')).display
+                }))));
+                assert.equal(await page.locator('tp-yt-iron-overlay-backdrop').isVisible(), true);
+                assert.equal(await page.locator('#dismiss-native').isVisible(), true,
+                    'A hidden native modal leaves its dimming backdrop and page lock stranded');
+                assert.equal(await page.locator('#ordinary-ad').isVisible(), false, 'Ordinary ads must still be hidden');
+                await page.click('#dismiss-native');
+                await page.waitForFunction(() => !document.getElementById('fixture-video').paused && document.getElementById('fixture-video').currentTime > .1);
+                assert.equal(await page.locator('tp-yt-iron-overlay-backdrop').count(), 0);
+                await page.click('#page-control');
+                assert.equal(await page.locator('body').getAttribute('data-clicked'), 'true');
+                await openControlCenter(page, mode);
+                await page.keyboard.press('Escape');
+                assert.equal(await page.locator('#page').getAttribute('inert'), null);
+                await page.click('#page-control');
+                // SPA replacement can detach an open panel before its close handler runs.
+                await openControlCenter(page, mode);
+                await page.locator('.ytab-overlay').evaluate(el => el.remove());
+                await openControlCenter(page, mode);
+                await page.keyboard.press('Escape');
+                assert.equal(await page.locator('#page').getAttribute('inert'), null);
+                await page.click('#page-control');
+            } finally { await context.close(); }
+        });
+    }
+});

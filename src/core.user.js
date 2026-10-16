@@ -899,11 +899,6 @@
             'ytm-promoted-sparkles-web-renderer', 'ytd-search-pyv-renderer',
             'ytd-merch-shelf-renderer', 'ad-slot-renderer', 'ytm-companion-ad-renderer',
             'ytd-statement-banner-renderer',
-            // Anti-adblock enforcement modal. Hiding it cosmetically is a
-            // defense-in-depth layer — the primary kill is pruning the
-            // frameworkUpdates payload that builds it.
-            'ytd-enforcement-message-view-model',
-            'tp-yt-paper-dialog:has(ytd-enforcement-message-view-model)',
             'ytd-rich-item-renderer:has(> #content > ytd-ad-slot-renderer)',
             '#shorts-inner-container > .ytd-shorts:has(> .ytd-reel-video-renderer > ytd-ad-slot-renderer)',
             '.ytd-watch-flexy > .ytd-watch-next-secondary-results-renderer > ytd-ad-slot-renderer',
@@ -4805,6 +4800,9 @@
         }
     }
 
+    // Preserve native modal lifecycles: hiding their content strands the backdrop,
+    // focus lock and paused player. Apply this to cached/remote selectors too.
+    const NATIVE_MODAL_SELECTOR = 'dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"], tp-yt-paper-dialog, ytd-enforcement-message-view-model, ytd-consent-bump-v2-lightbox, yt-confirm-dialog-renderer, tp-yt-iron-overlay-backdrop';
     let cosmeticCSSLastHash = '';
 
     function updateCosmeticCSS() {
@@ -4858,8 +4856,11 @@
         // Every cosmetic rule is scoped away from elements the compliance
         // scanner has marked, so an age/identity verification dialog can
         // never be hidden by an ad selector that happens to match it.
+        // Guard the matching element, modal descendants and containers holding a
+        // modal. :is() keeps comma-separated filter branches inside the guard.
+        const modalGuard = `:not(:is(${NATIVE_MODAL_SELECTOR}, :is(${NATIVE_MODAL_SELECTOR}) *)):not(:has(:is(${NATIVE_MODAL_SELECTOR})))`;
         state.cosmeticStyleEl.textContent = safe
-            .map(s => `${s}:not([${COMPLIANCE_MARK_ATTR}]) { display: none !important; }`)
+            .map(s => `:is(${s}):not([${COMPLIANCE_MARK_ATTR}])${modalGuard} { display: none !important; }`)
             .join('\n');
     }
 
@@ -6516,7 +6517,10 @@
     function buildSettingsPanel() {
         if (state.overlayEl && state.overlayEl.isConnected) return;
 
+        // document-start may precede <head>; retry UI styles before mounting.
+        injectSettingsCSS();
         const overlay = document.createElement('div');
+        overlay.hidden = true;
         overlay.className = `${CSS_PREFIX}-overlay`;
         overlay.setAttribute('aria-hidden', 'true');
         overlay.addEventListener('click', (e) => {
@@ -9016,6 +9020,9 @@
         // stale reference so the next open rebuilds cleanly rather than
         // attaching event handlers to an orphaned element.
         if (state.overlayEl && !state.overlayEl.isConnected) {
+            setBackgroundInert(false);
+            state.settingsOpen = false;
+            document.body?.classList.remove(`${CSS_PREFIX}-settings-open`);
             state.overlayEl = null;
             state.panelEl = null;
             state.toastLaneEl = null;
@@ -9036,6 +9043,7 @@
         state.settingsOpen = show;
         if (show) {
             state.lastFocusedEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            state.overlayEl.hidden = false;
             state.overlayEl.classList.add(`${CSS_PREFIX}-active`);
             document.body.classList.add(`${CSS_PREFIX}-settings-open`);
             // Remove rather than set to "false" — explicit aria-hidden="false"
@@ -9051,6 +9059,7 @@
             });
         } else {
             placeToastRegion(false);
+            state.overlayEl.hidden = true;
             state.overlayEl.classList.remove(`${CSS_PREFIX}-active`);
             state.overlayEl.setAttribute('aria-hidden', 'true');
             document.body.classList.remove(`${CSS_PREFIX}-settings-open`);

@@ -110,3 +110,33 @@ cached after a force push; their refresh is separate from verifying branch ances
   assets and verifies checksums. Ordinary main/PR CI remains non-publishing.
 - Release notes distinguish unsigned GitHub ZIPs from store signing/approval.
   No live YouTube or store compatibility claim has been added.
+
+## 1.1.1 modal-lock correction — 2026-10-16
+
+- Reproduced two startup failures in synthetic YouTube routes before the fix:
+  the closed Control Center could mount without its document-start stylesheet,
+  and cosmetic rules could hide a native modal while its backdrop and inert
+  page remained active. Both injected distribution modes failed the regression.
+- Cosmetic serialization now preserves native dialogs, their descendants and
+  containing elements even when cached or remote selectors match them. Native
+  actions stay under user control; the engine does not dismiss verification or
+  consent prompts. Ordinary matching ads remain hidden in the regression.
+- The native-dialog regression passed on Brave Origin Nightly 154.1.98.28 in
+  userscript and extension modes. It checks startup visibility, a native modal,
+  manual dismissal, advancing synthetic video frames, restored clicks, panel
+  closing and recovery after detaching an open panel during simulated navigation.
+- The full Chromium for Testing 149.0.7827.55 UI matrix passed 24 scenarios
+  (27 including parent groups). The subsequent detached-panel assertions were
+  checked separately on Brave in both modes.
+- Temporary installation checks passed on Chromium 149.0.7827.55 and Firefox
+  157.0, including hidden startup UI, native dialog controls and ordinary ad
+  hiding in both the userscript fixture and installed extension. Production
+  executable files remain byte-identical to the generated packages.
+- npm run check passed all 220 unit/contract cases, license checks, synchronized
+  versions, shared-engine parity and reproducible builds. Firefox lint reported
+  zero errors, notices or warnings. npm run package produced the 1.1.1 artifacts.
+- These tests use synthetic pages, simulated manager APIs and temporary browser
+  profiles. No actual Violentmonkey installation or live YouTube playback was
+  validated, so resolution in the user's Brave profile remains unconfirmed.
+- Signed filter files, verification keys, storage and consent defaults remain
+  unchanged. The existing published v1.1.0 tag/assets are unchanged.
