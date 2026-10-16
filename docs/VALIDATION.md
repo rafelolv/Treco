@@ -496,3 +496,18 @@ Firefox lint and temporary browser integration, compares repeated SHA256SUMS and
 checks the exact release payload. The existing 1.10.0 UI/stability evidence and
 manager/live-YouTube limitations above still apply. Publication uses the new-tag
 workflow and verifies all five downloaded assets. No store submission is included.
+
+## Treco 1.10.0 publication verification — 2026-10-16
+
+The release workflow completed successfully for tag v1.10.0 at commit
+1ee49fc95293a492c6020a174d9b219ada412239. GitHub now resolves the legacy repository
+to rafelolv/Treco. All five assets were downloaded from that canonical repository;
+SHA256SUMS matched the locally reviewed packages exactly. Release notes, package
+contents, compatibility installer and reviewer source passed verification.
+
+The first standalone audit rejected the canonical renamed URLs because it still
+expected the old repository path. Its read-only URL validation now accepts only
+the two known rafelolv project names and requires every asset to match the release's
+resolved project URL. The published audit then passed, including embedded metadata
+icons and both engines. This follow-up changes only auditing/documentation; the
+published tag and release assets are unchanged.

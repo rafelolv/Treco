@@ -65,3 +65,8 @@ The README download buttons name one existing GitHub release; the userscript URL
 follows main and can be newer. The audit derives the published version from these
 links rather than adding another public version source. Update both ZIP links
 together when preparing an authorized release and verify them after publication.
+
+GitHub redirects legacy rafelolv/Zynubo links to rafelolv/Treco. The published
+asset auditor accepts these two known project paths and checks all asset URLs
+against the resolved release URL. Legacy runtime metadata URLs remain update
+aliases; do not rewrite an existing release to change its embedded addresses.

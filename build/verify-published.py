@@ -30,6 +30,12 @@ def fetch(url, limit=20 * 1024 * 1024):
 
 release = json.loads(fetch(f'https://api.github.com/repos/{repository}/releases/tags/v{version}', 256 * 1024))
 assert release['tag_name'] == f'v{version}' and not release['draft'] and not release['prerelease']
+# GitHub preserves old project links after a rename; only these owner-controlled
+# product names are accepted, and every asset must use the resolved release path.
+canonical_projects = {'https://github.com/rafelolv/Zynubo', 'https://github.com/rafelolv/Treco'}
+canonical_project = release['html_url'].removesuffix(f'/releases/tag/v{version}')
+assert canonical_project in canonical_projects
+assert release['html_url'] == f'{canonical_project}/releases/tag/v{version}'
 expected = {f'{brand}-{browser}-v{version}.zip' for browser in ['chromium','firefox','source']} | {f'{brand}.user.js','SHA256SUMS'}
 assets = {asset['name']: asset for asset in release['assets']}
 assert set(assets) == expected, 'Unexpected published release assets'
@@ -39,7 +45,7 @@ for browser in ['chromium','firefox']:
 files = {}
 for name, asset in assets.items():
     url = asset['browser_download_url']
-    assert url == f'{project}/releases/download/v{version}/{name}'
+    assert url == f'{canonical_project}/releases/download/v{version}/{name}'
     files[name] = fetch(url)
     assert len(files[name]) == asset['size']
 checksums = dict((name, digest) for digest, name in (line.split('  ',1) for line in files['SHA256SUMS'].decode().splitlines()))
