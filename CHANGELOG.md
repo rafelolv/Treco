@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.2 — 2026-10-16
+
+- Preserve YouTube framework entity updates so comment text is not discarded alongside ad data.
+- Reject broad framework-removal rules from cached filters and property traps.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.3.1 — Unreleased
 
 - Keep the Zynubo button exclusively in the main page header; remove the floating fallback that could overlap live chat.

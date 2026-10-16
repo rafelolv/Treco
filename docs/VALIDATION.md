@@ -218,3 +218,19 @@ cached after a force push; their refresh is separate from verifying branch ances
   Violentmonkey installation, live YouTube broadcast or live chat was tested.
   Signed data, feature defaults, storage namespaces and published release assets
   remain unchanged.
+
+## 1.3.2 comment entity preservation — 2026-10-16
+
+- A focused regression reproduced deletion of frameworkUpdates, including a
+  commentEntityPayload text mutation, by the inherited broad pruning rule.
+  A second case covers cached broad rules and property-trap compilation.
+- Removed the broad built-in paths and guarded filter sanitization, direct
+  pruning, trap compilation and application. Targeted adPlacements and ad-signal
+  pruning remain active. Signed data files remain byte-identical.
+- The maintainer requested a focused hotfix without repeating the local browser
+  matrix. npm run package covers 222 unit/contract cases, versions, generated
+  parity, attribution and reproducible builds. The tag publication workflow
+  retains its existing validation requirements and downloaded checksum checks.
+- No live comments, real YouTube playback or actual Violentmonkey profile was
+  validated locally. This fix preserves missing entity data; the exact symptom
+  in the user's browser still needs confirmation after updating and reloading.

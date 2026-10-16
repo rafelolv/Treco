@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Zynubo
 // @namespace    https://github.com/rafelolv
-// @version      1.3.1
+// @version      1.3.2
 // @description  Local YouTube ad blocking with signed rules, plus an in-page Control Center that explains what is running.
 // @author       rafelolv (based on Matthew Parker's MIT-licensed work)
 // @license      MIT
@@ -75,7 +75,7 @@
      * ===================================================================== */
 
     const SCRIPT_NAME = 'Zynubo';
-    const SCRIPT_VERSION = '1.3.1';
+    const SCRIPT_VERSION = '1.3.2';
     const PROJECT_URL = 'https://github.com/rafelolv/Zynubo';
     const ISSUES_URL = `${PROJECT_URL}/issues`;
     const FILTER_URL_DEFAULT = 'https://raw.githubusercontent.com/rafelolv/Zynubo/refs/heads/main/youtube-adblock-filters.txt';
@@ -842,7 +842,6 @@
             // than /player, so widening pruneKeys catches them before the
             // engagement-message renderer builds the popup.
             'adBreakHeartbeatParams',
-            'frameworkUpdates',
             'responseContext.adSignalsInfo',
             'playerResponse.adBreakHeartbeatParams',
             'playerResponse.auxiliaryUi.messageRenderers.upsellDialogRenderer',
@@ -871,7 +870,6 @@
             'ytInitialPlayerResponse.adSlots',
             'ytInitialPlayerResponse.adBreakHeartbeatParams',
             'ytInitialPlayerResponse.auxiliaryUi.messageRenderers.upsellDialogRenderer',
-            'ytInitialData.frameworkUpdates',
             'playerResponse.adPlacements'
         ],
         replaceKeys: { adPlacements: 'no_ads', adSlots: 'no_ads', playerAds: 'no_ads' },
@@ -1844,6 +1842,7 @@
             const normalized = value.replace(/\[-\]\./g, '').trim();
             if (!normalized || !SAFE_DOTTED_PATH_RE.test(normalized)) continue;
             if (['important', 'legacyImportant', 'no_ads'].includes(normalized)) continue;
+            if (normalized.split('.').at(-1) === 'frameworkUpdates') continue;
             clean.push(normalized);
         }
         return [...new Set(clean)];
@@ -2646,6 +2645,9 @@
 
     function deleteNestedKey(obj, path) {
         const keys = path.split('.');
+        // Generic entity updates carry comment text and other non-ad UI state.
+        // Preserve them even when older cached rules request broad removal.
+        if (keys.at(-1) === 'frameworkUpdates') return false;
         let current = obj;
         for (let i = 0; i < keys.length - 1; i++) {
             if (current == null || typeof current !== 'object') return false;
@@ -3514,6 +3516,7 @@
         for (const path of paths) {
             if (typeof path !== 'string' || !path.includes('.')) continue;
             const parts = path.split('.');
+            if (parts.at(-1) === 'frameworkUpdates') continue;
             const root = parts[0];
             if (!byRoot.has(root)) byRoot.set(root, []);
             byRoot.get(root).push(parts.slice(1));
@@ -3525,6 +3528,7 @@
         if (!target || typeof target !== 'object') return false;
         let prunedHere = false;
         for (const subPath of subPaths) {
+            if (subPath.at(-1) === 'frameworkUpdates') continue;
             let cursor = target;
             for (let i = 0; i < subPath.length - 1; i++) {
                 if (cursor && typeof cursor === 'object' && subPath[i] in cursor) {

@@ -142,6 +142,8 @@ function createTestHarness(options = {}) {
     const exportBlock = `
     ;(typeof __ytab_test_export !== 'undefined') && __ytab_test_export({
         deleteNestedKey,
+        rebuildTrapPathsByRoot,
+        applySubPathPrunes,
         pruneObject,
         sanitizeFilterPayload,
         parseUBOFilterList,
@@ -329,13 +331,13 @@ test('pruneObject strips nested keys like playerResponse.adPlacements', () => {
     assert.ok(obj.playerResponse.streamingData);
 });
 
-test('pruneObject strips enforcement/framework keys', () => {
+test('pruneObject preserves comment entities while stripping ad signals', () => {
     const obj = {
-        frameworkUpdates: { entityBatchUpdate: {} },
+        frameworkUpdates: { entityBatchUpdate: { mutations: [{ entityKey: 'comment-1', payload: { commentEntityPayload: { properties: { content: { content: 'Keep this comment' } } } } }] } },
         responseContext: { adSignalsInfo: { params: [] }, serviceTrackingParams: [] },
     };
     harness.pruneObject(obj);
-    assert.equal('frameworkUpdates' in obj, false);
+    assert.equal(obj.frameworkUpdates.entityBatchUpdate.mutations[0].payload.commentEntityPayload.properties.content.content, 'Keep this comment');
     assert.equal('adSignalsInfo' in obj.responseContext, false);
     assert.ok(obj.responseContext.serviceTrackingParams);
 });
@@ -2315,4 +2317,19 @@ test('Zynubo imports legacy upstream settings without weakening foreign-app reje
     const result = h.importSettingsPayload(exportEnvelope({ keyword_blocklist: 'legacy' }, { app: 'YoutubeAdblock' }), 'json');
     assert.equal(result.ok, true);
     assert.equal(h.__storage.ytab_keyword_blocklist, 'legacy');
+});
+
+
+test('cached broad rules cannot erase framework updates or comment entity mutations', () => {
+    const h = createTestHarness();
+    h.state.filters = {pruneKeys:['frameworkUpdates', 'playerResponse.frameworkUpdates', 'adPlacements'], setUndefined:['ytInitialData.frameworkUpdates']};
+    const obj = {frameworkUpdates:{entityBatchUpdate:{mutations:[{entityKey:'comment-1'}]}}, playerResponse:{frameworkUpdates:{entityBatchUpdate:{mutations:[]}}}, adPlacements:[]};
+    h.pruneObject(obj);
+    assert.equal(obj.frameworkUpdates.entityBatchUpdate.mutations[0].entityKey, 'comment-1');
+    assert.ok(obj.playerResponse.frameworkUpdates);
+    assert.equal('adPlacements' in obj, false);
+    h.rebuildTrapPathsByRoot();
+    assert.equal(h.state.trapPathsByRoot.has('ytInitialData'), false);
+    assert.equal(h.applySubPathPrunes(obj, [['frameworkUpdates']]), false);
+    assert.ok(obj.frameworkUpdates);
 });

@@ -4,8 +4,8 @@
   <p>Less interruption. More YouTube.</p>
   <p>
     <a href="https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install userscript"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-chromium-v1.1.0.zip"><img src="https://img.shields.io/badge/Download_Chromium-252720?style=for-the-badge" alt="Download Chromium extension"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.1.0/Zynubo-firefox-v1.1.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Firefox temporary extension"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.3.2/Zynubo-chromium-v1.3.2.zip"><img src="https://img.shields.io/badge/Download_Chromium-252720?style=for-the-badge" alt="Download Chromium extension"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.3.2/Zynubo-firefox-v1.3.2.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Firefox temporary extension"></a>
   </p>
   <p><a href="docs/USER-GUIDE.md">User guide</a> · <a href="https://github.com/rafelolv/Zynubo/issues">Get help</a></p>
 </div>
