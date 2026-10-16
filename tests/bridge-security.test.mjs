@@ -501,3 +501,9 @@ test('JSON-string bridge requests work across Firefox worlds and malformed strin
     assert.ok(wire);
     assert.equal(env.responses.length, 1);
 });
+
+test('isolated bridge exits on chat documents before accessing extension or storage APIs', () => {
+    for (const pathname of ['/live_chat','/live_chat_replay']) {
+        assert.doesNotThrow(() => vm.runInNewContext(bridgeSource,{location:{pathname}}));
+    }
+});

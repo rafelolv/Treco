@@ -33,6 +33,7 @@ jobs:
       - run: npm run lint:firefox
       - run: git diff --exit-code -- Zynubo.user.js icon.png
       - run: npx playwright-core install --with-deps chromium
+      - run: npm run test:stability
       - run: npm run test:browser:upstream
       - uses: browser-actions/setup-firefox@v1
         id: firefox

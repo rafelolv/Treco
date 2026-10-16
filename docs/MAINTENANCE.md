@@ -5,6 +5,12 @@ commit Zynubo.user.js and icon.png alongside changes. Never edit dist/.
 Use `npm ci` from the committed lockfile. Node 24.21.0 (.nvmrc) and Python 3 form the reference
 build; pin dependency changes in the lockfile and review them separately.
 
+Run `npm run test:stability` for the short essential-surface gate after building.
+It exercises both generated engines against synthetic video, comments, live/replay
+chat and navigation, including native chat API identity. Use an installed
+Playwright Chromium or set YTAB_BROWSER_PATH. CI runs it before the UI matrix.
+This gate does not replace live YouTube confirmation or prove successful blocking.
+
 Run `npm run check`, `npm run lint:firefox`, then browser integration checks after
 core/adapter/popup changes. Run npm run test:browser:upstream for UI changes,
 including search, section visibility, focus, both themes and narrow layouts. `npm run package` regenerates and verifies all outputs.

@@ -185,35 +185,6 @@
       }
     },
     {
-      "id": 16,
-      "priority": 100,
-      "action": { "type": "block" },
-      "condition": {
-        "urlFilter": "||youtube.com/youtubei/v1/log_event",
-        "resourceTypes": ["xmlhttprequest"],
-        "requestMethods": ["post"]
-      }
-    },
-    {
-      "id": 17,
-      "priority": 100,
-      "action": { "type": "block" },
-      "condition": {
-        "urlFilter": "||youtube.com/youtubei/v1/att/log",
-        "resourceTypes": ["xmlhttprequest"],
-        "requestMethods": ["post"]
-      }
-    },
-    {
-      "id": 18,
-      "priority": 100,
-      "action": { "type": "block" },
-      "condition": {
-        "urlFilter": "||youtube.com/generate_204",
-        "resourceTypes": ["xmlhttprequest", "ping", "image"]
-      }
-    },
-    {
       "id": 19,
       "priority": 100,
       "action": { "type": "block" },

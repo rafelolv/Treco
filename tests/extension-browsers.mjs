@@ -59,6 +59,26 @@ ${mode === 'userscript' ? '<script src="/core.js"></script>' : ''}
 </script></body></html>`;
 const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
+    if (req.url === '/chat-data') {
+        res.setHeader('Content-Type', 'application/json'); res.end('{"message":"Live fixture message"}'); return;
+    }
+    if (req.url === '/live_chat') {
+        res.setHeader('Content-Type', 'text/html');
+        res.end(`<!doctype html><html><body><div id="messages"></div><script>
+            const data=JSON.parse('{"adPlacements":[1],"frameworkUpdates":{"keep":true}}');
+            let count=0;
+            const timer=setInterval(async () => {
+                const message=await (await fetch('/chat-data')).json();
+                document.getElementById('messages').textContent+=message.message;
+                if (++count===2) {
+                    clearInterval(timer);
+                    const node=document.createElement('pre');node.id='fixture-result';
+                    node.textContent=JSON.stringify({mode:'chat',unpruned:!!data.adPlacements,frameworkKept:!!data.frameworkUpdates,panelAbsent:!document.querySelector('.ytab-panel'),received:count});
+                    document.body.append(node);
+                }
+            },100);
+        </script></body></html>`); return;
+    }
     if (req.url.startsWith('/report')) {
         let body = ''; for await (const chunk of req) body += chunk;
         const report = JSON.parse(body); reports.set(report.browser + ':' + report.mode, report);
@@ -86,7 +106,7 @@ async function prepare(browser) {
     const manifest = JSON.parse(await fs.readFile(`${dir}/manifest.json`, 'utf8'));
     for (const item of manifest.content_scripts) {
         item.matches = ['http://127.0.0.1/*'];
-        item.exclude_matches = ['http://127.0.0.1/userscript*'];
+        item.exclude_matches = ['http://127.0.0.1/userscript*', 'http://127.0.0.1/live_chat*'];
     }
     manifest.host_permissions = ['http://127.0.0.1/*'];
     manifest.content_scripts.push({ matches: ['http://127.0.0.1/*'], js: ['test-probe.js'], run_at: 'document_idle' });
@@ -106,6 +126,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
 });
 chrome.tabs.create({url:${JSON.stringify(origin + '/extension')}});
 chrome.tabs.create({url:${JSON.stringify(origin + '/userscript')}});
+chrome.tabs.create({url:${JSON.stringify(origin + '/live_chat')}});
 `);
     await fs.writeFile(`${dir}/test-probe.js`, `
 (async () => {
@@ -183,6 +204,8 @@ try {
     const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
     await waitFor(() => reports.get('chromium:extension'), 'Chromium extension report');
     await waitFor(() => reports.get('chromium:userscript'), 'Chromium userscript report');
+    const chromiumChat = await waitFor(() => reports.get('chromium:chat'), 'Chromium excluded chat report');
+    assert.deepEqual([chromiumChat.unpruned, chromiumChat.frameworkKept, chromiumChat.panelAbsent, chromiumChat.received], [true,true,true,2]);
     check(reports.get('chromium:extension'), 'extension'); check(reports.get('chromium:userscript'), 'userscript');
     const popup = await context.newPage();
     await popup.goto(worker.url().replace(/[^/]+$/, 'popup.html'));
@@ -213,6 +236,8 @@ try {
     await remote.installTemporaryAddon(firefoxDir, false);
     await waitFor(() => reports.get('firefox:extension'), 'Firefox extension report');
     await waitFor(() => reports.get('firefox:userscript'), 'Firefox userscript report');
+    const firefoxChat = await waitFor(() => reports.get('firefox:chat'), 'Firefox excluded chat report');
+    assert.deepEqual([firefoxChat.unpruned, firefoxChat.frameworkKept, firefoxChat.panelAbsent, firefoxChat.received], [true,true,true,2]);
     check(reports.get('firefox:extension'), 'extension'); check(reports.get('firefox:userscript'), 'userscript');
     console.log(`PASS ${execFileSync(firefoxPath,['--version']).toString().trim()}: temporary add-on via Firefox RDP, page interception, duplicate claim, userscript fixture, cross-world runtime status, redesigned panel bounds/theme.`);
     console.log('LIMIT: loopback fixtures and simulated manager APIs; no real YouTube playback, manager installation, store signing or cross-device sync validation.');

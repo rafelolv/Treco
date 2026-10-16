@@ -21,6 +21,8 @@
 (function () {
     'use strict';
 
+    if (typeof location !== 'undefined' && /^\/live_chat(?:_replay)?(?:\/|$)/.test(location.pathname)) return;
+
     function bridgeEvent(type, options = {}) {
         return new CustomEvent(type, options.detail === undefined ? options : {
             ...options, detail: JSON.stringify(options.detail)

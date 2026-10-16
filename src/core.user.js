@@ -13,6 +13,7 @@
 // @match        https://www.youtube-nocookie.com/*
 // @match        https://youtubekids.com/*
 // @match        https://www.youtubekids.com/*
+// @exclude      https://*.youtube.com/live_chat*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
@@ -58,6 +59,17 @@
  */
 (function() {
     'use strict';
+
+    // Chat documents must keep their own APIs, timers, storage and DOM untouched.
+    function isChatSurfaceUrl(value) {
+        if (!value) return false;
+        try {
+            const url = new URL(value, location.href);
+            return /(^|\.)youtube\.com$/.test(url.hostname) &&
+                /^\/(?:live_chat(?:_replay)?(?:\/|$)|youtubei\/v1\/live_chat\/)/.test(url.pathname);
+        } catch (e) { return false; }
+    }
+    if (typeof location !== 'undefined' && isChatSurfaceUrl(location.href)) return;
 
     // One document-wide claim works across page and userscript worlds. No shared globals
     // or storage keys change; a second distribution exits before installing adapters.
@@ -844,8 +856,6 @@
             'adBreakHeartbeatParams',
             'responseContext.adSignalsInfo',
             'playerResponse.adBreakHeartbeatParams',
-            'playerResponse.auxiliaryUi.messageRenderers.upsellDialogRenderer',
-            'auxiliaryUi.messageRenderers.upsellDialogRenderer',
             // v0.4.0: wider renderer coverage. YT ships promoted content
             // through a dozen distinct renderer names; pruning each of
             // them at the payload layer is cheaper and more reliable
@@ -854,22 +864,17 @@
             'promotedVideoRenderer',
             'compactPromotedVideoRenderer',
             'compactPromotedItemRenderer',
-            'backgroundPromoRenderer',
-            'statementBannerRenderer',
             'brandVideoShelfRenderer',
             'brandVideoSingletonRenderer',
             'inlineAdLayoutRenderer',
             'adSlotRenderer',
             'linkedInstreamAdRenderer',
-            'shoppingCarouselRenderer',
-            'merchandiseShelfRenderer'
         ],
         setUndefined: [
             'ytInitialPlayerResponse.playerAds',
             'ytInitialPlayerResponse.adPlacements',
             'ytInitialPlayerResponse.adSlots',
             'ytInitialPlayerResponse.adBreakHeartbeatParams',
-            'ytInitialPlayerResponse.auxiliaryUi.messageRenderers.upsellDialogRenderer',
             'playerResponse.adPlacements'
         ],
         replaceKeys: { adPlacements: 'no_ads', adSlots: 'no_ads', playerAds: 'no_ads' },
@@ -1833,6 +1838,26 @@
         return true;
     }
 
+    // Review new structural removal targets in source, independently of signed
+    // filter delivery. Generic page/entity containers are never deletion targets.
+    const AD_DATA_KEYS = new Set([
+        'adPlacements', 'adSlots', 'playerAds', 'adBreakHeartbeatParams', 'adSignalsInfo',
+        'promotedSparklesWebRenderer', 'promotedVideoRenderer', 'compactPromotedVideoRenderer',
+        'compactPromotedItemRenderer', 'brandVideoShelfRenderer', 'brandVideoSingletonRenderer',
+        'inlineAdLayoutRenderer', 'adSlotRenderer', 'linkedInstreamAdRenderer'
+    ]);
+    function isAdDataPath(path) {
+        if (typeof path !== 'string' || !SAFE_DOTTED_PATH_RE.test(path)) return false;
+        const parts = path.split('.');
+        return AD_DATA_KEYS.has(parts.at(-1)) &&
+            !parts.some(part => ['__proto__', 'prototype', 'constructor'].includes(part));
+    }
+
+    function isAdPropertyPath(path) {
+        return isAdDataPath(path) &&
+            ['ytInitialData', 'ytInitialPlayerResponse', 'playerResponse'].includes(path.split('.')[0]);
+    }
+
     function sanitizeDottedPathList(values, maxCount) {
         const clean = [];
         if (!Array.isArray(values)) return clean;
@@ -1842,7 +1867,7 @@
             const normalized = value.replace(/\[-\]\./g, '').trim();
             if (!normalized || !SAFE_DOTTED_PATH_RE.test(normalized)) continue;
             if (['important', 'legacyImportant', 'no_ads'].includes(normalized)) continue;
-            if (normalized.split('.').at(-1) === 'frameworkUpdates') continue;
+            if (!isAdDataPath(normalized)) continue;
             clean.push(normalized);
         }
         return [...new Set(clean)];
@@ -1876,8 +1901,8 @@
         const clean = {};
         if (!value || typeof value !== 'object') return clean;
         for (const [key, replacement] of Object.entries(value)) {
-            if (!SAFE_PLAIN_KEY_RE.test(String(key || ''))) continue;
-            if (typeof replacement !== 'string' || !replacement.trim()) continue;
+            if (!AD_DATA_KEYS.has(key)) continue;
+            if (replacement !== 'no_ads') continue;
             clean[key] = replacement.trim();
         }
         return clean;
@@ -1935,8 +1960,7 @@
         if (parts.length < 2) return false;
         const sourceKey = unwrapScriptletLiteral(parts[0]);
         const replacement = unwrapScriptletLiteral(parts[1]);
-        if (!SAFE_PLAIN_KEY_RE.test(sourceKey)) return false;
-        if (!SAFE_PLAIN_KEY_RE.test(replacement)) return false;
+        if (!AD_DATA_KEYS.has(sourceKey) || replacement !== 'no_ads') return false;
         replaceKeys[sourceKey] = replacement;
         return true;
     }
@@ -1985,7 +2009,7 @@
         if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
 
         const pruneKeys = sanitizeDottedPathList(value.pruneKeys, FILTER_MAX_PRUNE_KEYS);
-        const setUndefined = sanitizeDottedPathList(value.setUndefined, FILTER_MAX_SET_UNDEFINED);
+        const setUndefined = sanitizeDottedPathList(value.setUndefined, FILTER_MAX_SET_UNDEFINED).filter(isAdPropertyPath);
         const cosmeticSelectors = sanitizeSelectorList(value.cosmeticSelectors, FILTER_MAX_COSMETIC_SELECTORS);
         const upsellSelectors = sanitizeSelectorList(value.upsellSelectors, FILTER_MAX_UPSELL_SELECTORS);
         const interceptPatterns = sanitizeInterceptPatterns(value.interceptPatterns);
@@ -2079,7 +2103,7 @@
                         const path = parts[0];
                         // Only accept identifier.path syntax — reject anything with
                         // brackets, spaces, or characters that suggest code smuggling.
-                        if (SAFE_DOTTED_PATH_RE.test(path)) {
+                        if (isAdPropertyPath(path)) {
                             setUndefined.add(path);
                         }
                     }
@@ -2119,7 +2143,7 @@
                         // Same identifier discipline — refuse anything that looks
                         // like it could be used as a key-path injection vector.
                         if (!clean || ['important', 'legacyImportant', 'no_ads'].includes(clean)) continue;
-                        if (!SAFE_DOTTED_PATH_RE.test(clean)) continue;
+                        if (!isAdDataPath(clean)) continue;
                         pruneKeys.add(clean);
                     }
                 }
@@ -2644,10 +2668,10 @@
      * ===================================================================== */
 
     function deleteNestedKey(obj, path) {
-        const keys = path.split('.');
         // Generic entity updates carry comment text and other non-ad UI state.
         // Preserve them even when older cached rules request broad removal.
-        if (keys.at(-1) === 'frameworkUpdates') return false;
+        if (!isAdDataPath(path)) return false;
+        const keys = path.split('.');
         let current = obj;
         for (let i = 0; i < keys.length - 1; i++) {
             if (current == null || typeof current !== 'object') return false;
@@ -2810,6 +2834,8 @@
 
     function pruneObject(obj, context) {
         if (!obj || typeof obj !== 'object') return false;
+        if (isChatSurfaceUrl(typeof context === 'string' ? context : context?.url) ||
+            obj.continuationContents?.liveChatContinuation || obj.liveChatContinuation) return false;
         recordServerStitchedAdSignal(obj, context);
         recordSabrOnlyStreaming(obj, context);
         if (state.features.adAllowlist && obj.videoDetails && (obj.videoDetails.author || obj.videoDetails.channelId)) {
@@ -2863,7 +2889,7 @@
     let interceptPatternSource = null;
 
     function matchesInterceptPattern(url) {
-        if (!url) return false;
+        if (!url || isChatSurfaceUrl(url)) return false;
         const patterns = state.filters?.interceptPatterns || DEFAULT_FILTERS.interceptPatterns;
         // Compile to a single RegExp once per patterns-array identity. The
         // fetch/XHR proxies call this on every request; replacing N repeated
@@ -2888,8 +2914,8 @@
         const rk = state.filters?.replaceKeys || DEFAULT_FILTERS.replaceKeys;
         if (replaceAdKeysSource === rk && replaceAdKeysCache) return replaceAdKeysCache;
         replaceAdKeysSource = rk;
-        replaceAdKeysCache = Object.entries(rk).map(([key, replacement]) => [
-            new RegExp(`"${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`, 'g'),
+        replaceAdKeysCache = Object.entries(sanitizeReplaceKeys(rk)).map(([key, replacement]) => [
+            new RegExp(`"${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"(?=\\s*:)`, 'g'),
             `"${replacement}"`
         ]);
         return replaceAdKeysCache;
@@ -3516,7 +3542,7 @@
         for (const path of paths) {
             if (typeof path !== 'string' || !path.includes('.')) continue;
             const parts = path.split('.');
-            if (parts.at(-1) === 'frameworkUpdates') continue;
+            if (!isAdPropertyPath(path)) continue;
             const root = parts[0];
             if (!byRoot.has(root)) byRoot.set(root, []);
             byRoot.get(root).push(parts.slice(1));
@@ -3528,7 +3554,7 @@
         if (!target || typeof target !== 'object') return false;
         let prunedHere = false;
         for (const subPath of subPaths) {
-            if (subPath.at(-1) === 'frameworkUpdates') continue;
+            if (!isAdDataPath(subPath.join('.'))) continue;
             let cursor = target;
             for (let i = 0; i < subPath.length - 1; i++) {
                 if (cursor && typeof cursor === 'object' && subPath[i] in cursor) {
@@ -3660,6 +3686,7 @@
     function bridgeIframeWindow(frame) {
         try {
             if (frameCrossOriginCache.get(frame) === true) return;
+            if (isChatSurfaceUrl(frame.getAttribute?.('src') || frame.src)) return;
             const cw = frame.contentWindow;
             if (!cw) return;
             // Idempotency short-circuit (cheap boolean check on same-origin
@@ -3679,6 +3706,7 @@
                 frameCrossOriginCache.set(frame, true);
                 return;
             }
+            if (isChatSurfaceUrl(cw.location?.href)) return;
             // Only bridge the APIs YT's ad-enforcement scripts have been
             // observed lifting (fetch, Request/Response, XHR, JSON.parse).
             // Promise/setTimeout are intentionally NOT bridged — legitimate

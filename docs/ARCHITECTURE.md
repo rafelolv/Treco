@@ -6,6 +6,20 @@ through `build/compile-ui.mjs`, and generates the root userscript. The engine in
 installs bounded DOM/playback fallbacks, and renders the existing Control Center.
 It preserves consent, compliance-dialog exceptions and data-integrity checks.
 
+Structural pruning uses an explicit source-reviewed ad-field allowlist at both
+parsing and execution boundaries, including old cached rules. Generic containers,
+player state and comment entities cannot be deletion/replacement targets.
+Property traps are limited to known initial player/data roots and approved ad
+leaves. Key replacement only recognizes JSON property names, preserving identical
+string values. User-selected blocklists and cosmetic preferences remain separate.
+
+Live and replay chat exit before the duplicate claim or extension adapters are
+installed. Userscript metadata and extension content-script exclusions reinforce
+this guard. Parent-page frame bridging refuses chat targets both before loading
+and after navigation; chat continuations bypass response pruning as well.
+Static extension network rules retain ad targets while leaving mixed-purpose
+log_event, att/log and generate_204 endpoints alone.
+
 Extension generation strips only userscript metadata and inserts the inherited
 GM adapters and command hooks from `src/extension/`. Both packages receive an
 identical generated `main.js`; packaging never maintains a second engine.

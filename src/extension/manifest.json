@@ -53,7 +53,10 @@
       ],
       "run_at": "document_start",
       "all_frames": false,
-      "world": "MAIN"
+      "world": "MAIN",
+      "exclude_matches": [
+        "https://*.youtube.com/live_chat*"
+      ]
     },
     {
       "matches": [
@@ -66,7 +69,10 @@
         "bridge.js"
       ],
       "run_at": "document_start",
-      "all_frames": false
+      "all_frames": false,
+      "exclude_matches": [
+        "https://*.youtube.com/live_chat*"
+      ]
     }
   ],
   "declarative_net_request": {

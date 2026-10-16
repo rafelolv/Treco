@@ -141,6 +141,8 @@ function createTestHarness(options = {}) {
     // export block right before the closing `})();` of the IIFE.
     const exportBlock = `
     ;(typeof __ytab_test_export !== 'undefined') && __ytab_test_export({
+        isAdDataPath,
+        bridgeIframeWindow,
         deleteNestedKey,
         rebuildTrapPathsByRoot,
         applySubPathPrunes,
@@ -401,12 +403,13 @@ test('sanitizeFilterPayload rejects non-objects', () => {
 
 test('sanitizeFilterPayload merges with defaults', () => {
     const result = harness.sanitizeFilterPayload({
-        pruneKeys: ['customAdKey'],
+        pruneKeys: ['customAdKey', 'custom.adPlacements'],
         cosmeticSelectors: ['.my-ad-class'],
     });
     assert.ok(result);
     assert.ok(result.pruneKeys.includes('adPlacements'));
-    assert.ok(result.pruneKeys.includes('customAdKey'));
+    assert.ok(!result.pruneKeys.includes('customAdKey'));
+    assert.ok(result.pruneKeys.includes('custom.adPlacements'));
     assert.ok(result.cosmeticSelectors.includes('.my-ad-class'));
     assert.ok(result.cosmeticSelectors.includes('#masthead-ad'));
 });
@@ -440,16 +443,16 @@ test('parseUBOFilterList extracts cosmetic selectors', () => {
 });
 
 test('parseUBOFilterList extracts json-prune keys', () => {
-    const text = 'youtube.com##+js(json-prune, myAdKey otherKey)\n';
+    const text = 'youtube.com##+js(json-prune, myAdKey playerResponse.adSlots)\n';
     const result = harness.parseUBOFilterList(text);
-    assert.ok(result.pruneKeys.includes('myAdKey'));
-    assert.ok(result.pruneKeys.includes('otherKey'));
+    assert.ok(!result.pruneKeys.includes('myAdKey'));
+    assert.ok(result.pruneKeys.includes('playerResponse.adSlots'));
 });
 
 test('parseUBOFilterList extracts set-undefined paths', () => {
-    const text = 'youtube.com##+js(set, myProperty.adField, undefined)\n';
+    const text = 'youtube.com##+js(set, ytInitialData.adPlacements, undefined)\n';
     const result = harness.parseUBOFilterList(text);
-    assert.ok(result.setUndefined.includes('myProperty.adField'));
+    assert.ok(result.setUndefined.includes('ytInitialData.adPlacements'));
 });
 
 test('parseUBOFilterList skips :style() rules', () => {
@@ -487,11 +490,11 @@ test('parseUBOFilterList rejects selectors with CSS injection chars', () => {
 
 test('parseUBOFilterList rejects json-prune keys with unsafe characters', () => {
     const text = [
-        'youtube.com##+js(json-prune, safe.key)',
+        'youtube.com##+js(json-prune, safe.adSlots)',
         'youtube.com##+js(json-prune, inject[0].bad)',
     ].join('\n');
     const result = harness.parseUBOFilterList(text);
-    assert.ok(result.pruneKeys.includes('safe.key'));
+    assert.ok(result.pruneKeys.includes('safe.adSlots'));
     assert.ok(!result.pruneKeys.includes('inject[0].bad'));
 });
 
@@ -2332,4 +2335,45 @@ test('cached broad rules cannot erase framework updates or comment entity mutati
     assert.equal(h.state.trapPathsByRoot.has('ytInitialData'), false);
     assert.equal(h.applySubPathPrunes(obj, [['frameworkUpdates']]), false);
     assert.ok(obj.frameworkUpdates);
+});
+
+
+test('structural rules can only mutate reviewed ad fields, including cached rules', () => {
+    const h = createTestHarness();
+    const generic = ['contents', 'actions', 'frameworkUpdates', 'entityBatchUpdate', 'mutations', 'commentEntityPayload', 'videoDetails', 'streamingData', 'playabilityStatus', 'responseContext', 'statementBannerRenderer', 'upsellDialogRenderer'];
+    h.state.filters = {pruneKeys:[...generic, 'adPlacements'], setUndefined:[...generic.map(key => `ytInitialData.${key}`), 'document.adSlots'], replaceKeys:Object.fromEntries([...generic, 'adSlots'].map(key => [key,'no_ads']))};
+    const payload = Object.fromEntries(generic.map(key => [key,{keep:true}])); payload.adPlacements=[];
+    h.pruneObject(payload);
+    for (const key of generic) assert.deepEqual(payload[key], {keep:true}, key);
+    assert.equal('adPlacements' in payload,false);
+    h.rebuildTrapPathsByRoot();
+    assert.equal(h.state.trapPathsByRoot.size,0);
+    const text = h.replaceAdKeys(JSON.stringify({adSlots:[],content:'adSlots',videoDetails:{title:'Keep'},frameworkUpdates:{keep:true}}));
+    const rewritten = JSON.parse(text);
+    assert.ok(rewritten.no_ads);
+    assert.equal(rewritten.content,'adSlots');
+    assert.equal(rewritten.videoDetails.title,'Keep');
+    assert.ok(rewritten.frameworkUpdates.keep);
+    assert.equal(h.isAdDataPath('__proto__.adSlots'),false);
+});
+
+test('chat continuations bypass structural pruning even when they contain ad-like keys', () => {
+    const h=createTestHarness();
+    const obj={continuationContents:{liveChatContinuation:{actions:[{message:'Keep'}]}},adPlacements:[1]};
+    assert.equal(h.pruneObject(obj),false);
+    assert.deepEqual(obj.adPlacements,[1]);
+    assert.equal(h.matchesInterceptPattern('https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?next=1'),false);
+});
+
+test('iframe bridging never assigns APIs to live or replay chat frames', () => {
+    const h=createTestHarness();
+    for (const pathname of ['/live_chat','/live_chat_replay']) {
+        const nativeFetch=()=>{};
+        const cw={fetch:nativeFetch,JSON:{parse:JSON.parse},document:{},location:{href:`https://www.youtube.com${pathname}`}};
+        h.bridgeIframeWindow({src:`https://www.youtube.com${pathname}`,contentWindow:cw});
+        assert.equal(cw.fetch,nativeFetch);
+        assert.equal(cw.__ytabBridged__,undefined);
+        h.bridgeIframeWindow({src:'about:blank',contentWindow:cw});
+        assert.equal(cw.fetch,nativeFetch);
+    }
 });

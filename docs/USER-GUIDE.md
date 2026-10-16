@@ -13,6 +13,9 @@ If the install link opens plain text:
 3. Replace the example code with the complete copied file, including the metadata at the top, and save.
 4. Keep Zynubo enabled and reload YouTube.
 
+Live and replay chat are excluded from the page engine. The Zynubo button stays
+in the main page header; chat messages use their own native page APIs.
+
 ## Open settings
 
 Click **Zynubo** in the top-right YouTube header. The button stays in the main page header; it does not float over videos or appear inside live chat. If the header is unavailable, use Alt+Shift+Z or the menu below. The button opens the same Control Center in both installations.

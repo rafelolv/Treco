@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0 — Unreleased
+
+- Restrict structural filtering to reviewed ad fields and preserve generic page, player and comment data, including cached rules.
+- Rewrite only ad property names, preserving matching words in comment text.
+- Leave live and replay chat documents, continuations and frame APIs outside the page engine.
+- Stop extension blocking of mixed-purpose telemetry endpoints.
+- Add a short stability check for synthetic video playback, readable comments, chat updates and navigation.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.3.2 — 2026-10-16
 
 - Preserve YouTube framework entity updates so comment text is not discarded alongside ad data.

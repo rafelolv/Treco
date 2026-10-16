@@ -36,3 +36,24 @@ test('popup reports unresponsive, paused, degraded and userscript ownership hone
     assert.match(user.status.textContent, /Userscript controls/);
     assert.equal(user.open.disabled, true);
 });
+
+test('chat builds exit before claiming the document or installing adapters', () => {
+    for (const code of [script, extension]) {
+        for (const pathname of ['/live_chat', '/live_chat_replay']) {
+            let touched=0;
+            vm.runInNewContext(prefix(code).replace('\n})();','\ninstall();\n})();'), {
+                URL, location:{href:`https://www.youtube.com${pathname}`,pathname},
+                document:{dispatchEvent(){touched++;return true;},addEventListener(){touched++;}},
+                install(){touched++;}
+            });
+            assert.equal(touched,0);
+        }
+    }
+});
+
+test('extension declarations exclude chat and avoid mixed-purpose telemetry blocks', () => {
+    const manifest=JSON.parse(fs.readFileSync('src/extension/manifest.json'));
+    for (const item of manifest.content_scripts) assert(item.exclude_matches.includes('https://*.youtube.com/live_chat*'));
+    const rules=JSON.parse(fs.readFileSync('src/extension/network-rules.json')).dnrRules;
+    for (const rule of rules) assert(!/log_event|\/att\/|generate_204|live_chat/.test(rule.condition.urlFilter || rule.condition.regexFilter || ''));
+});

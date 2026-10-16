@@ -823,7 +823,8 @@ test('page launcher opens settings and survives delayed mastheads and navigation
                     chat.id = 'live-chat-frame'; document.body.append(chat);
                 });
                 const chat = page.frameLocator('#live-chat-frame');
-                await chat.locator('.ytab-panel').waitFor({state:'attached'});
+                await chat.locator('ytd-masthead').waitFor({state:'attached'});
+                assert.equal(await chat.locator('.ytab-panel').count(), 0, 'Chat has no page engine');
                 assert.equal(await chat.locator('#ytab-launcher').count(), 0, 'No launcher inside live chat');
                 await page.evaluate(() => {
                     const child = document.createElement('iframe'); child.src = '/watch?v=child';
@@ -834,7 +835,8 @@ test('page launcher opens settings and survives delayed mastheads and navigation
                 assert.equal(await child.locator('#ytab-launcher').count(), 0, 'Child frames must not receive the main-page button');
                 for (const path of ['/live_chat', '/live_chat_replay', '/embed/fixture']) {
                     await page.goto(`https://www.youtube.com${path}`);
-                    await page.waitForSelector('.ytab-panel', {state:'attached'});
+                    await page.waitForSelector('ytd-masthead', {state:'attached'});
+                    if (path.startsWith('/live_chat')) assert.equal(await page.locator('.ytab-panel').count(), 0, 'Chat has no page engine');
                     assert.equal(await page.locator('#ytab-launcher').count(), 0, `No launcher on ${path}`);
                 }
             } finally { await context.close(); }

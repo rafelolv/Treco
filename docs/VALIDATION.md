@@ -234,3 +234,37 @@ cached after a force push; their refresh is separate from verifying branch ances
 - No live comments, real YouTube playback or actual Violentmonkey profile was
   validated locally. This fix preserves missing entity data; the exact symptom
   in the user's browser still needs confirmation after updating and reloading.
+
+## 1.4.0 structural safety and chat isolation — 2026-10-16
+
+- Structural pruning, parsed scriptlets, cached-rule execution and key
+  replacement now accept only reviewed ad fields. Generic framework, content,
+  player and comment containers remain intact. Property traps accept only
+  approved initial player/data roots. Literal comment text matching an ad
+  field name remains unchanged. Signed data files are byte-identical.
+- Chat documents exit before the duplicate claim, adapters, DOM hooks, timers
+  or storage setup. Userscript and extension declarations exclude chat as an
+  additional layer. Parent iframe bridging checks both the intended source
+  and current document, and chat continuations bypass response pruning.
+- Removed static extension rules for mixed-purpose log_event, att/log and
+  generate_204 endpoints. No host grants or API permissions were added.
+- npm run package passed 228 unit/contract cases, version/parity/license checks
+  and reproducible builds. New regressions cover rejected generic targets,
+  cached rules, text preservation, chat continuations, parent API bridging,
+  early chat exits in both builds and extension declarations/bridge exclusions.
+- npm run test:stability passed in userscript and generated extension modes on
+  Chromium for Testing 149.0.7827.55 and Brave Origin Nightly 154.1.98.28. Each
+  run took about 3 seconds. It verifies actual advancing synthetic media,
+  initial/fetched comment rendering while ad fields are removed, live messages,
+  native chat API identity, live/replay isolation and SPA/full navigation.
+- The full Chromium UI matrix passed 28 scenarios (33 including parent groups).
+  Existing header tests now expect no engine inside live/replay chat documents.
+- Temporary installation checks passed on Chromium 149.0.7827.55 and Firefox
+  157.0. Their excluded chat fixture retains its parsed data, receives two
+  network messages and mounts no panel. Production executable files remain
+  byte-identical; loopback-only test manifests model the chat exclusions.
+- Firefox lint reported zero errors, notices or warnings. Both CI workflows now
+  run the short stability gate before the existing full UI matrix.
+- Evidence is synthetic, including the video stream and incoming chat messages.
+  Actual Violentmonkey installation and live YouTube playback/comments/chat
+  were not validated. No new release tag or store submission was authorized.
