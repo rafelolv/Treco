@@ -376,3 +376,12 @@ cached after a force push; their refresh is separate from verifying branch ances
   Actual Violentmonkey installation, live YouTube playback at 10× and high-speed
   audio/video quality were not verified. No new release tag or store submission
   was created; existing published ZIP links remain separate from main updates.
+
+## 1.7.0 release preparation — 2026-10-16
+
+The maintainer authorized the GitHub release. README and extension-guide ZIP
+links now target v1.7.0; cumulative notes include the changes since v1.3.2.
+Release preparation repeats local packaging, Firefox lint and temporary extension
+integration. The existing 1.7.0 UI/stability evidence and live-check limitations
+above still apply. The tag-triggered workflow repeats validation before publishing
+and verifies downloaded assets; no store submission is authorized.

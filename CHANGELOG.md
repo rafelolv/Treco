@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.7.0 — Unreleased
+## 1.7.0 — 2026-10-16
 
 - Set the current video to 0.25×–10× from Video tools, with a one-click reset to normal speed.
 - Keep manual speed changes away from ads and live streams without forcing a rate on later videos.

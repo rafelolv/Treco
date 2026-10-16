@@ -4,8 +4,8 @@
   <p>Block ads, skip sponsors and make YouTube your own.</p>
   <p>
     <a href="https://raw.githubusercontent.com/rafelolv/Zynubo/main/Zynubo.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install Zynubo userscript"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.3.2/Zynubo-chromium-v1.3.2.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Zynubo extension for Chrome, Brave and Edge"></a>
-    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.3.2/Zynubo-firefox-v1.3.2.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Zynubo temporary Firefox extension"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.7.0/Zynubo-chromium-v1.7.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Zynubo extension for Chrome, Brave and Edge"></a>
+    <a href="https://github.com/rafelolv/Zynubo/releases/download/v1.7.0/Zynubo-firefox-v1.7.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Zynubo temporary Firefox extension"></a>
   </p>
   <p><a href="#install">Installation</a> · <a href="#use-zynubo">How to use</a> · <a href="#need-help">Get help</a></p>
 </div>
