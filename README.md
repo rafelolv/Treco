@@ -41,7 +41,9 @@ Zynubo has no browser-store listing or signed XPI yet. Follow the guide to extra
 
 1. Click **Zynubo** at the top right of YouTube to open the Control Center. If the page has no supported header, the button appears at the bottom right. The userscript menu and extension toolbar also work.
 2. Use **Overview** to check the page engine and counters. Choose a settings section or search with **Find a setting**.
-3. Turn on the options you want. Changes save automatically.
+3. Turn on the options you want. Star frequently used settings to keep them in Overview. Changes save automatically.
+
+**Alt+Shift+Z** opens or closes the interface outside text fields. Hover the page button to check whether the page engine is enabled, paused or needs attention.
 
 SponsorBlock, DeArrow and Return YouTube Dislike ask for permission before contacting their services. DeArrow is available only in the userscript. [Privacy details](docs/PRIVACY.md).
 

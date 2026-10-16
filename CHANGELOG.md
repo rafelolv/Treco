@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 — Unreleased
+
+- Open or close the Control Center with Alt+Shift+Z outside text fields.
+- Show the page engine's enabled, paused or attention state on the Zynubo button.
+- Star settings to keep their switches together in Overview without changing their enabled state.
+
+Validation and limitations are recorded in docs/VALIDATION.md.
+
 ## 1.2.0 — Unreleased
 
 - Open the Control Center from a visible Zynubo button in the YouTube header, with a bottom-right fallback on other page layouts.

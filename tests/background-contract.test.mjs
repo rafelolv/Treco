@@ -814,3 +814,14 @@ test('a corrupted chunk is rejected by the checksum even when the length matches
     assert.equal(JSON.parse(JSON.stringify(response.value)).ytab_enabled, true,
         'a checksum mismatch must leave local settings untouched');
 });
+
+test('favorite preferences persist as bounded local boolean maps', async () => {
+    const env = createBackgroundEnv();
+    const response = await env.sendSettingsMessage({type:'ytab:settings-write',value:{
+        ytab_favorite_features: {fetchIntercept:true, cosmeticHiding:'invalid'}
+    }}, trustedSender);
+    assert.equal(response.ok, true);
+    assert.deepEqual(JSON.parse(JSON.stringify(env.localStore[SETTINGS_KEY].ytab_favorite_features)), {fetchIntercept:true});
+    await env.flush();
+    assert.equal(readSyncedValue(env)?.ytab_favorite_features, undefined);
+});

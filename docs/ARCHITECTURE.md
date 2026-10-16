@@ -24,6 +24,14 @@ a fixed bottom-right fallback elsewhere, except embedded players. A tracked
 replaced headers without observing the entire DOM. Shared theme tokens and the
 canonical logo style the launcher; floating notifications leave room above it.
 
+Alt+Shift+Z toggles the panel outside text fields and editable comments. The
+launcher dot reports page-engine enablement, pause or refresh/engine warnings;
+it does not attest that ads were blocked. Favorites use a validated local
+`ytab_favorite_features` boolean map. Known feature switches appear in Overview
+with separate DOM IDs and the same consent/extension restrictions. Starring
+never changes a feature override. This UI preference is intentionally excluded
+from portable exports and cross-device sync.
+
 The Control Center displays one selected section at a time; search deliberately
 shows all matching sections. Hidden sections retain their controls and state for
 updates but are excluded from the keyboard focus trap. Option rebuilds preserve

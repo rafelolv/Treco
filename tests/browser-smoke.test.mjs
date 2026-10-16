@@ -823,3 +823,76 @@ test('page launcher opens settings and survives delayed mastheads and navigation
         });
     }
 });
+
+test('shortcut, launcher status and favorite switches share the existing settings', { skip: !browserPath }, async t => {
+    const browser = await chromium.launch({ executablePath: browserPath, headless: true });
+    t.after(() => browser.close());
+    for (const mode of ['userscript', 'extension']) {
+        await t.test(mode, async () => {
+            const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+            try {
+                await installRoutes(context);
+                const page = await context.newPage();
+                if (mode === 'userscript') await installUserscriptMode(page);
+                else await installExtensionMode(page);
+                await page.goto('https://www.youtube.com/watch?v=quick-controls');
+                const launcher = page.locator('#ytab-launcher');
+                await launcher.waitFor();
+                await page.keyboard.press('Alt+Shift+KeyZ');
+                await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
+                await page.locator('[data-section-id="ytab-section-core"]').click();
+                const star = page.locator('#ytab-star-fetchIntercept');
+                const initialFeature = await page.locator('#ytab-toggle-fetchIntercept').isChecked();
+                await star.click();
+                assert.equal(await star.getAttribute('aria-pressed'), 'true');
+                assert.equal(await page.locator('#ytab-toggle-fetchIntercept').isChecked(), initialFeature, 'Favoriting must not toggle protection');
+                assert.equal(await star.evaluate(el => el === document.activeElement), true);
+                await page.locator('[data-section-id="ytab-section-overview"]').click();
+                const favorite = page.locator('#ytab-favorite-toggle-fetchIntercept');
+                assert.equal(await favorite.isChecked(), initialFeature);
+                await favorite.press('Space');
+                assert.equal(await favorite.isChecked(), !initialFeature);
+                await page.locator('[data-section-id="ytab-section-core"]').click();
+                assert.equal(await page.locator('#ytab-toggle-fetchIntercept').isChecked(), !initialFeature);
+                await page.locator('#ytab-toggle-fetchIntercept').press('Space');
+                await page.locator('[data-section-id="ytab-section-overview"]').click();
+                await page.locator('#ytab-master-toggle').press('Space');
+                await page.waitForFunction(() => document.getElementById('ytab-launcher').dataset.status === 'paused');
+                assert.match(await launcher.getAttribute('title'), /paused/);
+                await page.locator('#ytab-master-toggle').press('Space');
+                await page.waitForFunction(() => document.getElementById('ytab-launcher').dataset.status !== 'paused');
+                await page.keyboard.press('Escape');
+                await page.keyboard.press('Alt+Shift+KeyZ');
+                await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
+                assert.equal(await favorite.isChecked(), initialFeature, 'Favorites survive panel reopening');
+                await page.setViewportSize({ width: 320, height: 568 });
+                await assertPanelLayout(page, 320, 568);
+                const overflow = await page.locator('.ytab-favorites .ytab-row').evaluateAll(rows => rows.map(row => row.scrollWidth - row.clientWidth));
+                assert(overflow.every(value => value <= 2), `Favorite row overflow: ${overflow}`);
+                await page.locator('#ytab-favorite-star-fetchIntercept').scrollIntoViewIfNeeded();
+                await fs.promises.mkdir(path.join(repoRoot, 'dist/ui-preview'), { recursive: true });
+                await page.screenshot({path: path.join(repoRoot, `dist/ui-preview/favorites-${mode}-mobile.png`)});
+                await page.locator('#ytab-favorite-star-fetchIntercept').click();
+                assert.equal(await favorite.count(), 0);
+                assert.equal(await page.locator('#ytab-master-toggle').evaluate(el => el === document.activeElement), true);
+                if (mode === 'extension') {
+                    await page.locator('[data-section-id="ytab-section-enhance"]').click();
+                    await page.locator('#ytab-star-dearrow').click();
+                    await page.locator('[data-section-id="ytab-section-overview"]').click();
+                    assert.equal(await page.locator('#ytab-favorite-toggle-dearrow').isDisabled(), true, 'Favorites must preserve extension feature restrictions');
+                }
+                await page.keyboard.press('Escape');
+                await page.evaluate(() => {
+                    const input = document.createElement('input'); input.id = 'fixture-writing'; document.body.append(input); input.focus();
+                });
+                await page.keyboard.press('Alt+Shift+KeyZ');
+                assert.equal(await page.locator('.ytab-overlay').isVisible(), false, 'Shortcut must not fire in a text input');
+                await page.evaluate(() => {
+                    const editor = document.createElement('div'); editor.contentEditable = 'true'; document.body.append(editor); editor.focus();
+                });
+                await page.keyboard.press('Alt+Shift+KeyZ');
+                assert.equal(await page.locator('.ytab-overlay').isVisible(), false, 'Shortcut must not fire in a comment editor');
+            } finally { await context.close(); }
+        });
+    }
+});

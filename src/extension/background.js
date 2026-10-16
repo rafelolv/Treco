@@ -190,6 +190,7 @@ function consentValue(value) {
 const SETTINGS_VALIDATORS = Object.freeze({
     ytab_enabled: booleanValue,
     ytab_welcomed: booleanValue,
+    ytab_favorite_features: (v) => boundedObject(v, 64, booleanValue),
     ytab_community_consent_notified: booleanValue,
     ytab_feature_overrides: (v) => boundedObject(v, MAX_SETTING_OBJECT_KEYS, booleanValue),
     ytab_stats: (v) => boundedObject(v, MAX_SETTING_OBJECT_KEYS,

@@ -18,8 +18,9 @@ const fixture = mode => `<!doctype html><html><head><meta charset="utf-8"><title
 <div class="ad-div" id="ordinary-ad">Advertisement</div>
 <div id="movie_player"><video class="html5-main-video"></video></div>
 <script>
-window.GM_getValue = (key, fallback) => fallback;
-window.GM_setValue = () => {};
+const fixtureStore = Object.create(null);
+window.GM_getValue = (key, fallback) => Object.hasOwn(fixtureStore, key) ? fixtureStore[key] : fallback;
+window.GM_setValue = (key, value) => { fixtureStore[key] = value; };
 window.GM_registerMenuCommand = () => null;
 window.GM_unregisterMenuCommand = () => {};
 window.GM_xmlhttpRequest = opts => opts.onerror?.(new Error('Fixture network disabled'));
@@ -44,6 +45,12 @@ ${mode === 'userscript' ? '<script src="/core.js"></script>' : ''}
         launcherVisible: !!document.getElementById('ytab-launcher')?.getClientRects().length };
     document.getElementById('ytab-launcher').click();
     payload.launcherOpensPanel = document.querySelector('.ytab-overlay').classList.contains('ytab-active');
+    document.getElementById('ytab-close-btn').click();
+    document.body.dispatchEvent(new KeyboardEvent('keydown', {code:'KeyZ',altKey:true,shiftKey:true,bubbles:true}));
+    payload.shortcutOpensPanel = document.querySelector('.ytab-overlay').classList.contains('ytab-active');
+    payload.launcherStatus = document.getElementById('ytab-launcher').dataset.status;
+    document.getElementById('ytab-star-fetchIntercept').click();
+    payload.favoriteAvailable = !!document.getElementById('ytab-favorite-toggle-fetchIntercept');
     document.getElementById('ytab-close-btn').click();
     // DOM fixture reports are deliberately unsigned test evidence, not product status.
     window.fixtureResult = payload;
@@ -145,6 +152,9 @@ function check(report, expected) {
     assert.equal(report.ordinaryAdHidden, true);
     assert.equal(report.launcherVisible, true);
     assert.equal(report.launcherOpensPanel, true);
+    assert.equal(report.shortcutOpensPanel, true);
+    assert.equal(report.launcherStatus, 'attention', 'Fixture refresh failure must remain visible');
+    assert.equal(report.favoriteAvailable, true);
     if (expected === 'extension') {
         assert.equal(report.runtimeStatus?.initialized, true, 'Isolated runtime status bridge');
         assert.equal(report.panelOpened, true);

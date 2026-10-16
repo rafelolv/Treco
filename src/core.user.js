@@ -6386,6 +6386,27 @@
      * UI: Settings Panel
      * ===================================================================== */
 
+    function updatePageLauncherStatus() {
+        const button = document.getElementById(`${CSS_PREFIX}-launcher`);
+        if (!button) return;
+        const attention = !!state.filterError || Object.values(state.engineHealth).some(value => value !== 'ok');
+        const status = !isEnabled() ? 'paused' : attention ? 'attention' : 'enabled';
+        const label = status === 'paused' ? 'Page engine paused' : status === 'attention' ? 'Page engine needs attention' : 'Page engine enabled';
+        button.dataset.status = status;
+        button.title = `Open Zynubo Control Center (Alt+Shift+Z) — ${label}`;
+        button.setAttribute('aria-description', label);
+    }
+
+    function handlePageShortcut(event) {
+        if (event.defaultPrevented || event.repeat || event.isComposing ||
+            !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey ||
+            event.code !== 'KeyZ') return;
+        const target = event.composedPath?.()[0] || event.target;
+        if (target?.closest?.('input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="range"]), textarea, select, [role="textbox"], [contenteditable]:not([contenteditable="false"])')) return;
+        event.preventDefault();
+        toggleSettings();
+    }
+
     function ensurePageLauncher() {
         // Embedded players should not gain controls outside the player UI.
         if (!document.body || location.pathname.startsWith('/embed/')) return;
@@ -6397,19 +6418,24 @@
             button.type = 'button';
             button.title = 'Open Zynubo Control Center';
             button.setAttribute('aria-label', button.title);
+            button.setAttribute('aria-keyshortcuts', 'Alt+Shift+Z');
             button.setAttribute('aria-haspopup', 'dialog');
             const mark = document.createElement('span');
             mark.className = `${CSS_PREFIX}-launcher-mark`;
             mark.setAttribute('aria-hidden', 'true');
             const label = document.createElement('span');
             label.textContent = SCRIPT_NAME;
-            button.append(mark, label);
+            const status = document.createElement('span');
+            status.className = `${CSS_PREFIX}-launcher-status`;
+            status.setAttribute('aria-hidden', 'true');
+            button.append(mark, label, status);
             button.addEventListener('click', () => toggleSettings(true));
         }
         const header = document.querySelector('ytd-masthead #end #buttons, ytmusic-nav-bar #right-content');
         const host = header || document.body;
         button.classList.toggle(`${CSS_PREFIX}-launcher-floating`, !header);
         if (button.parentElement !== host) host.prepend(button);
+        updatePageLauncherStatus();
     }
 
     function injectSettingsCSS() {
@@ -6734,11 +6760,37 @@
         updateSettingsNavigationAvailability();
     }
 
+    function getFavoriteFeatures() {
+        const saved = getSetting('favorite_features', {});
+        if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return [];
+        return FEATURE_GROUPS.flatMap(group => group.features).filter(feature =>
+            Object.hasOwn(saved, feature.key) && saved[feature.key] === true);
+    }
+
+    function createFavoriteSettings(query) {
+        const favorites = getFavoriteFeatures();
+        const container = document.createElement('div');
+        container.className = `${CSS_PREFIX}-favorites`;
+        const heading = document.createElement('h3');
+        heading.textContent = 'Favorites';
+        container.appendChild(heading);
+        const matches = favorites.filter(feature => !query || matchesSettingsQuery(query, 'favorites', feature.label, feature.desc, feature.key));
+        if (!favorites.length) {
+            const hint = document.createElement('p');
+            hint.className = `${CSS_PREFIX}-row-desc`;
+            hint.textContent = 'Star a setting in any section to keep it here.';
+            container.appendChild(hint);
+        }
+        for (const feature of matches) container.appendChild(createToggleRow(feature, true));
+        return container;
+    }
+
     function createOverviewSection(query = '') {
         if (query && !matchesSettingsQuery(
             query,
             'overview protection paused refresh project page diagnostics master switch rule library engine health degraded conflict',
-            getProtectionSummary().description
+            getProtectionSummary().description,
+            'favorites', ...getFavoriteFeatures().flatMap(feature => [feature.label, feature.desc, feature.key])
         )) {
             return null;
         }
@@ -6881,8 +6933,7 @@
         const pauseCard = createRecoveryPauseCard();
 
         const notes = [injectionNote, healthNote, ssaiNote].filter(Boolean);
-        if (notes.length) surface.append(hero, facts, ...notes, metrics, actions, moreStats, pauseCard);
-        else surface.append(hero, facts, metrics, actions, moreStats, pauseCard);
+        surface.append(hero, facts, ...notes, createFavoriteSettings(query), metrics, actions, moreStats, pauseCard);
         section.appendChild(surface);
         return section;
     }
@@ -8383,7 +8434,11 @@
         return { toggle, input };
     }
 
-    function createToggleRow(feature) {
+    function createToggleRow(feature, favoriteCopy = false) {
+        if (feature.key === 'dearrow' && IS_EXTENSION_BUILD) {
+            feature = { ...feature, locked: true, lockedReason: STRINGS.ui.unavailableDearrowExtension };
+        }
+        const context = favoriteCopy ? 'favorite-' : '';
         const row = document.createElement('label');
         row.className = `${CSS_PREFIX}-row`;
         const isOn = !feature.locked && state.features[feature.key] !== false;
@@ -8397,13 +8452,13 @@
         line.appendChild(label);
         const desc = document.createElement('p');
         desc.className = `${CSS_PREFIX}-row-desc`;
-        const descId = `${CSS_PREFIX}-desc-${feature.key}`;
+        const descId = `${CSS_PREFIX}-${context}desc-${feature.key}`;
         desc.id = descId;
         desc.textContent = feature.locked && feature.lockedReason
             ? `${feature.desc} ${feature.lockedReason}`
             : feature.desc;
         copy.append(line, desc);
-        const { toggle, input } = createToggleControl(`${CSS_PREFIX}-toggle-${feature.key}`, isOn, checked => {
+        const { toggle, input } = createToggleControl(`${CSS_PREFIX}-${context}toggle-${feature.key}`, isOn, checked => {
             if (feature.locked) return;
             setFeatureEnabled(feature.key, checked, feature.label);
         }, `Toggle ${feature.label}`);
@@ -8416,7 +8471,30 @@
             row.style.opacity = '0.6';
         }
         row.append(copy, toggle);
-        return row;
+        const wrapper = document.createElement('div');
+        wrapper.className = `${CSS_PREFIX}-feature-row`;
+        const favorite = document.createElement('button');
+        favorite.type = 'button';
+        favorite.id = `${CSS_PREFIX}-${context}star-${feature.key}`;
+        favorite.className = `${CSS_PREFIX}-favorite-button`;
+        const selected = getFavoriteFeatures().some(item => item.key === feature.key);
+        favorite.textContent = selected ? '★' : '☆';
+        favorite.setAttribute('aria-label', `Favorite ${feature.label}`);
+        favorite.setAttribute('aria-pressed', String(selected));
+        favorite.title = selected ? 'Remove from favorites' : 'Add to favorites';
+        favorite.addEventListener('click', () => {
+            const saved = Object.fromEntries(getFavoriteFeatures().map(item => [item.key, true]));
+            if (saved[feature.key]) delete saved[feature.key];
+            else saved[feature.key] = true;
+            if (!setSetting('favorite_features', saved)) {
+                showToast('Could not save favorites.', 'warn');
+                return;
+            }
+            refreshSettingsUI(true);
+            (document.getElementById(favorite.id) || document.getElementById(`${CSS_PREFIX}-master-toggle`))?.focus();
+        });
+        wrapper.append(row, favorite);
+        return wrapper;
     }
 
     function updateStatsDisplay() {
@@ -8432,6 +8510,7 @@
     }
 
     function updatePanelStatus() {
+        updatePageLauncherStatus();
         const footerStatus = document.getElementById(`${CSS_PREFIX}-footer-status`);
         if (footerStatus) {
             footerStatus.textContent = state.filterSyncing
@@ -9101,6 +9180,9 @@
             state.settingsNavIntentUntil = 0;
             state.settingsScrollFrame = 0;
             state.lastFocusedEl?.focus?.();
+            if (state.panelEl?.contains(document.activeElement)) {
+                document.getElementById(`${CSS_PREFIX}-launcher`)?.focus();
+            }
         }
     }
 
@@ -9178,6 +9260,7 @@
     function onDOMReady() {
         buildSettingsPanel();
         ensurePageLauncher();
+        document.addEventListener('keydown', handlePageShortcut);
         // The masthead is lazy-rendered and may be replaced during navigation.
         // Reuse one button without observing every mutation of the YouTube DOM.
         registerInterval(ensurePageLauncher, 1500);

@@ -20,6 +20,16 @@ Click **Zynubo** in the top-right YouTube header. On pages without a supported h
 - **Userscript alternative:** open the manager menu and choose **Zynubo: Open Control Center**.
 - **Extension:** click Zynubo in the browser toolbar, then **Open Control Center**.
 
+Press **Alt+Shift+Z** to open or close settings. The shortcut stays inactive in
+text fields and comment editors. The page button's dot shows whether the engine
+is enabled, paused or needs attention; hover for the status text. This status
+does not certify successful ad blocking.
+
+Click the **star** beside a setting to add its switch to **Favorites** in Overview.
+Click it again to remove it. Favorites do not change the setting's state and are
+saved locally in the current installation; they are not included in settings
+export or cross-device sync.
+
 Choose a section from the sidebar. On narrow windows, scroll the section list
 horizontally. **Find a setting** searches across sections. Press Escape to clear
 a nonempty search; press it again to close the panel. Changes save automatically.

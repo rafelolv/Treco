@@ -163,3 +163,32 @@ cached after a force push; their refresh is separate from verifying branch ances
 - All browser evidence uses local/synthetic routes and temporary profiles.
   Actual Violentmonkey installation, live YouTube header layouts and playback
   were not validated. No existing release tag or published asset was changed.
+
+## 1.3.0 quick access and favorites — 2026-10-16
+
+- Added Alt+Shift+Z, a launcher status dot and starred feature switches near the
+  top of Overview. Shortcut handling ignores text inputs, comment editors,
+  composition, repeats and already-consumed events. Closing the dialog restores
+  focus to the launcher if the previous target cannot regain focus.
+- Focused synthetic-page checks passed on Brave Origin Nightly 154.1.98.28 in
+  userscript and extension modes: shortcut opening, input/editor exclusion,
+  favorite add/remove, focus retention, unchanged feature state when starring,
+  shared switch updates, persistence across panel reopening, pause/status
+  changes and 320px bounds. DeArrow remains disabled in extension favorites.
+  Narrow favorites captures were visually inspected.
+- Temporary installation checks passed on Chromium for Testing 149.0.7827.55
+  and Firefox 157.0. Both integrations exercise shortcut opening, launcher
+  attention status for deliberately failed fixture refreshes and adding a
+  favorite through the existing storage adapter.
+- npm run package passed 221 unit/contract cases, license checks, synchronized
+  1.3.0 metadata, shared-engine parity and reproducible builds. The new broker
+  regression checks bounded favorite boolean maps and exclusion from sync.
+  Firefox lint passed with zero errors, notices or warnings.
+- The full Chromium UI suite passed 28 scenarios (33 including parent groups),
+  including existing surfaces, responsive layouts, modal recovery, the launcher
+  and the new controls.
+- Favorite preferences are local to the installation and excluded from settings
+  exports/sync. Consent, feature defaults, signed data and add-on IDs are
+  unchanged. No new permissions or published release tags/assets were added.
+- Tests use synthetic routes, simulated manager APIs and temporary profiles;
+  no actual Violentmonkey installation or live YouTube compatibility is claimed.
