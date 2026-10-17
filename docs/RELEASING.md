@@ -35,6 +35,13 @@ retry; the workflow intentionally refuses to replace a published release.
 
 ## Store preparation
 
+Every Firefox release and retry must follow
+[Firefox publication rules](FIREFOX-PUBLISH.md#publication-rules), including
+store-note bounds, archive/version checks, reviewer source, declarations and
+API-response diagnosis. Its enforcement table distinguishes current automation
+from manual pre-submission requirements. Metadata-only submission fixes may use
+`main` with unchanged tagged files; package changes require a new version.
+
 Chromium ZIP: upload its exact contents to Chrome Web Store or Edge Add-ons after
 separate authorization. Record the assigned IDs and preserve them for updates.
 Brave accepts compatible Chromium installations; no independent Brave store

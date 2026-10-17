@@ -1,3 +1,5 @@
+# Firefox release/retry policy: docs/FIREFOX-PUBLISH.md#publication-rules.
+# This workflow publishes GitHub assets; AMO submission requires separate authorization.
 name: Release
 on:
   push:

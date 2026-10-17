@@ -70,3 +70,10 @@ GitHub redirects legacy rafelolv/Zynubo links to rafelolv/Treco. The published
 asset auditor accepts these two known project paths and checks all asset URLs
 against the resolved release URL. Legacy runtime metadata URLs remain update
 aliases; do not rewrite an existing release to change its embedded addresses.
+
+
+Firefox publication and retry policy is recorded in
+[FIREFOX-PUBLISH.md](FIREFOX-PUBLISH.md#publication-rules). Recheck its official
+sources when changing tooling, permissions, privacy declarations or packaging.
+Keep GitHub release notes complete and any AMO notes separate. The current
+workflows do not submit to AMO; do not claim manual policy checks are automated.

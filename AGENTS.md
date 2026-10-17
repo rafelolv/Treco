@@ -31,3 +31,10 @@ Maintained by rafelolv. Read docs/MAINTENANCE.md and docs/ARCHITECTURE.md.
 - Run npm run test:browser:upstream after UI changes. It now covers desktop surfaces plus 320px/mobile/tablet/short-window layouts, search, navigation and keyboard focus. Keep these local fixture captures distinct from live YouTube evidence.
 
 - Release publication uses .github/workflows/release.yml on new v* tags only. A version tag requires explicit release authorization. Keep validation read-only; only its dependent publishing job may receive contents: write and github.token. Refuse existing releases and verify the downloaded assets. Main pushes and pull requests must not publish; no store submission is authorized by this workflow.
+
+## Mozilla publication rules
+
+- Follow [Firefox publication rules](docs/FIREFOX-PUBLISH.md#publication-rules) for every Firefox release and retry. Recheck the linked official sources when tooling, permissions, privacy declarations, or packaging change; do not invent limits for unverified listing fields.
+- AMO version notes must fit 3,000 characters per locale, including any appended link. Keep the existing tested shortening behavior for English store notes; preserve full GitHub notes. Check the 200 MB archive cap and valid increasing versions; do not confuse those manual checks with existing automated guards.
+- Run pinned `web-ext lint` for changed extension packages, resolve errors, and review warnings. Preserve the add-on ID, minimal permissions, reviewable bundled code, and accurate data declarations; reassess source uploads when build transformations change.
+- Diagnose the API response before retrying. Confirm whether an ambiguous attempt already created the version. Metadata-only submission fixes may retry an unchanged tagged package from `main`; package changes require a new version. Never move published tags, replace packages, expose secrets, or report submitted as approved.
