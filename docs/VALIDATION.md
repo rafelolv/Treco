@@ -537,3 +537,13 @@ published tag and release assets are unchanged.
 - Public runtime metadata is synchronized at 1.10.1. Generated extension packages
   have the same engine. No new release tag was created; v1.10.0 assets retain their
   original contents and continue to work through GitHub redirects.
+
+
+## 1.10.1 release preparation — 2026-10-16
+
+The maintainer authorized publication of the canonical-link correction. README
+and extension downloads target v1.10.1. Local preparation repeats packaging,
+Firefox lint and temporary integration, compares repeated SHA256SUMS and verifies
+the exact release payload. The tag workflow repeats validation before publishing
+and verifies downloaded assets. Existing 1.10.1 synthetic/live-check limits above
+still apply. No store submission or replacement of older release assets is included.

@@ -4,8 +4,8 @@
   <p><strong>The Complete YouTube Toolkit</strong><br>All the tricks you need for a better YouTube.</p>
   <p>
     <a href="https://raw.githubusercontent.com/rafelolv/Treco/main/Treco.user.js"><img src="https://img.shields.io/badge/Install_userscript-cb3727?style=for-the-badge" alt="Install Treco userscript"></a>
-    <a href="https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Treco extension for Chrome, Brave and Edge"></a>
-    <a href="https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Treco temporary Firefox extension"></a>
+    <a href="https://github.com/rafelolv/Treco/releases/download/v1.10.1/Treco-chromium-v1.10.1.zip"><img src="https://img.shields.io/badge/Chrome_·_Brave_·_Edge-252720?style=for-the-badge" alt="Download Treco extension for Chrome, Brave and Edge"></a>
+    <a href="https://github.com/rafelolv/Treco/releases/download/v1.10.1/Treco-firefox-v1.10.1.zip"><img src="https://img.shields.io/badge/Firefox_(temporary)-252720?style=for-the-badge" alt="Download Treco temporary Firefox extension"></a>
   </p>
   <p><a href="#install">Installation</a> · <a href="#use-treco">How to use</a> · <a href="#need-help">Get help</a></p>
 </div>

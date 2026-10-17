@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.10.1 — Unreleased
+## 1.10.1 — 2026-10-16
 
 - Point installation, updates, signed rule sources and support directly to rafelolv/Treco.
 - Keep earlier official filter-source preferences and cached rules compatible with the renamed repository.

@@ -4,11 +4,11 @@ Treco extensions run without Tampermonkey or another userscript manager. They
 share the userscript's engine and Control Center. Keep only one Treco method
 enabled in each browser profile.
 
-Download **Treco 1.10.0**:
+Download **Treco 1.10.1**:
 
-- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-chromium-v1.10.0.zip)
-- [Firefox temporary ZIP](https://github.com/rafelolv/Treco/releases/download/v1.10.0/Treco-firefox-v1.10.0.zip)
-- [Checksums](https://github.com/rafelolv/Treco/releases/download/v1.10.0/SHA256SUMS)
+- [Chrome, Brave and Edge ZIP](https://github.com/rafelolv/Treco/releases/download/v1.10.1/Treco-chromium-v1.10.1.zip)
+- [Firefox temporary ZIP](https://github.com/rafelolv/Treco/releases/download/v1.10.1/Treco-firefox-v1.10.1.zip)
+- [Checksums](https://github.com/rafelolv/Treco/releases/download/v1.10.1/SHA256SUMS)
 
 No build commands are needed to install these downloads. Extract the ZIP and
 follow the browser instructions below. These are unsigned local packages; no
