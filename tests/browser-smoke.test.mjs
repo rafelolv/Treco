@@ -815,7 +815,7 @@ test('page launcher opens settings and survives delayed mastheads and navigation
                 assert.equal(bounds.height, 40);
                 assert.equal(await button.textContent(), '', 'The header launcher uses a single icon');
                 assert.equal(await button.evaluate(el => getComputedStyle(el).borderTopWidth), '0px');
-                assert.equal(await button.locator('.ytab-launcher-mark').evaluate(el => getComputedStyle(el).maskImage.startsWith('url(')), true);
+                assert.equal(await button.locator('.ytab-launcher-mark').evaluate(el => getComputedStyle(el).backgroundImage.startsWith('url(')), true);
                 await button.click();
                 await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
                 await page.keyboard.press('Escape');

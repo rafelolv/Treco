@@ -37,8 +37,8 @@ There is no floating fallback; child frames, live chat/replay and embedded
 players are excluded even if they contain a matching header. A tracked
 1.5-second reconciliation timer and YouTube navigation events recover lazy or
 replaced headers without observing the entire DOM. Shared theme tokens and the
-canonical logo path style a 40px circular launcher. Its monochrome symbol inherits
-the native header text color; the build derives it from images/icon.svg. Missing headers leave keyboard/menu access available.
+canonical logo style a compact 40px launcher with the same red tile as the panel.
+The build embeds images/icon.svg without a separate launcher variant. Missing headers leave keyboard/menu access available.
 
 Alt+Shift+Z toggles the panel outside text fields and editable comments. The
 launcher tooltip reports page-engine status. A dimmed symbol indicates pause;

@@ -576,3 +576,27 @@ still apply. No store submission or replacement of older release assets is inclu
   dialogs and player controls. Repeated final packaging produced identical
   SHA256SUMS; the reviewer source contains editable code, build scripts, lockfile
   and licenses without local profiles or dependency trees.
+
+## 1.10.3 visual consistency — 2026-10-18
+
+- The launcher again uses the canonical red T tile, matching the panel and popup,
+  with a transparent borderless 40px target. Removed decorative red header stripes
+  from both surfaces and colored navigation markers. A neutral filled selection
+  and neutral keyboard focus rings retain clear states in both themes.
+- npm run package passed the five Node suites, license checks, synchronized
+  versions, shared engines and reproducible build verification. Temporary browser
+  integration passed Chromium 149.0.7827.55 and Firefox 157.0. Pinned web-ext 10.8.0
+  lint reported zero errors, notices or warnings; its optional config-store update
+  check remained unavailable without affecting lint.
+- Rechecked Mozilla's source-code submission guidance after removing the unused
+  symbol extraction. The reviewer source still includes the original SVG, editable
+  CSS, compilation scripts and lockfile for the exact generated package:
+  https://extensionworkshop.com/documentation/publish/source-code-submission/.
+- Filtering, consent, permissions and data flows are unchanged. Evidence comes
+  from synthetic pages and simulated manager APIs, not real YouTube playback or
+  installed Violentmonkey/Brave. No store submission or release publication occurred.
+- The full Chromium UI matrix passed all 42 tests without skips, including both
+  modes, themes, 320px/mobile/tablet/short layouts, navigation, search, focus and
+  player controls. Inspected dark/light panel, header and popup captures; updated
+  docs/UI.md with versioned native captures. Repeated packaging yielded identical
+  SHA256SUMS, and the reviewer archive includes matching source and previews.

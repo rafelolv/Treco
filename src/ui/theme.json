@@ -19,7 +19,7 @@
     "warning": "#e4bc78",
     "danger": "#ffab9c",
     "info": "#a4c5e8",
-    "focus": "#ef8f78",
+    "focus": "#f5f3ef",
     "scheme": "dark"
   },
   "light": {
@@ -35,7 +35,7 @@
     "warning": "#885a12",
     "danger": "#ac2b1e",
     "info": "#335f8d",
-    "focus": "#b62f20",
+    "focus": "#201f1d",
     "scheme": "light"
   }
 }

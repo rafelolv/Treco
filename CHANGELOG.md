@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.3 — Unreleased
+
+- Match the YouTube launcher to Treco’s red T logo without adding a label or decorative border.
+- Remove red header stripes and navigation markers from the Control Center and extension popup.
+- Use neutral keyboard focus rings and a subtle filled selection for navigation.
+
 ## 1.10.2 — Unreleased
 
 - Simplify the YouTube header button to a monochrome T with native hover and keyboard focus states.

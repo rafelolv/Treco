@@ -1,6 +1,6 @@
 # Interface
 
-Treco 1.10.0 uses a neutral black/white palette, the red T mark and local serif
+Treco 1.10.3 uses a neutral black/white palette, the red T mark and local serif
 headings. One full-width brand bar and a compact section list frame plain setting
 rows. The main header shows the current section title without a repeated heading
 below it. Search retains titles for each matching section.
@@ -21,35 +21,36 @@ The extension popup shares tokens and typography. Fonts are local; the canonical
 logo is images/icon.svg. No remote font, image or stylesheet is required to render
 the interface. Engine state and counters do not certify live ad blocking.
 
-The 1.10.2 header launcher uses a monochrome T in a 40px circular target,
-with a transparent idle background and YouTube's native text and hover colors.
-The symbol comes from the canonical SVG at build time. The full brand tile stays
-in the Control Center, popup and installation icons. Keyboard focus remains
-visible; the tooltip names Treco and reports status. Paused mode dims the symbol,
-and only warnings show a small status dot. The launcher stays inside the header.
+The 1.10.3 header launcher uses the same red T tile as the Control Center and
+popup in a compact 40px target, with a transparent idle background. There is no
+label or decorative border. The panel and popup have no red header stripe;
+navigation selection uses a neutral filled background instead of a colored line.
+Keyboard focus rings are neutral and remain visible in both themes. Paused mode
+dims the launcher, and only warnings show a small status dot. The launcher stays
+inside the header. Red remains in the logo and active controls.
 
-These native browser captures use the generated 1.10.0 engine with synthetic data.
+These native browser captures use the generated 1.10.3 engine with synthetic data.
 They are not design mockups or evidence of live YouTube compatibility.
 
 ## Dark
 
-![Dark settings overview](images/control-center-v1.10.0-dark.png)
+![Dark settings overview](images/control-center-v1.10.3-dark.png)
 
 ## Light
 
-![Light settings overview](images/control-center-v1.10.0-light.png)
+![Light settings overview](images/control-center-v1.10.3-light.png)
 
 ## Narrow viewport
 
-![Narrow settings overview](images/control-center-v1.10.0-mobile.png)
+![Narrow settings overview](images/control-center-v1.10.3-mobile.png)
 
 ## Settings rows
 
-![Ad blocking settings](images/settings-v1.10.0.png)
+![Ad blocking settings](images/settings-v1.10.3.png)
 
 ## Extension popup
 
-![Unavailable extension popup](images/popup-v1.10.0.png)
+![Unavailable extension popup](images/popup-v1.10.3.png)
 
 Edit src/ui/panel.css, src/ui/theme.json and src/extension/popup.css, then rebuild.
 See VALIDATION.md for browser versions, tests and limitations.

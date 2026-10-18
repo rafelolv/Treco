@@ -27,9 +27,9 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-nav-mark { flex: 0 0 28px; width: 28px; height: 28px; background: var(--z-logo) center / contain no-repeat; }
 .ytab-nav-product { font: 700 27px/1 var(--z-display-font); letter-spacing: -1.1px; color: var(--z-ink); }
 .ytab-nav-list { display: grid; align-content: start; gap: 3px; min-height: 0; overflow: auto; scrollbar-width: thin; }
-.ytab-nav-button { width: 100%; min-height: 36px; padding: 8px 12px; border: 0; border-radius: 0; background: transparent; color: var(--z-muted); text-align: left; font-size: 13px; line-height: 1.35; font-weight: 500; cursor: pointer; }
+.ytab-nav-button { width: 100%; min-height: 36px; padding: 8px 12px; border: 0; border-radius: 4px; background: transparent; color: var(--z-muted); text-align: left; font-size: 13px; line-height: 1.35; font-weight: 500; cursor: pointer; }
 .ytab-nav-button:hover:not(:disabled) { color: var(--z-ink); background: var(--z-hover); }
-.ytab-nav-button[aria-current="page"] { color: var(--z-ink); background: transparent; font-weight: 650; box-shadow: inset 2px 0 var(--z-accent); }
+.ytab-nav-button[aria-current="page"] { color: var(--z-ink); background: var(--z-hover); font-weight: 650; }
 .ytab-nav-button:disabled { opacity: .4; cursor: default; }
 .ytab-nav-button[data-section-id="ytab-section-core"], .ytab-nav-button[data-section-id="ytab-section-sponsor"], .ytab-nav-button[data-section-id="ytab-section-diagnostics"] { margin-top: 14px; }
 .ytab-nav-meta { margin-top: auto; padding: 24px 8px 0; font-size: 11px; color: var(--z-faint); display: grid; gap: 4px; }
@@ -158,7 +158,7 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-panel .ytab-toast-title { display: none; }
 .ytab-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: ytab-spin .6s linear infinite; }
 @keyframes ytab-spin { to { transform: rotate(360deg); } }
-.ytab-topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-top: 3px solid var(--z-accent); border-bottom: 1px solid var(--z-line); }
+.ytab-topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--z-line); }
 .ytab-shortcut-hint { margin-left: auto; margin-right: 14px; font: 11px/1.4 var(--z-font); color: var(--z-faint); }
 .ytab-topbar .ytab-close { margin-left: 0; }
 .ytab-panel[data-searching="false"] .ytab-section-head .ytab-section-title { display: none; }
@@ -168,7 +168,7 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-home-link > span:first-child { display: grid; gap: 3px; }
 .ytab-home-link strong { font-size: 14px; font-weight: 600; }
 .ytab-home-link > span:first-child > span { color: var(--z-muted); font-size: 12px; }
-.ytab-home-link > span:last-child { color: var(--z-accent); font-size: 21px; }
+.ytab-home-link > span:last-child { color: var(--z-muted); font-size: 21px; }
 .ytab-home-link:hover strong { text-decoration: underline; text-underline-offset: 3px; }
 .ytab-home-tools { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
 .ytab-text-action { min-height: 32px; appearance: none; padding: 3px 0; border: 0; background: transparent; color: var(--z-muted); text-align: left; font: 12px/1.5 var(--z-font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -199,7 +199,6 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
     .ytab-nav-list { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 4px; }
     .ytab-nav-button { width: auto; flex: 0 0 auto; min-height: 38px; padding: 9px; font-size: 12px; }
     .ytab-nav-button[data-section-id] { margin-top: 0; }
-    .ytab-nav-button[aria-current="page"] { box-shadow: inset 0 -2px var(--z-accent); }
     .ytab-nav-meta { display: none; }
     .ytab-main-column { flex: 1; }
     .ytab-header { padding: 20px 18px 8px; }
@@ -230,17 +229,16 @@ body:not(.ytab-ready) .ytab-overlay, .ytab-overlay[hidden] { display: none !impo
 .ytab-launcher {
     appearance: none; position: relative; display: inline-flex; align-items: center; justify-content: center;
     flex: 0 0 40px; width: 40px; height: 40px; margin: 0 8px 0 0; padding: 4px;
-    border: 0; border-radius: 50%; background: transparent;
-    color: var(--yt-spec-text-primary, var(--z-ink)); font: inherit;
+    border: 0; border-radius: 6px; background: transparent;
+    color: var(--z-ink); font: inherit;
     cursor: pointer; box-sizing: border-box; vertical-align: middle;
 }
 .ytab-launcher:hover { background: var(--yt-spec-badge-chip-background, var(--z-hover)); }
 .ytab-launcher:active { background: var(--yt-spec-button-chip-background-hover, var(--z-line)); }
 .ytab-launcher:focus-visible { outline: 2px solid var(--z-focus); outline-offset: 2px; }
 .ytab-launcher-mark {
-    width: 32px; height: 32px; flex: 0 0 32px; background: currentColor;
-    -webkit-mask: var(--z-symbol) center / contain no-repeat;
-    mask: var(--z-symbol) center / contain no-repeat;
+    width: 28px; height: 28px; flex: 0 0 28px;
+    background: var(--z-logo) center / contain no-repeat;
 }
 .ytab-launcher-status { display: none; }
 .ytab-launcher[data-status="paused"] .ytab-launcher-mark { opacity: .55; }
