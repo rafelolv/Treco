@@ -21,6 +21,13 @@ The extension popup shares tokens and typography. Fonts are local; the canonical
 logo is images/icon.svg. No remote font, image or stylesheet is required to render
 the interface. Engine state and counters do not certify live ad blocking.
 
+The 1.10.2 header launcher uses a monochrome T in a 40px circular target,
+with a transparent idle background and YouTube's native text and hover colors.
+The symbol comes from the canonical SVG at build time. The full brand tile stays
+in the Control Center, popup and installation icons. Keyboard focus remains
+visible; the tooltip names Treco and reports status. Paused mode dims the symbol,
+and only warnings show a small status dot. The launcher stays inside the header.
+
 These native browser captures use the generated 1.10.0 engine with synthetic data.
 They are not design mockups or evidence of live YouTube compatibility.
 

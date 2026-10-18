@@ -48,7 +48,7 @@ Keep only **one Treco installation** enabled in each browser.
 
 ## Use Treco
 
-1. **Open settings:** click **Treco** in YouTube's top-right header, or press **Alt+Shift+Z** outside a text field. You can also use your userscript manager's menu or the extension's toolbar icon.
+1. **Open settings:** click the **T icon** in YouTube's top-right header, or press **Alt+Shift+Z** outside a text field. You can also use your userscript manager's menu or the extension's toolbar icon.
 2. **Find an option:** choose a section or use **Find a setting**. Each option explains what it does; expand **Technical details** if you want more information.
 3. **Make it yours:** turn options on or off. Changes save automatically. Star your favorites to keep them together in **Overview**.
 

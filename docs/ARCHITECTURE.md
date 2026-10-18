@@ -37,11 +37,13 @@ There is no floating fallback; child frames, live chat/replay and embedded
 players are excluded even if they contain a matching header. A tracked
 1.5-second reconciliation timer and YouTube navigation events recover lazy or
 replaced headers without observing the entire DOM. Shared theme tokens and the
-canonical logo style the launcher. Missing headers leave keyboard/menu access available.
+canonical logo path style a 40px circular launcher. Its monochrome symbol inherits
+the native header text color; the build derives it from images/icon.svg. Missing headers leave keyboard/menu access available.
 
 Alt+Shift+Z toggles the panel outside text fields and editable comments. The
-launcher dot reports page-engine enablement, pause or refresh/engine warnings;
-it does not attest that ads were blocked. Favorites use a validated local
+launcher tooltip reports page-engine status. A dimmed symbol indicates pause;
+a small amber dot appears only for refresh/engine warnings. These indicators
+do not attest that ads were blocked. Favorites use a validated local
 `ytab_favorite_features` boolean map. Known feature switches appear in Overview
 with separate DOM IDs and the same consent/extension restrictions. Starring
 never changes a feature override. This UI preference is intentionally excluded

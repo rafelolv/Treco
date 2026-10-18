@@ -810,13 +810,25 @@ test('page launcher opens settings and survives delayed mastheads and navigation
                 assert.equal(await button.count(), 1);
                 const bounds = await button.boundingBox();
                 assert(bounds.x >= 0 && bounds.x + bounds.width <= 320);
-                assert.equal(await button.evaluate(el => getComputedStyle(el).position), 'static');
+                assert.equal(await button.evaluate(el => getComputedStyle(el).position), 'relative');
+                assert.equal(bounds.width, 40);
+                assert.equal(bounds.height, 40);
+                assert.equal(await button.textContent(), '', 'The header launcher uses a single icon');
+                assert.equal(await button.evaluate(el => getComputedStyle(el).borderTopWidth), '0px');
+                assert.equal(await button.locator('.ytab-launcher-mark').evaluate(el => getComputedStyle(el).maskImage.startsWith('url(')), true);
                 await button.click();
                 await page.waitForFunction(() => document.activeElement?.closest('.ytab-panel'));
                 await page.keyboard.press('Escape');
                 assert.equal(await button.evaluate(el => el === document.activeElement), true);
                 await page.setViewportSize({ width: 1440, height: 900 });
-                await page.screenshot({ path: path.join(repoRoot, `dist/ui-preview/launcher-${mode}-header.png`) });
+                await button.evaluate(el => el.blur());
+                for (const theme of ['dark', 'light']) {
+                    await page.evaluate(theme => {
+                        document.documentElement.toggleAttribute('dark', theme === 'dark');
+                        document.body.style.background = theme === 'dark' ? '#0f0f0f' : '#fff';
+                    }, theme);
+                    await page.locator('ytd-masthead').screenshot({ path: path.join(repoRoot, `dist/ui-preview/launcher-${mode}-${theme}.png`) });
+                }
                 // Removing only the host container leaves no orphaned floating button.
                 await page.evaluate(() => {
                     document.getElementById('buttons').remove();

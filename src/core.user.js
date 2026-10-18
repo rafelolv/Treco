@@ -6489,12 +6489,10 @@
             const mark = document.createElement('span');
             mark.className = `${CSS_PREFIX}-launcher-mark`;
             mark.setAttribute('aria-hidden', 'true');
-            const label = document.createElement('span');
-            label.textContent = SCRIPT_NAME;
             const status = document.createElement('span');
             status.className = `${CSS_PREFIX}-launcher-status`;
             status.setAttribute('aria-hidden', 'true');
-            button.append(mark, label, status);
+            button.append(mark, status);
             button.addEventListener('click', () => toggleSettings(true));
         }
         if (button.parentElement !== header) header.prepend(button);

@@ -547,3 +547,32 @@ Firefox lint and temporary integration, compares repeated SHA256SUMS and verifie
 the exact release payload. The tag workflow repeats validation before publishing
 and verifies downloaded assets. Existing 1.10.1 synthetic/live-check limits above
 still apply. No store submission or replacement of older release assets is included.
+
+## 1.10.2 header launcher — 2026-10-18
+
+- Replaced the boxed logo/name/status launcher with a 40px circular icon target.
+  Its monochrome T is derived from the canonical SVG path during compilation;
+  native YouTube text/hover colors have shared-theme fallbacks. No new permissions,
+  data flows, runtime fetches or filtering behavior were introduced.
+- Inspected dark and light Chromium fixture captures. Existing launcher coverage
+  checks 320px bounds, icon rendering, keyboard return focus, delayed/replaced
+  headers, navigation deduplication and exclusion from chat/child/embed surfaces.
+- npm run package passed the five Node test suites, license/attribution checks,
+  synchronized versions, shared engines and deterministic rebuild verification.
+  Temporary integration passed Chromium 149.0.7827.55 and Firefox 157.0. The short
+  synthetic video/comment/chat/navigation stability gate passed both modes.
+- Pinned web-ext 10.8.0 reported zero errors, notices or warnings. Its optional
+  update check could not access the local config store; package lint succeeded.
+- Rechecked Mozilla's official source-code submission and web-ext documentation
+  for the build-time symbol extraction. The matching editable source and lockfile
+  remain required and included in the reviewer archive. No store upload occurred.
+  Sources: https://extensionworkshop.com/documentation/publish/source-code-submission/
+  and https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/.
+- Browser evidence uses local fixtures and simulated manager APIs. No real YouTube
+  playback, installed Violentmonkey/Brave integration, signing or store approval
+  was verified. Existing release assets remain unchanged.
+- The full UI matrix passed all 42 tests with no skips in Chromium 149.0.7827.55,
+  covering both integrations, themes, responsive layouts, search, focus, native
+  dialogs and player controls. Repeated final packaging produced identical
+  SHA256SUMS; the reviewer source contains editable code, build scripts, lockfile
+  and licenses without local profiles or dependency trees.

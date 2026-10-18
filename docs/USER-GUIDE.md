@@ -18,7 +18,7 @@ in the main page header; chat messages use their own native page APIs.
 
 ## Open settings
 
-Click **Treco** in the top-right YouTube header. The button stays in the main page header; it does not float over videos or appear inside live chat. If the header is unavailable, use Alt+Shift+Z or the menu below. The button opens the same Control Center in both installations.
+Click the **T icon** in the top-right YouTube header to open Treco. The button stays in the main page header; it does not float over videos or appear inside live chat. If the header is unavailable, use Alt+Shift+Z or the menu below. The button opens the same Control Center in both installations.
 
 - **Userscript alternative:** open the manager menu and choose **Treco: Open Control Center**.
 - **Extension:** click Treco in the browser toolbar, then **Open settings**.

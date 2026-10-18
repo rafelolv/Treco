@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.10.2 — Unreleased
+
+- Simplify the YouTube header button to a monochrome T with native hover and keyboard focus states.
+- Show a header status dot only when something needs attention; keep normal and paused status in the tooltip.
+
 ## 1.10.1 — 2026-10-16
 
 - Point installation, updates, signed rule sources and support directly to rafelolv/Treco.
