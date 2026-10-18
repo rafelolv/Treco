@@ -600,3 +600,40 @@ still apply. No store submission or replacement of older release assets is inclu
   player controls. Inspected dark/light panel, header and popup captures; updated
   docs/UI.md with versioned native captures. Repeated packaging yielded identical
   SHA256SUMS, and the reviewer archive includes matching source and previews.
+
+
+## Automatic Firefox submission preparation — 2026-10-18
+
+- Reviewed rafelolv/Wipecord's release/submission workflow and direct API client,
+  plus rafelolv/AdBonk's reusable workflow, package verifier and English notes
+  formatter. Adapted their sequencing, exact-package checks and paragraph-aware
+  shortening to Treco; did not import runtime features, permissions or secrets.
+- Added a release-dependent reusable Firefox workflow with read-only GitHub
+  permissions, credential-free tagged rebuild/lint/download comparison, immutable
+  payload artifact and a separate AMO job. Main pushes and pull requests do not
+  submit. Explicit retries run from main; inspect is the manual default.
+- npm run package passed npm run check with all 252 Node tests (no failures/skips),
+  including 15 Firefox publication cases and seven offline Python preparation
+  cases. These cover exact upload/source bytes, checksum/source tampering, archive
+  limits, stable release metadata, note boundaries/Unicode/section extraction,
+  numeric version order, private history pagination, missing listing/credentials,
+  identity mismatch, validation failure/timeout, ambiguous creation, partial notes
+  failure, redaction, confirmation and credential-access order.
+- Actionlint 1.7.12 passed both changed release workflows. Its official release
+  binary was checked against the published checksum before local execution.
+  Pinned web-ext 10.8.0 reported zero errors/notices/warnings. Temporary extension
+  integration passed Chromium 149.0.7827.55 and Firefox 157.0; both extension ZIPs and the userscript stayed byte-identical to the validated
+  1.10.3 visual correction. No runtime, UI, metadata or permissions changed.
+  Repeated final reviewer-source packaging produced identical SHA256SUMS.
+- Rechecked official AMO version create/source/list/detail APIs, authentication,
+  manifest version syntax/order, archive/source requirements and web-ext tooling.
+  Numeric components accept the documented AMO maximum of nine digits; unknown
+  prior formats stop for manual review. The English note cap remains the
+  maintainer-specified 3,000-character bound, including any appended link.
+  Official links are recorded in FIREFOX-PUBLISH.md.
+- The unauthenticated preserved-ID lookup returned 404, which does not establish
+  whether a private/pending listing exists. No AMO credential was accessed, no
+  authenticated/live store call or submission occurred, and no new tag/release
+  was created. Initial listing/privacy setup and actual secret configuration have
+  not been verified. Browser evidence remains synthetic, separate from live
+  YouTube/Violentmonkey/Brave playback and Mozilla review/signing/availability.

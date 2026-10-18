@@ -135,3 +135,17 @@ canonical generated installer; Zynubo.user.js is a byte-identical update alias.
 The metadata icon is a build-time PNG data URL generated from images/icon.svg,
 matching the packaged 128px icon and avoiding a stale remote icon cache. Author
 metadata names rafelolv; inherited MIT notices remain in the source and legal files.
+
+
+Release automation uses the validated tagged build and published GitHub checksums.
+The dependent reusable Firefox workflow rebuilds the tag without store credentials,
+compares all four downloads byte-for-byte, and passes only the verified Firefox
+ZIP, source ZIP and bounded metadata to an isolated submission job. Current main
+owns submission tooling for explicit retries of older immutable tags. AMO JWTs
+are step-scoped; no tagged package code executes in the credentialed job. The
+client updates only the preserved existing Firefox listing, checks nonpublic
+version history, uploads the exact ZIP bytes, supplies matching source, then sets
+translated change notes separately. Failed mutations receive a read-only status
+lookup, with no automatic mutation retry. See FIREFOX-PUBLISH.md for setup and
+manual initial-listing/data-declaration work. Runtime distribution code and
+permissions are independent of these CI-only tools.

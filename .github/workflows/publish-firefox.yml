@@ -1,0 +1,112 @@
+name: Publish Firefox
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        required: true
+        type: string
+    secrets:
+      AMO_JWT_ISSUER:
+        required: true
+      AMO_JWT_SECRET:
+        required: true
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing stable GitHub release tag (for example v1.10.3)
+        required: true
+        type: string
+      mode:
+        description: Inspect a previous attempt before deciding whether to retry
+        type: choice
+        options: [inspect, submit]
+        default: inspect
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firefox-store-publication
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.repository == 'rafelolv/Treco' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - name: Check tag syntax
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1
+      - name: Check out current submission verifier
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - run: cp -R build/firefox "$RUNNER_TEMP/firefox-tools"
+      - name: Check out immutable release source
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.release_tag }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Rebuild and validate without store credentials
+        run: |
+          npm run package
+          npm run lint:firefox
+          git diff --exit-code -- Treco.user.js Zynubo.user.js icon.png
+          cp dist/SHA256SUMS "$RUNNER_TEMP/rebuilt-checksums"
+          python3 build/package.py
+          cmp "$RUNNER_TEMP/rebuilt-checksums" dist/SHA256SUMS
+      - name: Download and verify exact published package and reviewer source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/firefox-release"
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json tagName,isDraft,isPrerelease > "$RUNNER_TEMP/firefox-release/release.json"
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "Treco-*-$RELEASE_TAG.zip" --pattern Treco.user.js --pattern SHA256SUMS \
+            --dir "$RUNNER_TEMP/firefox-release"
+          python3 "$RUNNER_TEMP/firefox-tools/prepare.py" "$RELEASE_TAG" \
+            "$RUNNER_TEMP/firefox-release" "$RUNNER_TEMP/firefox-payload"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firefox-payload-${{ inputs.release_tag }}
+          path: ${{ runner.temp }}/firefox-payload/
+          if-no-files-found: error
+          retention-days: 7
+
+  submit:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out trusted submission code only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v4
+        with:
+          name: firefox-payload-${{ inputs.release_tag }}
+          path: ${{ runner.temp }}/firefox-payload
+      - name: Submit or inspect the existing Firefox listing
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          FIREFOX_MODE: ${{ inputs.mode || 'submit' }}
+          FIREFOX_PAYLOAD_DIR: ${{ runner.temp }}/firefox-payload
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: node build/firefox/publish.mjs

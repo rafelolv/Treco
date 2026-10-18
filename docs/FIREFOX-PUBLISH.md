@@ -2,11 +2,67 @@
 
 ## Current scope
 
-Treco currently publishes unsigned Firefox ZIPs through the GitHub Release
-workflow. There is no AMO upload/signing workflow, store-note shortener or Mozilla
-credential integration in this repository. GitHub publication does not authorize
-an AMO submission. Temporary installation, submission, signing, review, approval
-and public availability are separate states.
+Treco's Release workflow publishes validated GitHub assets on explicitly
+authorized new version tags. After publication succeeds, it calls
+`.github/workflows/publish-firefox.yml` to submit the exact Firefox ZIP and matching
+reviewer source to the existing AMO listing. The maintainer authorized this
+release-linked Firefox automation on 2026-10-18, after requesting the pattern used
+by Wipecord and AdBonk. Ordinary main pushes and pull requests never submit.
+Submission, signing, review, approval and public availability remain separate.
+
+## One-time setup
+
+1. Configure **AMO_JWT_ISSUER** and **AMO_JWT_SECRET** as Treco repository Actions
+   secrets using your Mozilla developer API credentials. Never put values in code,
+   commands, issue comments or release artifacts. The workflow does not transfer
+   another repository's secrets or use the GitHub token as an AMO credential.
+2. Complete the initial Treco listing and privacy declarations in the Mozilla
+   Developer Hub, preserving **zynubo@rafelolv.github.io**. This workflow updates an
+   existing listing; it does not invent store metadata or create a listing. Supply
+   the exact validated Firefox ZIP and matching source for the initial submission.
+   A public API 404 alone does not prove that a private/pending listing is absent;
+   the submission job performs an authenticated identity check.
+3. Review data declarations against the package and consent-gated community APIs.
+   Run the documented live playback checks before first store submission. Lint and
+   synthetic browser tests cannot establish that store declarations are accurate.
+
+Once configured, an explicitly authorized GitHub release automatically attempts
+its Firefox update. GitHub downloads remain unchanged and unsigned; the workflow
+does not attach or replace release files with a signed package.
+
+## Workflow and retries
+
+The read-only preparation job checks out the immutable tag, runs `npm run package`
+and pinned Firefox lint, repeats packaging, and downloads the published release.
+It rejects drafts/prereleases, invalid tags, mismatched versions/identity, archives
+over 200 MB, checksum failures and differences from the reproducible tagged build.
+Both release archives are copied byte-for-byte into an immutable Actions artifact.
+
+Only the dependent submission job receives Mozilla secrets. It rechecks payload
+hashes and sizes before reading them, uses the official API, checks all visible
+listed/unlisted and pending/rejected versions, and refuses an existing or
+non-increasing version. Numeric prior versions are compared component by component;
+unfamiliar prerelease formats require manual review. English store notes use only the tagged **Changes** section, following
+Wipecord's separation of change summaries. They retain AdBonk's paragraph-aware 3,000-character shortening, including the full release link. Full
+GitHub notes are preserved. Source is submitted as multipart; translated notes use
+a separate JSON update, as required by AMO.
+
+If an AMO step fails, inspect its stage, HTTP status and bounded error-field summary.
+Raw API errors and credentials are withheld. After a possibly successful mutation,
+the client makes one read-only version lookup, never an automatic POST/PATCH retry.
+Use **Actions → Publish Firefox → Run workflow**, branch **main**, the existing
+release tag, and mode **inspect** (the default) before considering **submit**.
+Inspect also verifies the immutable release before accessing AMO. A submission
+retry is appropriate only after diagnosing that no version was created. The
+workflow serializes AMO jobs and never overwrites existing versions.
+
+If the version already exists but notes failed, repair only its metadata in
+Developer Hub after inspecting the package/source and version status. Current
+main automation may verify an older immutable tagged release without changing its
+package. The workflow deliberately has no automatic metadata-repair mode. Package
+changes require a new version; never move tags or replace release assets. Job
+summaries report submission and the returned AMO file status without claiming
+signing, approval or public availability.
 
 ## Publication rules
 
@@ -22,8 +78,8 @@ limits for other listing fields from a limit on version notes.
   the current field validation before implementing or changing store tooling.
 - Keep store notes separate from the full GitHub release notes. Preserve any
   existing tested English shortening behavior when maintaining store automation.
-  Treco currently has no such implementation; do not claim it is already enforced.
-- A future English shortener must reserve space for its appended link and check
+  Treco now applies the tested English formatter in build/firefox/publish.mjs.
+- The English shortener must reserve space for its appended link and check
   the final text. Test boundary values and long notes; keep the link complete.
   Do not silently invent truncation behavior for other locales.
 - Check Mozilla's **200 MB archive cap**, valid Firefox manifest versions and a
@@ -89,14 +145,14 @@ and responses before choosing a retry path.
 | Pinned lint, including warnings | Automated in validation and GitHub release workflows. |
 | Package versions, Firefox ID and expected permissions | Automated local build/package verification. |
 | Reviewer source, shared engine, artifact checksums | Automated release verification and post-publication download checks. |
-| AMO notes within 3,000 characters per locale | Manual requirement; no store-note formatter exists here. |
-| 200 MB archive cap | Manual pre-submission requirement; no dedicated size guard exists here. |
-| Version greater than prior AMO submissions | Manual authenticated check; no AMO-history integration exists here. |
+| AMO notes within 3,000 characters per locale | Automated English formatter and boundary/Unicode tests; additional locales must receive the same bound. |
+| 200 MB archive cap | Automated for both submitted archives before secrets and again in the submission client. |
+| Version greater than prior AMO submissions | Authenticated paginated history scan, including pending/rejected/unlisted versions; unfamiliar formats stop for manual review. |
 | Accurate privacy declarations and source-upload reassessment | Maintainer review against official policy and the exact package. |
-| Ambiguous submission diagnosis and metadata-only retry | Manual procedure; no AMO submission/retry workflow exists here. |
+| Ambiguous submission diagnosis and metadata-only retry | One read-only diagnosis after failed mutations; explicit inspect/submit workflow. Existing-version metadata repair remains manual. |
 
-Official documentation was checked on 2026-10-16 for the archive cap, lint,
+Official documentation was rechecked on 2026-10-18 for the archive cap, lint,
 source submission, data-policy requirements and version API behavior. The
 3,000-character note bound comes from the maintainer's instructions; the reviewed
-API documentation did not specify that numeric limit. Recheck field validators
-before adding submission automation. This document does not enable publishing.
+API documentation did not specify that numeric limit. The formatter enforces the maintainer's bound without inventing other field limits.
+Automation is enabled only for the authorized triggers and requires the setup above.

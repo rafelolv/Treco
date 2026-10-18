@@ -39,8 +39,9 @@ The signer in tools/ is inherited tooling, not an authorized publishing pipeline
 
 Ordinary CI validates pull requests and main pushes; it never publishes.
 The separate Release workflow publishes validated GitHub assets on authorized
-new version tags; it never submits to stores. GitHub releases and
-store submissions require separate explicit authorization. See RELEASING.md.
+new version tags. Version tags require explicit release authorization. The
+maintainer authorized a dependent workflow for automatic existing-listing Firefox
+submissions following those releases. See RELEASING.md.
 
 Development dependency audit (2026-10-16): web-ext 10.8.0 is the current official
 version checked for this setup. npm audit still reports three high-severity
@@ -75,5 +76,5 @@ aliases; do not rewrite an existing release to change its embedded addresses.
 Firefox publication and retry policy is recorded in
 [FIREFOX-PUBLISH.md](FIREFOX-PUBLISH.md#publication-rules). Recheck its official
 sources when changing tooling, permissions, privacy declarations or packaging.
-Keep GitHub release notes complete and any AMO notes separate. The current
-workflows do not submit to AMO; do not claim manual policy checks are automated.
+Keep GitHub release notes complete and any AMO notes separate. The Firefox
+workflow submits only after exact tagged artifacts pass read-only validation. Privacy declarations and initial listing setup remain manual checks.

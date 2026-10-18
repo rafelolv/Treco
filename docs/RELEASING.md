@@ -1,8 +1,9 @@
 # Releases
 
-1. Confirm whether the request explicitly authorizes a GitHub release. Store
-   submission is separate. If authorization is absent, finish local preparation
-   and present concrete artifacts before asking.
+1. Confirm whether the request explicitly authorizes a GitHub release. The
+   maintainer authorized automatic existing-listing AMO updates following those
+   releases; initial listing creation and Chromium stores are separate. If release
+   authorization is absent, finish preparation before asking.
 2. Review main, notices and changelog. Update package.json only for the public
    version, run npm install --package-lock-only, regenerate and commit artifacts.
 3. Run npm run package, npm run lint:firefox and npm run test:extensions:browser.
@@ -26,7 +27,9 @@ validation job rebuilds, lints, tests browsers and checks the exact archives. On
 the dependent publication job receives `contents: write` and the temporary GitHub
 token. It refuses existing releases and verifies downloaded asset checksums.
 A tag push is therefore a publication action: push it only for an authorized
-release. No workflow submits to stores. Release notes live in docs/releases/.
+release. After successful publication, the dependent Firefox workflow submits
+the validated package/source pair to the existing AMO listing. Release notes live
+in docs/releases/.
 
 When using this workflow for step 6, push the new annotated tag and wait for
 both jobs. Do not publish a second copy locally or retry by moving the tag.
@@ -58,7 +61,9 @@ package can be pending/rejected; verify review status and public listing separat
 No signed XPI exists until Mozilla returns one. The current unsigned ZIP is
 suitable for temporary development and as submission input, not store availability.
 
-Any future automation must use official APIs/CLI, least-privilege permissions,
-explicit release triggers and CI secrets only. It must refuse an existing version,
-verify exact artifacts before credential access and verify submission outcomes.
-Do not copy another project's AMO authorization: none is granted for Treco yet.
+The maintainer authorized the automatic Firefox update workflow on 2026-10-18.
+See FIREFOX-PUBLISH.md for setup, release submission and read-only diagnosis.
+It uses official APIs, read-only GitHub permissions and step-scoped AMO secrets;
+ordinary main pushes and pull requests do not submit. A failed AMO job does not
+undo the published GitHub release or authorize moving its tag. Diagnose before
+retrying only the Firefox workflow from main against the immutable release.

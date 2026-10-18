@@ -1,5 +1,5 @@
 # Firefox release/retry policy: docs/FIREFOX-PUBLISH.md#publication-rules.
-# This workflow publishes GitHub assets; AMO submission requires separate authorization.
+# The maintainer authorized automatic AMO updates after validated GitHub releases.
 name: Release
 on:
   push:
@@ -87,3 +87,14 @@ jobs:
           gh release download "$RELEASE_TAG" --repo "$REPOSITORY" --dir downloaded
           cmp release-files/SHA256SUMS downloaded/SHA256SUMS
           (cd downloaded && sha256sum --check SHA256SUMS)
+  firefox:
+    needs: publish
+    if: github.repository == 'rafelolv/Treco'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/publish-firefox.yml
+    with:
+      release_tag: ${{ github.ref_name }}
+    secrets:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}

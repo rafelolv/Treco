@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node build/build.mjs",
-    "test": "node --test tests/engine-core.test.mjs tests/background-contract.test.mjs tests/bridge-security.test.mjs tests/sign-filter-manifest.test.mjs tests/distribution.test.mjs",
+    "test": "node --test tests/engine-core.test.mjs tests/background-contract.test.mjs tests/bridge-security.test.mjs tests/sign-filter-manifest.test.mjs tests/distribution.test.mjs tests/firefox-publish.test.mjs",
     "verify:published": "python3 build/verify-published.py",
     "check": "npm run build && npm test && node tools/verify-license-attribution.mjs && node build/verify.mjs",
     "test:stability": "node --test tests/stability-browser.test.mjs",
